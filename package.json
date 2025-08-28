@@ -1,0 +1,56 @@
+{
+  "name": "universal-oauth-worker",
+  "version": "2.0.0",
+  "description": "Universal OAuth 2.0 Cloudflare Worker with API key management for multiple platforms (YouTube, Facebook, Instagram, X, LinkedIn)",
+  "main": "oauth-worker.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "deploy:preview": "wrangler deploy --env preview",
+    "tail": "wrangler tail --format pretty",
+    "health": "curl https://oauth-handler.socialoauth.workers.dev/health",
+    "test:local": "node examples/backend-integration.js",
+    "docs:serve": "python -m http.server 8000",
+    "version": "echo $npm_package_version"
+  },
+  "keywords": [
+    "oauth",
+    "oauth2",
+    "cloudflare",
+    "worker",
+    "youtube",
+    "facebook",
+    "instagram",
+    "twitter",
+    "x",
+    "linkedin",
+    "social-media",
+    "api",
+    "authentication",
+    "tokens",
+    "api-keys",
+    "dashboard",
+    "user-management"
+  ],
+  "author": "Gracier Digital",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gracier-digital/universal-oauth-worker"
+  },
+  "bugs": {
+    "url": "https://github.com/gracier-digital/universal-oauth-worker/issues"
+  },
+  "homepage": "https://github.com/gracier-digital/universal-oauth-worker#readme",
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241011.0",
+    "wrangler": "^3.84.1"
+  },
+  "dependencies": {
+    "node-fetch": "^2.6.7",
+    "express": "^4.18.2"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

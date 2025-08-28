@@ -1,0 +1,41 @@
+name = "oauth-handler"
+main = "src/index.js"
+compatibility_date = "2024-08-23"
+compatibility_flags = ["nodejs_compat"]
+
+# Default Environment KV Namespaces
+[[kv_namespaces]]
+binding = "OAUTH_TOKENS"
+id = "6a7ce118a43f41cfb84aa3ea038eaf4c"
+preview_id = "aad50e450c0f4ac09e90990e51ac2a4a"
+
+[[kv_namespaces]]
+binding = "API_KEYS"
+id = "fb963882101e4bc585388e8817713d37"
+preview_id = "739dbeb63f964999b4d45d981874bb1a"
+
+[[kv_namespaces]]
+binding = "USERS"
+id = "e523c4d4f3ea4bb79cacae28f85a0221"
+
+# Production Environment
+[env.production]
+name = "oauth-handler-prod"
+
+[[env.production.kv_namespaces]]
+binding = "OAUTH_TOKENS"
+id = "6a7ce118a43f41cfb84aa3ea038eaf4c"
+preview_id = "aad50e450c0f4ac09e90990e51ac2a4a"
+
+[[env.production.kv_namespaces]]
+binding = "API_KEYS"
+id = "fb963882101e4bc585388e8817713d37"
+preview_id = "739dbeb63f964999b4d45d981874bb1a"
+
+[[env.production.kv_namespaces]]
+binding = "USERS"
+id = "e523c4d4f3ea4bb79cacae28f85a0221"
+
+# Staging Environment  
+[env.staging]
+name = "oauth-handler-staging"
