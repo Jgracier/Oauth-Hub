@@ -8,10 +8,10 @@ export async function rateLimitMiddleware(request, env, ctx) {
   
   // Different rate limits for different endpoints
   const rateLimits = {
-    '/auth': { requests: 5, window: 60 }, // 5 requests per minute for auth
-    '/api/': { requests: 100, window: 60 }, // 100 requests per minute for API
-    '/consent/': { requests: 30, window: 60 }, // 30 OAuth flows per minute
-    default: { requests: 200, window: 60 } // 200 requests per minute default
+    '/auth': { requests: 50, window: 60 }, // 50 requests per minute for auth (increased from 5)
+    '/api/': { requests: 500, window: 60 }, // 500 requests per minute for API (increased from 100)
+    '/consent/': { requests: 100, window: 60 }, // 100 OAuth flows per minute (increased from 30)
+    default: { requests: 1000, window: 60 } // 1000 requests per minute default (increased from 200)
   };
   
   // Find applicable rate limit
