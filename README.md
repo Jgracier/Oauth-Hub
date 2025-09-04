@@ -1,64 +1,110 @@
-# OAuth Hub - Complete Modular Platform
+# OAuth Hub - Production-Ready OAuth Management Platform
 
-A comprehensive, modular OAuth management platform built with Cloudflare Workers. Features user authentication, API key management, OAuth app credentials, and complete OAuth flow handling.
+A secure, streamlined OAuth management platform built with Cloudflare Workers. Get platform user IDs instantly via popup messaging - no webhooks or polling required!
 
-## 🚀 Live URL
-https://oauth-handler.socialoauth.workers.dev
+## 🎯 Key Features
 
-## 🔄 Auto-Deployment
-✅ **GitHub Actions Enabled** - Automatic deployment on every push to main branch!
+### **NEW: Direct Platform User ID Return**
+- Platform user IDs returned instantly via popup window messaging
+- No webhooks needed - simplifies integration dramatically
+- Automatic token storage and refresh in the background
+- One simple flow works for all platforms
+
+### **Security First**
+- JWT-based session authentication with HTTP-only cookies
+- Password hashing with SHA-256 iterations
+- CSRF protection on OAuth flows
+- Rate limiting on all endpoints
+- Secure API key management
+
+### **Developer Experience**
+- Simple popup helper script - one line of code to connect
+- Automatic token refresh
+- Comprehensive documentation
+- Support for 8+ major platforms
+
+## 🚀 Quick Start
+
+### For Developers Using OAuth Hub
+
+1. **Include the popup helper:**
+```html
+<script src="https://oauth-handler.socialoauth.workers.dev/oauth-popup.js"></script>
+```
+
+2. **Connect a social account:**
+```javascript
+const result = await OAuthHub.connect('facebook', 'sk_your_api_key');
+console.log('Platform User ID:', result.platformUserId);
+console.log('Access Token:', result.tokens.accessToken);
+```
+
+That's it! The platform user ID is returned directly to your app.
 
 ## 📁 Project Structure
 
 ```
 oauth-worker/
 ├── src/
-│   ├── index.js           # Main entry point & request router
-│   ├── pages/             # Individual page modules
-│   │   ├── auth.js        # Login/Signup page
-│   │   ├── dashboard.js   # Main dashboard
-│   │   ├── api-keys.js    # API key management
-│   │   ├── apps.js        # OAuth app credentials
-│   │   ├── docs.js        # API documentation
-│   │   └── analytics.js   # Usage analytics & token management
-│   ├── shared/            # Shared resources
-│   │   └── styles.js      # Unified CSS design system
-│   ├── utils/             # Utility functions
-│   │   └── helpers.js     # Common helper functions
-│   └── oauth/             # OAuth backend
-│       └── backend.js     # Core OAuth logic & token management
-├── backup/                # Backup of old files
-├── wrangler.toml          # Cloudflare Workers config
-├── package.json           # Node.js dependencies
-└── README.md              # This file
+│   ├── index.js           # Main entry point with middleware
+│   ├── pages/             # UI pages (auth, dashboard, etc.)
+│   ├── middleware/        # Auth & rate limiting
+│   ├── client/           # OAuth popup helper script
+│   ├── oauth/            # Core OAuth logic
+│   ├── utils/            # Security & helper utilities
+│   └── shared/           # Shared UI components
+├── wrangler.toml         # Cloudflare Workers config
+└── package.json          # Dependencies
 ```
 
-## ✨ Features
+## ✨ What's New
 
-### 🔐 **User Authentication**
-- Sign up / Login system
-- Secure session management
-- User data stored in Cloudflare KV
+### Security Enhancements
+- ✅ Secure password hashing (no more plain text!)
+- ✅ JWT session tokens with HTTP-only cookies
+- ✅ CSRF protection with signed state parameters
+- ✅ Rate limiting to prevent abuse
+- ✅ Security headers (CSP, HSTS, etc.)
 
-### 🔑 **API Key Management** 
-- Generate multiple API keys per user
-- Secure key storage and validation
-- Copy/delete functionality
+### Simplified OAuth Flow
+- ✅ Direct platform user ID return via popup messaging
+- ✅ No webhook configuration required
+- ✅ Automatic token refresh
+- ✅ One redirect URI for all platforms
 
-### 📱 **OAuth App Credentials**
-- Add OAuth apps for 8+ platforms (Google, Facebook, Instagram, Twitter, LinkedIn, TikTok, Discord, Pinterest)
-- Store client IDs, secrets, scopes, and redirect URIs
-- Platform-specific configuration
+### Developer Experience
+- ✅ Simple OAuth popup helper script
+- ✅ Comprehensive documentation with examples
+- ✅ Support for React/Vue/Angular
+- ✅ Clean API with consistent responses
 
-### 📖 **API Documentation**
-- Complete API reference
-- Code examples in JavaScript and Python  
-- Interactive endpoint documentation
+## 🔐 Security Features
 
-### 📊 **Analytics & Token Management**
-- View active OAuth tokens
-- Monitor platform usage
-- Token refresh and revocation
+1. **Authentication**
+   - JWT sessions with 24-hour expiry
+   - Secure password hashing (10,000 iterations)
+   - HTTP-only session cookies
+
+2. **API Security**
+   - API keys for programmatic access
+   - Rate limiting per endpoint
+   - CORS protection
+
+3. **OAuth Security**
+   - Signed state parameters prevent CSRF
+   - Automatic token encryption
+   - Secure popup communication
+
+## 🌐 Supported Platforms
+
+- 📘 Facebook
+- 🔍 Google  
+- 📸 Instagram
+- 🐦 Twitter/X
+- 💼 LinkedIn
+- 🎵 TikTok
+- 🎮 Discord
+- 📌 Pinterest
 
 ## 🛠️ Development
 
@@ -70,73 +116,32 @@ npm install
 npx wrangler dev
 
 # Deploy to Cloudflare
-npx wrangler deploy --env=""
+npx wrangler deploy
 ```
 
-## 🔄 Complete OAuth Flow
+## 📊 API Endpoints
 
-### 1. **User Setup**
-1. Sign up or log in to your account
-2. Generate an API key for your application
-3. Add OAuth app credentials for each platform you want to support
+### Public Endpoints
+- `POST /auth` - Login/Signup
+- `GET /oauth-popup.js` - OAuth helper script
+- `GET /consent/{platform}/{apiKey}` - Generate consent URL
+- `GET /callback` - OAuth callback handler
 
-### 2. **OAuth Authorization**
-```javascript
-// Step 1: Get consent URL
-GET /consent/{platform}?apiKey=YOUR_API_KEY
+### Authenticated Endpoints
+- `GET /user-keys` - List user's API keys
+- `POST /generate-key` - Create new API key
+- `GET /user-apps` - List OAuth app credentials
+- `POST /save-app` - Save OAuth app credentials
+- `GET /tokens/{platformUserId}/{apiKey}` - Get access tokens
 
-// Step 2: User visits consent URL and authorizes
-// Step 3: User is redirected to your callback URL with authorization code
-// Step 4: Platform exchanges code for tokens and stores them securely
-```
+## 🔄 Migration from Webhooks
 
-### 3. **Token Usage**
-```javascript
-// Get user's tokens (auto-refreshes if expired)
-GET /tokens/{platformUserId}/{platform}?apiKey=YOUR_API_KEY
+If you're currently using webhooks:
 
-// Manual token refresh
-POST /refresh/{platformUserId}/{platform}?apiKey=YOUR_API_KEY
-```
-
-## 🌐 Supported Platforms
-
-| Platform | Status | Features |
-|----------|--------|----------|
-| **Google** | ✅ Ready | YouTube, Drive, Gmail APIs |
-| **Facebook** | ✅ Ready | Graph API, Pages, Posts |
-| **Instagram** | ✅ Ready | Basic Display API, Media |
-| **Twitter/X** | ✅ Ready | API v2, Tweets, Users |
-| **LinkedIn** | ✅ Ready | Profile, Company APIs |
-| **TikTok** | ✅ Ready | For Developers API |
-| **Discord** | ✅ Ready | Bot APIs, User Data |
-| **Pinterest** | ✅ Ready | Boards, Pins APIs |
-
-## 📝 Architecture
-
-- **🏗️ Modular Design**: Each feature is a separate page module
-- **🔐 Secure**: API keys and OAuth tokens stored in Cloudflare KV
-- **⚡ Fast**: Built on Cloudflare Workers edge network  
-- **🎨 Unified**: Consistent design system across all pages
-- **📱 Responsive**: Works on desktop and mobile devices
-
-## 🚦 Current Status
-
-✅ **Fully Implemented**:
-- User authentication (signup/login)
-- API key management system
-- OAuth app credentials management
-- Complete API documentation
-- Analytics and token management dashboard
-- OAuth consent URL generation
-- Callback handling and success pages
-- Modular, maintainable codebase
-
-✅ **Ready for Production**:
-- All pages working and connected
-- Backend API endpoints implemented
-- OAuth flow architecture complete
-- Professional UI/UX design
+1. Replace webhook endpoint with the popup helper
+2. Remove webhook configuration code  
+3. Update OAuth button to use `OAuthHub.connect()`
+4. Platform user IDs now returned directly - no polling needed!
 
 ## 📄 License
 

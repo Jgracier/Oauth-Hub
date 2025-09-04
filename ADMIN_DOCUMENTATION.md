@@ -2,319 +2,154 @@
 
 ## System Overview
 
-OAuth Hub is a comprehensive token management system built on Cloudflare Workers with KV storage. It provides user authentication, API key management, OAuth app credentials storage, and token management across multiple platforms.
+OAuth Hub is a production-ready OAuth token management system built on Cloudflare Workers with KV storage. It provides secure user authentication, API key management, OAuth app credentials storage, and simplified OAuth flows with direct platform user ID return.
 
 **Base URL**: `https://oauth-handler.socialoauth.workers.dev`
 
 ---
 
-## 🔐 Authentication Methods
+## 🔐 Security Architecture
 
-### 1. User Registration
+### Authentication
+- **Password Hashing**: SHA-256 with 10,000 iterations + salt
+- **Session Management**: JWT tokens in HTTP-only cookies (24-hour expiry)
+- **API Keys**: Secure random generation with `sk_` prefix
+- **CSRF Protection**: Signed state parameters for OAuth flows
+
+### Middleware Stack
+1. **Rate Limiting**: Different limits per endpoint
+2. **Authentication**: JWT verification or API key validation
+3. **Security Headers**: CSP, HSTS, X-Frame-Options, etc.
+
+---
+
+## 🚀 NEW: Direct Platform User ID Flow
+
+### How It Works
+1. Developer calls `OAuthHub.connect('platform', 'api_key')`
+2. OAuth popup opens with consent URL
+3. User authorizes the app
+4. Platform redirects to callback with auth code
+5. **Server exchanges code for tokens AND platform user ID**
+6. **Data sent back to parent window via postMessage**
+7. Developer immediately has platform user ID and tokens
+
+### Benefits
+- No webhooks required
+- No polling needed
+- Instant results
+- Works across all platforms
+
+---
+
+## 📡 API Endpoints
+
+### Authentication
+
+#### User Registration
 ```bash
 curl -X POST "${BASE_URL}/auth" \
   -H "Content-Type: application/json" \
   -d '{
     "mode": "signup",
     "email": "user@example.com",
-    "password": "securepassword",
+    "password": "securepassword123",
     "fullName": "John Doe"
   }'
 ```
 
-**Response:**
-```json
-{
-  "success": true,
-  "apiKey": "sk_abc123...",
-  "email": "user@example.com",
-  "name": "John Doe",
-  "message": "Account created successfully"
-}
-```
+**Response:** Sets session cookie + returns success message
 
-### 2. User Login
+#### User Login
 ```bash
 curl -X POST "${BASE_URL}/auth" \
   -H "Content-Type: application/json" \
   -d '{
     "mode": "login",
     "email": "user@example.com",
-    "password": "securepassword"
+    "password": "securepassword123"
   }'
 ```
 
-**Response:**
-```json
-{
-  "success": true,
-  "email": "user@example.com",
-  "name": "John Doe",
-  "message": "Login successful"
-}
+**Response:** Sets session cookie + returns user data
+
+#### Logout
+```bash
+curl -X POST "${BASE_URL}/auth/logout" \
+  --cookie "session=jwt_token_here"
 ```
 
 ---
 
-## 🔑 API Key Management
+### API Key Management
 
-### 1. Generate New API Key
+All endpoints require authentication via session cookie.
+
+#### Generate New API Key
 ```bash
 curl -X POST "${BASE_URL}/generate-key" \
   -H "Content-Type: application/json" \
+  --cookie "session=jwt_token_here" \
   -d '{
-    "email": "user@example.com",
     "name": "Production API"
   }'
 ```
 
-**Response:**
-```json
-{
-  "success": true,
-  "key": {
-    "id": "unique-key-id",
-    "name": "Production API",
-    "key": "sk_abc123...",
-    "createdAt": "2025-08-28T01:30:00.000Z"
-  },
-  "message": "API key generated successfully"
-}
-```
-
-### 2. List User's API Keys
+#### List User's API Keys
 ```bash
-curl "${BASE_URL}/user-keys?email=user@example.com"
+curl "${BASE_URL}/user-keys" \
+  --cookie "session=jwt_token_here"
 ```
 
-**Response:**
-```json
-{
-  "success": true,
-  "keys": [
-    {
-      "id": "key-id-1",
-      "name": "Default Key",
-      "key": "sk_abc123...",
-      "createdAt": "2025-08-28T01:30:00.000Z"
-    },
-    {
-      "id": "key-id-2",
-      "name": "Production API",
-      "key": "sk_def456...",
-      "createdAt": "2025-08-28T01:31:00.000Z"
-    }
-  ]
-}
-```
-
-### 3. Delete API Key
+#### Delete API Key
 ```bash
-curl -X DELETE "${BASE_URL}/delete-key/{keyId}?email=user@example.com"
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "API key deleted successfully"
-}
-```
-
-### 4. API Key Authentication
-Include API key in Authorization header for authenticated requests:
-```bash
-curl -H "Authorization: Bearer sk_abc123..." "${BASE_URL}/endpoint"
+curl -X DELETE "${BASE_URL}/delete-key/{keyId}" \
+  --cookie "session=jwt_token_here"
 ```
 
 ---
 
-## 🔗 OAuth App Credentials Management
+### OAuth App Management
 
-### 1. Save OAuth App Credentials
+#### Save OAuth App Credentials
 ```bash
 curl -X POST "${BASE_URL}/save-app" \
   -H "Content-Type: application/json" \
+  --cookie "session=jwt_token_here" \
   -d '{
-    "email": "user@example.com",
     "platform": "facebook",
     "name": "My Facebook App",
     "clientId": "facebook_client_id",
     "clientSecret": "facebook_client_secret",
     "scopes": ["email", "public_profile"],
-    "redirectUri": "https://example.com/callback"
+    "redirectUri": "https://oauth-handler.socialoauth.workers.dev/callback"
   }'
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "app": {
-    "platform": "facebook",
-    "name": "My Facebook App",
-    "clientId": "facebook_client_id",
-    "clientSecret": "facebook_client_secret",
-    "scopes": ["email", "public_profile"],
-    "redirectUri": "https://example.com/callback",
-    "createdAt": "2025-08-28T01:30:00.000Z"
-  },
-  "message": "App credentials saved successfully"
-}
-```
-
-### 2. List User's OAuth Apps
-```bash
-curl "${BASE_URL}/user-apps?email=user@example.com"
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "apps": [
-    {
-      "platform": "facebook",
-      "name": "My Facebook App",
-      "clientId": "facebook_client_id",
-      "clientSecret": "facebook_client_secret",
-      "scopes": ["email", "public_profile"],
-      "redirectUri": "https://example.com/callback",
-      "createdAt": "2025-08-28T01:30:00.000Z"
-    }
-  ]
-}
-```
-
-### 3. Delete OAuth App
-```bash
-curl -X DELETE "${BASE_URL}/delete-app/{platform}?email=user@example.com"
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "App credentials deleted successfully"
-}
 ```
 
 ---
 
-## 🌐 OAuth Flow Management
+### OAuth Flow
 
-### 1. Generate OAuth Consent URL
+#### 1. Generate Consent URL (Public)
 ```bash
-curl "${BASE_URL}/consent/{platform}/{apiKey}?state=optional_state"
+curl "${BASE_URL}/consent/{platform}/{apiKey}"
 ```
 
-**Supported Platforms:**
-- `facebook`
-- `google`
-- `x` (Twitter/X)
-- `instagram`
-- `linkedin`
-- `tiktok`
-- `discord`
-- `pinterest`
+Returns OAuth consent URL for the platform.
 
-**Response:**
-```json
-{
-  "platform": "FACEBOOK",
-  "consentUrl": "https://www.facebook.com/v18.0/dialog/oauth?client_id=123...",
-  "message": "OAuth consent URL for FACEBOOK"
-}
-```
+#### 2. OAuth Callback (Automatic)
+The callback endpoint handles the OAuth redirect and:
+1. Validates the secure state parameter
+2. Exchanges auth code for tokens
+3. Stores tokens securely in KV
+4. Returns platform user ID to parent window
 
-### 2. OAuth Callback Handler
-```bash
-# This is called automatically by OAuth providers
-curl "${BASE_URL}/callback?code=auth_code&state=platform_timestamp_email"
-```
-
-**Response:** Auto-closing HTML page that completes OAuth flow
-
-### 3. Retrieve OAuth Tokens
+#### 3. Get Tokens (Public with API Key)
 ```bash
 curl "${BASE_URL}/tokens/{platformUserId}/{apiKey}"
 ```
 
-**Response:**
-```json
-{
-  "success": true,
-  "tokens": {
-    "access_token": "oauth_access_token",
-    "refresh_token": "oauth_refresh_token",
-    "expires_in": 3600,
-    "platform": "facebook",
-    "platformUserId": "123456789"
-  }
-}
-```
-
-### 4. Refresh OAuth Tokens
-```bash
-curl -X POST "${BASE_URL}/refresh/{platformUserId}/{apiKey}"
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "tokens": {
-    "access_token": "new_access_token",
-    "refresh_token": "new_refresh_token",
-    "expires_in": 3600
-  }
-}
-```
-
-### 5. Revoke OAuth Tokens
-```bash
-curl -X DELETE "${BASE_URL}/revoke-token/{platformUserId}/{apiKey}"
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Token revoked successfully"
-}
-```
-
----
-
-## 📊 System Monitoring
-
-### 1. Health Check
-```bash
-curl "${BASE_URL}/health"
-```
-
-**Response:**
-```json
-{
-  "status": "✅ OAuth Hub Online - Modular v2.0",
-  "version": "2.0-modular",
-  "timestamp": "2025-08-28T01:30:00.000Z",
-  "features": [
-    "Authentication",
-    "API Keys",
-    "OAuth Apps",
-    "Token Management",
-    "Analytics"
-  ]
-}
-```
-
-### 2. Documentation Access
-```bash
-curl "${BASE_URL}/docs"
-```
-
-**Response:** HTML documentation page
+Returns current access token (auto-refreshes if expired).
 
 ---
 
@@ -322,119 +157,134 @@ curl "${BASE_URL}/docs"
 
 ### API_KEYS Namespace
 ```
-Key Format: {resource-type} {User Name} {email}
+Key Format: {resource-type} {firstname} {lastname} {email}
 
+Examples:
 api-Production API John Doe user@example.com
 oauth-facebook John Doe user@example.com
-lookup-sk_abc123... (API key validation)
-user-keys-user@example.com (User's API key list)
-user-apps-user@example.com (User's OAuth app list)
+rate:127.0.0.1:/auth (for rate limiting)
 ```
 
 ### OAUTH_TOKENS Namespace
 ```
-Key Format: {resource-type} {User Name} {email}
+Key Format: token-{platform} {firstname} {lastname} {email}
 
+Example:
 token-facebook John Doe user@example.com
-lookup-facebook-123456 (Platform user ID lookup)
 ```
 
 ### USERS Namespace
 ```
-Key Format: {resource-type} {User Name} {email}
+Key Format: user {firstname} {lastname} {email}
 
+Example:
 user John Doe user@example.com
-lookup-user@example.com (Email to user lookup)
 ```
 
 ---
 
-## 🔍 Searching in Cloudflare Dashboard
+## 🔍 Rate Limiting
 
-### Search Examples:
-- **By Resource Type**: `"api-"` → All API keys, `"oauth-"` → All OAuth apps
-- **By User**: `"John Doe"` → All resources for John Doe
-- **By Email**: `"user@example.com"` → All resources for that email
-- **By Platform**: `"facebook"` → All Facebook-related resources
-- **By Key Name**: `"Production API"` → That specific API key
+Different endpoints have different rate limits:
+
+- `/auth` - 5 requests/minute (prevent brute force)
+- `/api/*` - 100 requests/minute
+- `/consent/*` - 30 requests/minute
+- Default - 200 requests/minute
+
+Rate limit headers are included in responses:
+- `X-RateLimit-Limit`
+- `X-RateLimit-Remaining`
+- `X-RateLimit-Reset`
+- `Retry-After` (on 429 errors)
 
 ---
 
-## ⚠️ Error Responses
+## 🚨 Error Handling
 
-All endpoints return consistent error formats:
-
+### Standard Error Format
 ```json
 {
-  "error": "Error message",
+  "error": "Short error message",
   "message": "Detailed error description"
 }
 ```
 
-### Common HTTP Status Codes:
+### HTTP Status Codes
 - `200` - Success
-- `400` - Bad Request (missing/invalid parameters)
-- `401` - Unauthorized (invalid API key)
-- `404` - Not Found (user/resource not found)
+- `400` - Bad Request
+- `401` - Unauthorized
+- `404` - Not Found
+- `429` - Too Many Requests
 - `500` - Internal Server Error
 
 ---
 
-## 🛡️ Security Features
+## 🛡️ Security Checklist
 
-1. **API Key Authentication** - All sensitive operations require valid API keys
-2. **Email Validation** - Proper email format validation
-3. **Input Sanitization** - All inputs are sanitized before storage
-4. **CORS Headers** - Proper CORS handling for web applications
-5. **Secure Storage** - Sensitive data encrypted in Cloudflare KV
+### Password Security
+- ✅ Passwords hashed with salt
+- ✅ 10,000 iteration SHA-256
+- ✅ Minimum 8 character requirement
+- ✅ Salt stored separately
 
----
+### Session Security
+- ✅ JWT tokens with expiration
+- ✅ HTTP-only cookies
+- ✅ Secure flag on cookies
+- ✅ SameSite=Strict
 
-## 📝 Usage Examples
+### API Security
+- ✅ Rate limiting per endpoint
+- ✅ API key validation
+- ✅ CORS headers
+- ✅ Security headers
 
-### Complete OAuth Flow Example:
-```bash
-# 1. Save OAuth app credentials
-curl -X POST "${BASE_URL}/save-app" \
-  -H "Content-Type: application/json" \
-  -d '{"email":"user@example.com","platform":"facebook","clientId":"123","clientSecret":"secret"}'
-
-# 2. Generate consent URL
-curl "${BASE_URL}/consent/facebook/sk_your_api_key"
-
-# 3. User visits consent URL, authorizes, gets redirected to callback
-
-# 4. Retrieve tokens
-curl "${BASE_URL}/tokens/facebook_user_id/sk_your_api_key"
-```
-
-### API Key Management Example:
-```bash
-# 1. Generate new API key
-curl -X POST "${BASE_URL}/generate-key" \
-  -H "Content-Type: application/json" \
-  -d '{"email":"user@example.com","name":"My API Key"}'
-
-# 2. List all keys
-curl "${BASE_URL}/user-keys?email=user@example.com"
-
-# 3. Use API key for authenticated requests
-curl -H "Authorization: Bearer sk_abc123..." "${BASE_URL}/user-apps?email=user@example.com"
-
-# 4. Delete key when no longer needed
-curl -X DELETE "${BASE_URL}/delete-key/key-id?email=user@example.com"
-```
+### OAuth Security
+- ✅ Signed state parameters
+- ✅ State expiration (5 minutes)
+- ✅ Origin validation on callbacks
+- ✅ Encrypted token storage
 
 ---
 
-## 📞 Support Information
+## 📊 Monitoring
 
-- **Base URL**: https://oauth-handler.socialoauth.workers.dev
-- **Version**: 2.0-modular
+### Health Check
+```bash
+curl "${BASE_URL}/health"
+```
+
+Returns system status and enabled features.
+
+### Search Patterns in KV
+- By user: Search for email
+- By resource: Search for "api-" or "oauth-" or "token-"
+- By platform: Search for platform name
+
+---
+
+## 🔧 Maintenance
+
+### Rotating Secrets
+1. Update JWT_SECRET in environment variables
+2. Users will need to re-authenticate
+3. Consider grace period with dual validation
+
+### Cleaning Up Expired Data
+- Rate limit keys expire automatically (TTL set)
+- Consider periodic cleanup of old tokens
+- Monitor KV storage usage
+
+---
+
+## 📞 Support
+
+- **Version**: 3.0 (Simplified + Secure)
 - **Platform**: Cloudflare Workers
 - **Storage**: Cloudflare KV
-- **Documentation**: Available at `/docs` endpoint
+- **Documentation**: Available at `/docs`
 
 ---
 
-*Last Updated: August 28, 2025*
+*Last Updated: Current Version with Security Enhancements*
