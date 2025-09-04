@@ -147,8 +147,8 @@ routes = [
 ## 🎉 Success!
 
 Once set up, you'll have:
-- 🔄 **Automatic deployments** on every push
-- 📊 **Deployment history** and monitoring  
+- 🔄 **Automatic deployments** on every push.
+- 📊 **Deployment history** and monitoring.
 - 🛡️ **Secure credential management**
 - 🚀 **Zero-downtime deployments**
 
