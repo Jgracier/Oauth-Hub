@@ -4,7 +4,7 @@
 
 import { getNavigation, getSharedScript } from '../shared/navigation.js';
 
-export function getDashboardPage(UNIFIED_CSS) {
+export function getDashboardPage(UNIFIED_CSS, userData = {}) {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -15,7 +15,7 @@ export function getDashboardPage(UNIFIED_CSS) {
 </head>
 <body>
     <div class="app-layout">
-        ${getNavigation('dashboard')}
+        ${getNavigation('dashboard', userData)}
         
         <main class="main">
             <div class="container">
@@ -48,45 +48,50 @@ export function getDashboardPage(UNIFIED_CSS) {
                             </div>
                         </div>
                         <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <span id="apps-count" style="font-size: 2rem; font-weight: 700; color: var(--success-500);">-</span>
+                            <span id="apps-count" style="font-size: 2rem; font-weight: 700; color: var(--primary-600);">-</span>
                             <a href="/apps" class="btn btn-primary">Manage</a>
                         </div>
                     </div>
                     
                     <div class="card">
                         <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4);">
-                            <div style="font-size: 2rem;">👥</div>
+                            <div style="font-size: 2rem;">🌐</div>
                             <div>
                                 <h3 style="margin: 0;">Active Tokens</h3>
-                                <p style="color: var(--gray-600); margin: 0; font-size: 0.875rem;">User authorizations</p>
+                                <p style="color: var(--gray-600); margin: 0; font-size: 0.875rem;">OAuth connections</p>
                             </div>
                         </div>
                         <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <span id="tokens-count" style="font-size: 2rem; font-weight: 700; color: var(--warning-500);">-</span>
+                            <span id="tokens-count" style="font-size: 2rem; font-weight: 700; color: var(--primary-600);">-</span>
                             <a href="/analytics" class="btn btn-primary">View</a>
                         </div>
                     </div>
                 </div>
                 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-6);">
-                    <div class="card">
-                        <h3 style="margin-bottom: var(--space-4);">Quick Start</h3>
-                        <ol style="color: var(--gray-600); line-height: 1.6;">
-                            <li>Create an API key in the <a href="/api-keys">API Keys</a> section</li>
-                            <li>Add your OAuth app credentials in <a href="/apps">App Credentials</a></li>
-                            <li>Use the consent endpoints to authorize users</li>
-                            <li>Retrieve tokens using the token endpoints</li>
-                        </ol>
-                        <a href="/docs" class="btn btn-secondary" style="margin-top: var(--space-4);">View Documentation</a>
+                <div class="card">
+                    <h2 style="margin: 0 0 var(--space-4) 0;">Quick Actions</h2>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-4);">
+                        <a href="/apps" class="btn btn-secondary" style="text-decoration: none; text-align: center;">
+                            🔗 Add OAuth App
+                        </a>
+                        <a href="/api-keys" class="btn btn-secondary" style="text-decoration: none; text-align: center;">
+                            🔑 Generate API Key
+                        </a>
+                        <a href="/docs" class="btn btn-secondary" style="text-decoration: none; text-align: center;">
+                            📚 View Documentation
+                        </a>
+                        <a href="/analytics" class="btn btn-secondary" style="text-decoration: none; text-align: center;">
+                            📊 View Analytics
+                        </a>
                     </div>
-                    
-                    <div class="card">
-                        <h3 style="margin-bottom: var(--space-4);">Recent Activity</h3>
-                        <div id="recent-activity">
-                            <p style="color: var(--gray-500); text-align: center; padding: var(--space-4);">
-                                No recent activity
-                            </p>
-                        </div>
+                </div>
+                
+                <div class="card">
+                    <h2 style="margin: 0 0 var(--space-4) 0;">Recent Activity</h2>
+                    <div id="recent-activity">
+                        <p style="color: var(--gray-500); text-align: center; padding: var(--space-4);">
+                            No recent activity
+                        </p>
                     </div>
                 </div>
             </div>
@@ -100,15 +105,15 @@ export function getDashboardPage(UNIFIED_CSS) {
         async function loadDashboardData() {
             try {
                 // Load API keys count
-                const keysResponse = await fetch(\`/user-keys?apiKey=\${apiKey}\`);
-                if (keysResponse.ok) {
+                const keysResponse = await window.apiCall('/user-keys');
+                if (keysResponse && keysResponse.ok) {
                     const keysData = await keysResponse.json();
                     document.getElementById('api-keys-count').textContent = keysData.keys ? keysData.keys.length : 0;
                 }
                 
                 // Load apps count  
-                const appsResponse = await fetch(\`/user-apps?apiKey=\${apiKey}\`);
-                if (appsResponse.ok) {
+                const appsResponse = await window.apiCall('/user-apps');
+                if (appsResponse && appsResponse.ok) {
                     const appsData = await appsResponse.json();
                     document.getElementById('apps-count').textContent = appsData.apps ? appsData.apps.length : 0;
                 }
