@@ -5,6 +5,9 @@ A comprehensive, modular OAuth management platform built with Cloudflare Workers
 ## 🚀 Live URL
 https://oauth-handler.socialoauth.workers.dev
 
+## 🔄 Auto-Deployment
+✅ **GitHub Actions Enabled** - Automatic deployment on every push to main branch!
+
 ## 📁 Project Structure
 
 ```
