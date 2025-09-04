@@ -76,6 +76,14 @@ export function getDocsPage(UNIFIED_CSS) {
             padding: var(--space-4);
             margin: var(--space-4) 0;
         }
+        .feature-highlight {
+            background: linear-gradient(135deg, var(--primary-50), var(--primary-100));
+            border: 2px solid var(--primary-300);
+            border-radius: var(--radius-lg);
+            padding: var(--space-6);
+            margin: var(--space-6) 0;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -86,96 +94,264 @@ export function getDocsPage(UNIFIED_CSS) {
             <div class="container" style="max-width: 1000px;">
                 <div class="page-header">
                     <h1 class="page-title">OAuth Hub Documentation</h1>
-                    <p class="page-description">Complete guide to OAuth token management for all platforms</p>
+                    <p class="page-description">The simplest way to manage OAuth connections across all platforms</p>
+                </div>
+
+                <!-- NEW: Direct Platform User ID Feature -->
+                <div class="feature-highlight">
+                    <h2 style="color: var(--primary-700); margin: 0 0 var(--space-3) 0;">🎯 NEW: Direct Platform User ID Return</h2>
+                    <p style="font-size: 1.125rem; margin: 0;">
+                        Get platform user IDs instantly via popup window messaging.<br/>
+                        <strong>No webhooks needed. No polling. Just direct results!</strong>
+                    </p>
                 </div>
 
                 <!-- Quick Start Guide -->
                 <div class="card">
-                    <h2>🚀 Quick Start (5 Minutes)</h2>
+                    <h2>🚀 Quick Start (2 Minutes)</h2>
                     
                     <div class="success-box">
-                        <h4>✅ One Callback URL for All Platforms</h4>
-                        <p>Set this single redirect URI for ALL your OAuth apps:</p>
-                        <div class="code-block" style="text-align: center; font-size: 1rem; font-weight: bold;">
-                            https://oauth-handler.socialoauth.workers.dev/callback
-                        </div>
+                        <h4>✨ What You'll Get</h4>
+                        <ul>
+                            <li>Platform User ID returned directly to your app</li>
+                            <li>Automatic token storage and refresh</li>
+                            <li>One simple flow for all platforms</li>
+                        </ul>
                     </div>
-                    
-                    <h3>Step 1: Get Your API Key</h3>
-                    <ol>
-                        <li>Create an account on OAuth Hub</li>
-                        <li>Go to <a href="/api-keys">API Keys</a> page</li>
-                        <li>Click "Generate API Key" and give it a name</li>
-                        <li>Copy your key (starts with <code>sk_</code>)</li>
-                    </ol>
-                    
-                    <h3>Step 2: Create OAuth Apps</h3>
-                    <p>For each platform you want to use, create an OAuth app in their developer portal and get your Client ID & Secret:</p>
-                    
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--space-4); margin: var(--space-4) 0;">
-                        <div class="platform-card">
-                            <h4>📘 Facebook</h4>
-                            <p>Create apps for Facebook Login & Instagram API</p>
-                            <a href="https://developers.facebook.com/" target="_blank" class="platform-url">
-                                Create Facebook App →
-                            </a>
-                        </div>
-                        
-                        <div class="platform-card">
-                            <h4>🎬 Google</h4>
-                            <p>Access Gmail, Drive, Calendar & more APIs</p>
-                            <a href="https://console.cloud.google.com/" target="_blank" class="platform-url">
-                                Create Google App →
-                            </a>
-                        </div>
-                        
-                        <div class="platform-card">
-                            <h4>🐦 X (Twitter)</h4>
-                            <p>Create apps for X API v2 access</p>
-                            <a href="https://developer.x.com/" target="_blank" class="platform-url">
-                                Create X App →
-                            </a>
-                        </div>
-                        
-                        <div class="platform-card">
-                            <h4>💼 LinkedIn</h4>
-                            <p>Access professional profiles & company data</p>
-                            <a href="https://developer.linkedin.com/" target="_blank" class="platform-url">
-                                Create LinkedIn App →
-                            </a>
-                        </div>
-                        
-                        <div class="platform-card">
-                            <h4>📸 Instagram</h4>
-                            <p>Use Facebook Developer Portal for Instagram API</p>
-                            <a href="https://developers.facebook.com/" target="_blank" class="platform-url">
-                                Create Instagram App →
-                            </a>
-                        </div>
-                        
-                        <div class="platform-card">
-                            <h4>🎵 TikTok</h4>
-                            <p>Create apps for TikTok Login Kit & API</p>
-                            <a href="https://developers.tiktok.com/" target="_blank" class="platform-url">
-                                Create TikTok App →
-                            </a>
-                        </div>
+
+                    <h3>Step 1: Include OAuth Popup Helper</h3>
+                    <div class="code-block">
+&lt;!-- Add to your HTML --&gt;
+&lt;script src="https://oauth-handler.socialoauth.workers.dev/oauth-popup.js"&gt;&lt;/script&gt;
                     </div>
-                    
-                    <h3>Step 3: Add App Credentials to OAuth Hub</h3>
-                    <p>Go to <a href="/apps">App Credentials</a> page and add your OAuth app details (Client ID, Secret, Scopes) for each platform.</p>
-                    
+
+                    <h3>Step 2: Connect Social Account</h3>
+                    <div class="code-block">
+// That's it! One line of code:
+const result = await OAuthHub.connect('facebook', 'sk_your_api_key');
+
+// You immediately get:
+console.log(result.platformUserId);  // "1234567890"
+console.log(result.tokens);          // { accessToken, expiresAt, ... }
+console.log(result.userInfo);        // { name, email, ... } (if available)
+                    </div>
+
+                    <h3>Step 3: Use the Tokens</h3>
+                    <div class="code-block">
+// Now you can make API calls to the platform:
+fetch('https://graph.facebook.com/me', {
+  headers: { 'Authorization': \`Bearer \${result.tokens.accessToken}\` }
+});
+
+// Or fetch fresh tokens anytime using the platform user ID:
+const tokens = await fetch(\`/tokens/\${result.platformUserId}/\${apiKey}\`);
+                    </div>
+
                     <div class="warning-box">
-                        <h4>⚠️ Important: Redirect URI Setup</h4>
-                        <p>In each platform's OAuth app settings, make sure to add this exact redirect URI:</p>
-                        <code>https://oauth-handler.socialoauth.workers.dev/callback</code>
-                        <p><strong>This same URL works for ALL platforms!</strong></p>
+                        <h4>🔄 Migrating from Webhooks?</h4>
+                        <p>If you're currently using webhooks, migration is simple:</p>
+                        <ol>
+                            <li>Replace webhook endpoint with the popup helper</li>
+                            <li>Remove webhook configuration code</li>
+                            <li>Update your OAuth button to use <code>OAuthHub.connect()</code></li>
+                        </ol>
                     </div>
                 </div>
-                
-                <!-- API Endpoints -->
+
+                <!-- Complete Integration Example -->
                 <div class="card">
-                    <h2>📡 API Usage</h2>
+                    <h2>💻 Complete Integration Example</h2>
+                    
+                    <h3>Frontend Integration</h3>
+                    <div class="code-block">
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+  &lt;script src="https://oauth-handler.socialoauth.workers.dev/oauth-popup.js"&gt;&lt;/script&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;!-- Social Connect Buttons --&gt;
+  &lt;button onclick="connectSocial('facebook')"&gt;Connect Facebook&lt;/button&gt;
+  &lt;button onclick="connectSocial('google')"&gt;Connect Google&lt;/button&gt;
+  &lt;button onclick="connectSocial('instagram')"&gt;Connect Instagram&lt;/button&gt;
+  
+  &lt;script&gt;
+    // Initialize with your API key
+    const oauth = OAuthHub.init('sk_your_api_key');
+    
+    async function connectSocial(platform) {
+      try {
+        // Show loading state
+        console.log('Connecting to ' + platform + '...');
+        
+        // Open OAuth popup and wait for completion
+        const result = await oauth.connect(platform);
+        
+        // Success! You have the platform user ID immediately
+        console.log('Connected! Platform User ID:', result.platformUserId);
+        
+        // Save to your backend
+        await fetch('/api/users/social-connection', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            platform: result.platform,
+            platformUserId: result.platformUserId,
+            // Optional: Include tokens if you want to store them
+            tokens: result.tokens
+          })
+        });
+        
+        // Update UI
+        alert(platform + ' connected successfully!');
+        
+      } catch (error) {
+        console.error('OAuth failed:', error);
+        alert('Connection failed: ' + error.message);
+      }
+    }
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+                    </div>
+
+                    <h3>Backend Integration (Node.js)</h3>
+                    <div class="code-block">
+const express = require('express');
+const fetch = require('node-fetch');
+
+const app = express();
+const OAUTH_HUB_API_KEY = 'sk_your_api_key';
+const OAUTH_HUB_URL = 'https://oauth-handler.socialoauth.workers.dev';
+
+// Store user's social connections
+app.post('/api/users/social-connection', async (req, res) => {
+  const { platform, platformUserId } = req.body;
+  const userId = req.user.id; // Your authenticated user
+  
+  // Save connection to your database
+  await db.socialConnections.create({
+    userId,
+    platform,
+    platformUserId,
+    connectedAt: new Date()
+  });
+  
+  res.json({ success: true });
+});
+
+// Get fresh access token when needed
+async function getAccessToken(platformUserId) {
+  const response = await fetch(
+    \`\${OAUTH_HUB_URL}/tokens/\${platformUserId}/\${OAUTH_HUB_API_KEY}\`
+  );
+  
+  if (!response.ok) {
+    throw new Error('Failed to get access token');
+  }
+  
+  const data = await response.json();
+  return data.accessToken;
+}
+
+// Use tokens to make API calls
+app.get('/api/facebook/profile', async (req, res) => {
+  // Get user's Facebook connection
+  const connection = await db.socialConnections.findOne({
+    userId: req.user.id,
+    platform: 'facebook'
+  });
+  
+  if (!connection) {
+    return res.status(404).json({ error: 'Facebook not connected' });
+  }
+  
+  // Get fresh access token
+  const accessToken = await getAccessToken(connection.platformUserId);
+  
+  // Call Facebook API
+  const fbResponse = await fetch('https://graph.facebook.com/me', {
+    headers: { 'Authorization': \`Bearer \${accessToken}\` }
+  });
+  
+  const profile = await fbResponse.json();
+  res.json(profile);
+});
+                    </div>
+
+                    <h3>React/Vue/Angular Example</h3>
+                    <div class="code-block">
+// React Component Example
+import { useState, useEffect } from 'react';
+
+function SocialConnections() {
+  const [connections, setConnections] = useState({});
+  const [loading, setLoading] = useState(false);
+  
+  useEffect(() => {
+    // Load OAuth popup helper
+    const script = document.createElement('script');
+    script.src = 'https://oauth-handler.socialoauth.workers.dev/oauth-popup.js';
+    document.head.appendChild(script);
+  }, []);
+  
+  const connectPlatform = async (platform) => {
+    setLoading(true);
+    
+    try {
+      // Initialize OAuth Hub (can also be done once globally)
+      const oauth = window.OAuthHub.init('sk_your_api_key');
+      
+      // Connect to platform
+      const result = await oauth.connect(platform);
+      
+      // Update state
+      setConnections(prev => ({
+        ...prev,
+        [platform]: {
+          connected: true,
+          platformUserId: result.platformUserId,
+          connectedAt: new Date()
+        }
+      }));
+      
+      // Save to backend
+      await saveConnection(platform, result.platformUserId);
+      
+    } catch (error) {
+      console.error('OAuth error:', error);
+      alert(\`Failed to connect \${platform}\`);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  return (
+    &lt;div&gt;
+      &lt;h2&gt;Connect Your Social Accounts&lt;/h2&gt;
+      
+      {['facebook', 'google', 'instagram', 'twitter'].map(platform =&gt; (
+        &lt;div key={platform}&gt;
+          &lt;button
+            onClick={() =&gt; connectPlatform(platform)}
+            disabled={loading || connections[platform]?.connected}
+          &gt;
+            {connections[platform]?.connected 
+              ? \`✓ \${platform} Connected\`
+              : \`Connect \${platform}\`
+            }
+          &lt;/button&gt;
+        &lt;/div&gt;
+      ))}
+    &lt;/div&gt;
+  );
+}
+                    </div>
+                </div>
+
+                <!-- API Reference -->
+                <div class="card">
+                    <h2>📡 API Reference</h2>
                     
                     <div class="success-box">
                         <h4>🏁 Base URL</h4>
@@ -183,211 +359,223 @@ export function getDocsPage(UNIFIED_CSS) {
                             https://oauth-handler.socialoauth.workers.dev
                         </div>
                     </div>
+
+                    <h3>OAuth Popup Helper Methods</h3>
                     
-                    <h3>1. Generate OAuth URL</h3>
+                    <div class="endpoint">
+                        <h4>OAuthHub.connect(platform, apiKey, options)</h4>
+                        <p>Opens OAuth popup and returns platform user ID and tokens</p>
+                        <div class="code-block">
+<strong>Parameters:</strong>
+- platform: string - Platform name ('facebook', 'google', etc.)
+- apiKey: string - Your OAuth Hub API key
+- options: object (optional)
+  - width: number - Popup width (default: 500)
+  - height: number - Popup height (default: 600)
+  - timeout: number - Timeout in ms (default: 300000)
+
+<strong>Returns Promise:</strong>
+{
+  platform: 'facebook',
+  platformUserId: '1234567890',
+  tokens: {
+    accessToken: 'token...',
+    tokenType: 'bearer',
+    expiresAt: 1234567890,
+    scope: 'email public_profile'
+  },
+  userInfo: { // Optional, if available
+    name: 'John Doe',
+    email: 'john@example.com'
+  }
+}
+                        </div>
+                    </div>
+
+                    <div class="endpoint">
+                        <h4>OAuthHub.init(apiKey, defaultOptions)</h4>
+                        <p>Initialize OAuth Hub with default API key and options</p>
+                        <div class="code-block">
+const oauth = OAuthHub.init('sk_your_api_key', {
+  width: 600,
+  height: 700
+});
+
+// Now use without specifying API key each time
+const result = await oauth.connect('facebook');
+                        </div>
+                    </div>
+
+                    <h3>Backend API Endpoints</h3>
+                    
                     <div class="endpoint">
                         <div style="display: flex; align-items: center; margin-bottom: var(--space-2);">
                             <span class="method get">GET</span>
                             <code>/consent/{platform}/{apiKey}</code>
                         </div>
-                        <p>Get the authorization URL for users to grant permissions</p>
-                        <div class="code-block">
-<strong>Example:</strong><br>
-GET /consent/facebook/sk_abc123<br><br>
-<strong>Returns:</strong><br>
-{<br>
-&nbsp;&nbsp;"consentUrl": "https://facebook.com/oauth?...",<br>
-&nbsp;&nbsp;"platform": "facebook"<br>
-}
-                        </div>
+                        <p>Get OAuth consent URL (used internally by popup helper)</p>
                     </div>
                     
-                    <h3>2. Get Access Tokens</h3>
                     <div class="endpoint">
                         <div style="display: flex; align-items: center; margin-bottom: var(--space-2);">
                             <span class="method get">GET</span>
                             <code>/tokens/{platformUserId}/{apiKey}</code>
                         </div>
-                        <p>Retrieve valid access tokens (auto-refreshes if expired)</p>
+                        <p>Get current access token (auto-refreshes if expired)</p>
                         <div class="code-block">
-<strong>Example:</strong><br>
-GET /tokens/123456789/sk_abc123<br><br>
-<strong>Returns:</strong><br>
-{<br>
-&nbsp;&nbsp;"accessToken": "EAAVfX...",<br>
-&nbsp;&nbsp;"tokenType": "bearer",<br>
-&nbsp;&nbsp;"expiresAt": 1756142188028,<br>
-&nbsp;&nbsp;"platform": "facebook",<br>
-&nbsp;&nbsp;"platformUserId": "123456789"<br>
+<strong>Example:</strong>
+GET /tokens/1234567890/sk_abc123
+
+<strong>Returns:</strong>
+{
+  "accessToken": "EAAVfX...",
+  "tokenType": "bearer",
+  "expiresAt": 1756142188028,
+  "platform": "facebook",
+  "platformUserId": "1234567890"
 }
                         </div>
                     </div>
+
+                    <div class="endpoint">
+                        <div style="display: flex; align-items: center; margin-bottom: var(--space-2);">
+                            <span class="method post">POST</span>
+                            <code>/refresh/{platformUserId}/{apiKey}</code>
+                        </div>
+                        <p>Manually refresh access token</p>
+                    </div>
+
+                    <div class="endpoint">
+                        <div style="display: flex; align-items: center; margin-bottom: var(--space-2);">
+                            <span class="method delete">DELETE</span>
+                            <code>/revoke-token/{platformUserId}/{apiKey}</code>
+                        </div>
+                        <p>Revoke stored tokens for a user</p>
+                    </div>
+                </div>
+
+                <!-- Supported Platforms -->
+                <div class="card">
+                    <h2>🌐 Supported Platforms</h2>
                     
-                    <h3>Supported Platforms</h3>
-                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-2); margin: var(--space-4) 0;">
-                        <div style="text-align: center; padding: var(--space-2);">
-                            <div style="font-size: 1.5rem;">📘</div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--space-4); margin: var(--space-4) 0;">
+                        <div class="platform-card" style="text-align: center;">
+                            <div style="font-size: 3rem;">📘</div>
+                            <h4>Facebook</h4>
                             <code>facebook</code>
                         </div>
-                        <div style="text-align: center; padding: var(--space-2);">
-                            <div style="font-size: 1.5rem;">🎬</div>
+                        <div class="platform-card" style="text-align: center;">
+                            <div style="font-size: 3rem;">🔍</div>
+                            <h4>Google</h4>
                             <code>google</code>
                         </div>
-                        <div style="text-align: center; padding: var(--space-2);">
-                            <div style="font-size: 1.5rem;">📸</div>
+                        <div class="platform-card" style="text-align: center;">
+                            <div style="font-size: 3rem;">📸</div>
+                            <h4>Instagram</h4>
                             <code>instagram</code>
                         </div>
-                        <div style="text-align: center; padding: var(--space-2);">
-                            <div style="font-size: 1.5rem;">🐦</div>
-                            <code>twitter</code>
+                        <div class="platform-card" style="text-align: center;">
+                            <div style="font-size: 3rem;">🐦</div>
+                            <h4>Twitter/X</h4>
+                            <code>x</code> or <code>twitter</code>
                         </div>
-                        <div style="text-align: center; padding: var(--space-2);">
-                            <div style="font-size: 1.5rem;">💼</div>
+                        <div class="platform-card" style="text-align: center;">
+                            <div style="font-size: 3rem;">💼</div>
+                            <h4>LinkedIn</h4>
                             <code>linkedin</code>
                         </div>
-                        <div style="text-align: center; padding: var(--space-2);">
-                            <div style="font-size: 1.5rem;">🎵</div>
+                        <div class="platform-card" style="text-align: center;">
+                            <div style="font-size: 3rem;">🎵</div>
+                            <h4>TikTok</h4>
                             <code>tiktok</code>
+                        </div>
+                        <div class="platform-card" style="text-align: center;">
+                            <div style="font-size: 3rem;">🎮</div>
+                            <h4>Discord</h4>
+                            <code>discord</code>
+                        </div>
+                        <div class="platform-card" style="text-align: center;">
+                            <div style="font-size: 3rem;">📌</div>
+                            <h4>Pinterest</h4>
+                            <code>pinterest</code>
+                        </div>
+                    </div>
+
+                    <div class="success-box">
+                        <h4>✅ One Redirect URI for ALL Platforms</h4>
+                        <p>Set this single redirect URI in each platform's OAuth app settings:</p>
+                        <div class="code-block" style="text-align: center; font-size: 1rem; font-weight: bold;">
+                            https://oauth-handler.socialoauth.workers.dev/callback
                         </div>
                     </div>
                 </div>
-                
-                <!-- Implementation Guide -->
+
+                <!-- Best Practices -->
                 <div class="card">
-                    <h2>💻 Implementation Guide</h2>
-                    
-                    <div class="warning-box">
-                        <h4>🔑 Critical: Capturing Platform User ID</h4>
-                        <p>After OAuth completion, you <strong>MUST</strong> capture the platform user ID to make token requests.</p>
-                    </div>
-                    
-                    <h3>Frontend Implementation (JavaScript)</h3>
-                    <div class="code-block">
-// 1. Set up OAuth callback listener (BEFORE opening popup)
-window.addEventListener('message', (event) => {
-&nbsp;&nbsp;if (event.origin !== 'https://oauth-handler.socialoauth.workers.dev') return;
-&nbsp;&nbsp;
-&nbsp;&nbsp;if (event.data.type === 'oauth_success') {
-&nbsp;&nbsp;&nbsp;&nbsp;const platformUserId = event.data.userId;  // "822389666895701"
-&nbsp;&nbsp;&nbsp;&nbsp;const platform = event.data.platform;      // "facebook"
-&nbsp;&nbsp;&nbsp;&nbsp;
-&nbsp;&nbsp;&nbsp;&nbsp;// SAVE THIS ID! You need it for all token requests
-&nbsp;&nbsp;&nbsp;&nbsp;saveUserOAuthData(platform, platformUserId);
-&nbsp;&nbsp;}
-});
-
-// 2. Start OAuth flow
-async function startOAuth(platform) {
-&nbsp;&nbsp;const response = await fetch('/consent/' + platform + '/' + API_KEY);
-&nbsp;&nbsp;const { consentUrl } = await response.json();
-&nbsp;&nbsp;
-&nbsp;&nbsp;// Open popup window
-&nbsp;&nbsp;window.open(consentUrl, 'oauth', 'width=500,height=600');
-}
-                    </div>
-                    
-                    <h3>Backend Implementation (Node.js)</h3>
-                    <div class="code-block">
-const API_KEY = 'sk_your_api_key_here';
-const BASE_URL = 'https://oauth-handler.socialoauth.workers.dev';
-
-// Get access token for API calls
-async function getAccessToken(platformUserId) {
-&nbsp;&nbsp;const response = await fetch(BASE_URL + '/tokens/' + platformUserId + '/' + API_KEY);
-&nbsp;&nbsp;const data = await response.json();
-&nbsp;&nbsp;
-&nbsp;&nbsp;if (!response.ok) throw new Error(data.error);
-&nbsp;&nbsp;return data.accessToken;
-}
-
-// Use token for platform API calls
-async function callFacebookAPI(accessToken) {
-&nbsp;&nbsp;const response = await fetch('https://graph.facebook.com/me', {
-&nbsp;&nbsp;&nbsp;&nbsp;headers: { 'Authorization': 'Bearer ' + accessToken }
-&nbsp;&nbsp;});
-&nbsp;&nbsp;return response.json();
-}
-                    </div>
-                    
-                    <h3>Python Implementation</h3>
-                    <div class="code-block">
-import requests
-
-API_KEY = 'sk_your_api_key_here'
-BASE_URL = 'https://oauth-handler.socialoauth.workers.dev'
-
-def get_access_token(platform_user_id):
-&nbsp;&nbsp;&nbsp;&nbsp;url = f"{BASE_URL}/tokens/{platform_user_id}/{API_KEY}"
-&nbsp;&nbsp;&nbsp;&nbsp;response = requests.get(url)
-&nbsp;&nbsp;&nbsp;&nbsp;response.raise_for_status()
-&nbsp;&nbsp;&nbsp;&nbsp;return response.json()['accessToken']
-
-def call_facebook_api(access_token):
-&nbsp;&nbsp;&nbsp;&nbsp;headers = {'Authorization': f'Bearer {access_token}'}
-&nbsp;&nbsp;&nbsp;&nbsp;response = requests.get('https://graph.facebook.com/me', headers=headers)
-&nbsp;&nbsp;&nbsp;&nbsp;return response.json()
-                    </div>
-                </div>
-                
-                <!-- Security & Best Practices -->
-                <div class="card">
-                    <h2>🔐 Security & Best Practices</h2>
+                    <h2>🔐 Security Best Practices</h2>
                     
                     <h3>API Key Security</h3>
                     <ul>
-                        <li>✅ Keep API keys secret - never expose in client-side code</li>
-                        <li>✅ Use OAuth Hub from your backend server only</li>
-                        <li>✅ Rotate keys regularly for enhanced security</li>
-                        <li>✅ Use HTTPS for all API calls</li>
+                        <li>✅ Keep API keys on your backend server only</li>
+                        <li>✅ Never expose API keys in client-side JavaScript</li>
+                        <li>✅ Use environment variables for API key storage</li>
+                        <li>✅ Rotate keys regularly</li>
                     </ul>
-                    
+
+                    <h3>Platform User ID Storage</h3>
+                    <ul>
+                        <li>✅ Store platform user IDs securely in your database</li>
+                        <li>✅ Associate them with your internal user IDs</li>
+                        <li>✅ Never expose platform user IDs publicly</li>
+                        <li>✅ Use them only for token retrieval</li>
+                    </ul>
+
                     <h3>OAuth Security</h3>
                     <ul>
-                        <li>✅ Use unique state parameters to prevent CSRF attacks</li>
-                        <li>✅ Verify message origins in OAuth callbacks</li>
-                        <li>✅ Store platform user IDs securely in your database</li>
-                        <li>✅ Tokens are automatically encrypted and stored securely</li>
+                        <li>✅ Always use HTTPS for API calls</li>
+                        <li>✅ Validate popup window origins</li>
+                        <li>✅ Handle popup blockers gracefully</li>
+                        <li>✅ Implement proper error handling</li>
                     </ul>
                 </div>
-                
-                <!-- Error Handling -->
+
+                <!-- Common Issues -->
                 <div class="card">
-                    <h2>🚨 Error Handling</h2>
+                    <h2>🚨 Troubleshooting</h2>
                     
-                    <h3>Common HTTP Status Codes</h3>
-                    <ul>
-                        <li><code>200</code> - Success</li>
-                        <li><code>400</code> - Bad Request (missing parameters)</li>
-                        <li><code>401</code> - Unauthorized (invalid API key)</li>
-                        <li><code>404</code> - Not Found (no tokens found)</li>
-                        <li><code>500</code> - Internal Server Error</li>
-                    </ul>
-                    
-                    <h3>Error Response Format</h3>
+                    <h3>Popup Blocked</h3>
                     <div class="code-block">
-{
-&nbsp;&nbsp;"error": "Error message",
-&nbsp;&nbsp;"message": "Additional details (optional)"
+// Check if popup was blocked
+const popup = window.open(consentUrl, 'oauth', 'width=500,height=600');
+
+if (!popup || popup.closed || typeof popup.closed == 'undefined') {
+  alert('Please allow popups for this site to connect social accounts');
+}
+                    </div>
+
+                    <h3>Cross-Origin Issues</h3>
+                    <p>The OAuth popup helper handles cross-origin communication automatically. If you're implementing your own solution, ensure you:</p>
+                    <ul>
+                        <li>Listen for <code>postMessage</code> events</li>
+                        <li>Validate the origin is <code>https://oauth-handler.socialoauth.workers.dev</code></li>
+                        <li>Handle both <code>oauth_complete</code> and <code>oauth_error</code> message types</li>
+                    </ul>
+
+                    <h3>Token Expiration</h3>
+                    <p>Tokens are automatically refreshed when you call the <code>/tokens</code> endpoint. If you need to handle expiration manually:</p>
+                    <div class="code-block">
+if (tokens.expiresAt < Date.now()) {
+  // Token expired, fetch fresh one
+  const freshTokens = await getTokens(platformUserId, apiKey);
 }
                     </div>
                 </div>
-                
             </div>
         </main>
     </div>
     
     ${getSharedScript()}
     <script>
-        // Show platform URL on hover for platform cards
-        document.querySelectorAll('.platform-card').forEach(card => {
-            card.addEventListener('click', function() {
-                const link = this.querySelector('.platform-url');
-                if (link) {
-                    link.click();
-                }
-            });
-        });
-        
         // Smooth scrolling for any internal links
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {

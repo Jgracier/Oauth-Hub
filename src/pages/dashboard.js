@@ -4,7 +4,7 @@
 
 import { getNavigation, getSharedScript } from '../shared/navigation.js';
 
-export function getDashboardPage(UNIFIED_CSS) {
+export function getDashboardPage(UNIFIED_CSS, userData = {}) {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -15,7 +15,7 @@ export function getDashboardPage(UNIFIED_CSS) {
 </head>
 <body>
     <div class="app-layout">
-        ${getNavigation('dashboard')}
+        ${getNavigation('dashboard', userData)}
         
         <main class="main">
             <div class="container">
@@ -100,15 +100,15 @@ export function getDashboardPage(UNIFIED_CSS) {
         async function loadDashboardData() {
             try {
                 // Load API keys count
-                const keysResponse = await fetch(\`/user-keys?apiKey=\${apiKey}\`);
-                if (keysResponse.ok) {
+                const keysResponse = await window.apiCall('/user-keys');
+                if (keysResponse && keysResponse.ok) {
                     const keysData = await keysResponse.json();
                     document.getElementById('api-keys-count').textContent = keysData.keys ? keysData.keys.length : 0;
                 }
                 
                 // Load apps count  
-                const appsResponse = await fetch(\`/user-apps?apiKey=\${apiKey}\`);
-                if (appsResponse.ok) {
+                const appsResponse = await window.apiCall('/user-apps');
+                if (appsResponse && appsResponse.ok) {
                     const appsData = await appsResponse.json();
                     document.getElementById('apps-count').textContent = appsData.apps ? appsData.apps.length : 0;
                 }

@@ -125,11 +125,7 @@ export function getAuthPage(UNIFIED_CSS) {
                 const result = await response.json();
                 
                 if (response.ok) {
-                    // Store API key and user info
-                    localStorage.setItem('apiKey', result.apiKey);
-                    localStorage.setItem('userEmail', result.email);
-                    localStorage.setItem('userName', result.name);
-                    
+                    // Session is set via secure cookie, no need for localStorage
                     showMessage('Success! Redirecting to dashboard...', false);
                     
                     setTimeout(() => {
@@ -143,10 +139,8 @@ export function getAuthPage(UNIFIED_CSS) {
             }
         });
         
-        // Check if already logged in
-        if (localStorage.getItem('apiKey')) {
-            window.location.href = '/dashboard';
-        }
+        // Check if already logged in via session cookie
+        // This will be handled server-side, so we can remove this check
     </script>
 </body>
 </html>`;

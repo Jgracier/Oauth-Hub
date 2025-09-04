@@ -2,7 +2,7 @@
 // 🧭 NAVIGATION COMPONENT - Shared navigation across all pages
 // =============================================================================
 
-export function getNavigation(activePage = '') {
+export function getNavigation(activePage = '', userData = {}) {
   return `
     <header class="header">
         <div class="header-content">
@@ -20,7 +20,7 @@ export function getNavigation(activePage = '') {
             </nav>
             
             <div style="display: flex; align-items: center; gap: var(--space-4);">
-                <span id="user-email" style="color: var(--gray-600);"></span>
+                <span id="user-email" style="color: var(--gray-600);">${userData.email || ''}</span>
                 <button onclick="logout()" class="btn btn-secondary">Logout</button>
             </div>
         </div>
@@ -31,29 +31,47 @@ export function getNavigation(activePage = '') {
 export function getSharedScript() {
   return `
     <script>
-        // Check authentication for all pages
-        const apiKey = localStorage.getItem('apiKey');
-        const userEmail = localStorage.getItem('userEmail');
-        
-        if (!apiKey && window.location.pathname !== '/auth' && window.location.pathname !== '/') {
-            window.location.href = '/auth';
-        }
-        
-        // Display user info if available
-        if (userEmail) {
-            document.getElementById('user-email').textContent = userEmail;
-        }
+        // Session authentication is now handled server-side
+        // No need to check localStorage
         
         // Global logout function
-        function logout() {
-            localStorage.removeItem('apiKey');
-            localStorage.removeItem('userEmail');
-            localStorage.removeItem('userName');
+        async function logout() {
+            try {
+                await fetch('/auth/logout', { 
+                    method: 'POST',
+                    credentials: 'include' 
+                });
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
             window.location.href = '/auth';
         }
         
         // Make logout function globally accessible
         window.logout = logout;
+        
+        // Helper function to make authenticated API calls
+        async function apiCall(url, options = {}) {
+            const response = await fetch(url, {
+                ...options,
+                credentials: 'include', // Always include cookies
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...options.headers
+                }
+            });
+            
+            if (response.status === 401) {
+                // Session expired or invalid
+                window.location.href = '/auth';
+                return null;
+            }
+            
+            return response;
+        }
+        
+        // Make apiCall globally accessible
+        window.apiCall = apiCall;
     </script>
   `;
 }
