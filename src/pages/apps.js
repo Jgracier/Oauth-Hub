@@ -706,7 +706,9 @@ export function getAppsPage(UNIFIED_CSS) {
         // Load user's apps
         async function loadApps() {
             try {
-                const response = await fetch(\`/user-apps?email=\${encodeURIComponent(localStorage.getItem('userEmail'))}\`);
+                const response = await fetch('/user-apps', {
+                    credentials: 'include' // Include session cookie
+                });
                 if (response.ok) {
                     const data = await response.json();
                     userApps = data.apps || [];

@@ -58,26 +58,46 @@ async function validateApiKey(apiKey, env) {
   return null;
 }
 
-// Helper function to find user by email by searching through entries
+// Helper function to find user by email using optimized lookup
 async function findUserByEmail(email, env) {
-  const { keys } = await env.USERS.list();
-  
-  for (const keyInfo of keys) {
-    if (keyInfo.name.startsWith('user ')) {
-      const userData = await env.USERS.get(keyInfo.name);
+  try {
+    // First try the optimized email lookup
+    const userId = await env.USERS.get(`email:${email}`);
+    if (userId) {
+      const userData = await env.USERS.get(`user:${userId}`);
       if (userData) {
         const parsedUser = JSON.parse(userData);
-        if (parsedUser.email === email) {
-          return {
-            userData: parsedUser,
-            userKey: keyInfo.name
-          };
+        return {
+          userData: parsedUser,
+          userKey: `user:${userId}`
+        };
+      }
+    }
+    
+    // Fallback: search through all entries (for backward compatibility)
+    const { keys } = await env.USERS.list();
+    
+    for (const keyInfo of keys) {
+      // Check both old format (user FirstName LastName email) and new format (user:UUID)
+      if (keyInfo.name.startsWith('user ') || keyInfo.name.startsWith('user:')) {
+        const userData = await env.USERS.get(keyInfo.name);
+        if (userData) {
+          const parsedUser = JSON.parse(userData);
+          if (parsedUser.email === email) {
+            return {
+              userData: parsedUser,
+              userKey: keyInfo.name
+            };
+          }
         }
       }
     }
+    
+    return null;
+  } catch (error) {
+    console.error('Error finding user by email:', error);
+    return null;
   }
-  
-  return null;
 }
 
 // Import OAuth backend
@@ -119,6 +139,11 @@ export default {
       // Authentication (Login/Signup)
       if (path === '/auth' && method === 'POST') {
         return await handleAuth(request, env, corsHeaders);
+      }
+      
+      // Password Reset for Migrated Users
+      if (path === '/reset-password' && method === 'POST') {
+        return await handlePasswordReset(request, env, corsHeaders);
       }
       
       // Serve OAuth popup helper script
@@ -367,6 +392,16 @@ async function handleAuth(request, env, corsHeaders) {
       
       const user = userResult.userData;
       
+      // Check if user has password data (migrated users might not)
+      if (!user.passwordSalt || !user.passwordHash) {
+        return jsonResponse({ 
+          error: 'Password reset required', 
+          message: 'Your account was migrated and requires a password reset. Please use the password reset feature.',
+          requiresPasswordReset: true,
+          email: user.email
+        }, 401, corsHeaders);
+      }
+      
       // Verify password
       const isValidPassword = await verifyPassword(password, user.passwordSalt, user.passwordHash);
       if (!isValidPassword) {
@@ -396,6 +431,64 @@ async function handleAuth(request, env, corsHeaders) {
     
   } catch (error) {
     return jsonResponse({ error: 'Authentication failed', message: error.message }, 500, corsHeaders);
+  }
+}
+
+// Password reset handler for migrated users
+async function handlePasswordReset(request, env, corsHeaders) {
+  try {
+    const data = await parseJsonBody(request);
+    const { email, newPassword } = data;
+    
+    if (!validateEmail(email) || !newPassword || newPassword.length < 8) {
+      return jsonResponse({ error: 'Invalid email or password (minimum 8 characters)' }, 400, corsHeaders);
+    }
+    
+    // Find user by email
+    const userResult = await findUserByEmail(email, env);
+    if (!userResult) {
+      return jsonResponse({ error: 'User not found' }, 404, corsHeaders);
+    }
+    
+    const user = userResult.userData;
+    
+    // Generate new password hash
+    const { salt, hash } = await hashPassword(newPassword);
+    
+    // Update user with new password
+    const updatedUser = {
+      ...user,
+      passwordSalt: salt,
+      passwordHash: hash,
+      updatedAt: new Date().toISOString(),
+      tempPassword: false,
+      mustChangePassword: false,
+      passwordResetAt: new Date().toISOString()
+    };
+    
+    // Store updated user data
+    await env.USERS.put(`user:${user.id}`, JSON.stringify(updatedUser));
+    
+    // Generate JWT session token for immediate login
+    const sessionToken = await generateJWT({
+      userId: user.id,
+      email: user.email,
+      name: user.name,
+      exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60) // 24 hours
+    }, null, env);
+    
+    return jsonResponse({
+      success: true,
+      email: user.email,
+      name: user.name,
+      message: 'Password reset successfully. You are now logged in.'
+    }, 200, {
+      ...corsHeaders,
+      'Set-Cookie': createSessionCookie(sessionToken)
+    });
+    
+  } catch (error) {
+    return jsonResponse({ error: 'Password reset failed', message: error.message }, 500, corsHeaders);
   }
 }
 
