@@ -6,6 +6,7 @@
 export async function generateJWT(payload, secret, env) {
   // Use environment variable if available, fallback for development
   const jwtSecret = secret || env?.JWT_SECRET || 'development-secret-change-in-production';
+  
   const header = {
     alg: 'HS256',
     typ: 'JWT'

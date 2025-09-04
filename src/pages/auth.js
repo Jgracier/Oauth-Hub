@@ -45,7 +45,7 @@ export function getAuthPage(UNIFIED_CSS) {
                         
                         <div class="form-group">
                             <label class="form-label">Password</label>
-                            <input type="password" id="password" class="form-input" placeholder="Enter your password" required>
+                            <input type="password" id="password" class="form-input" placeholder="Enter your password (min 8 chars)" required minlength="8">
                         </div>
                         
                         <div id="signup-fields" style="display: none;">
@@ -103,6 +103,11 @@ export function getAuthPage(UNIFIED_CSS) {
             const password = document.getElementById('password').value;
             const fullName = document.getElementById('fullName').value;
             
+            if (password.length < 8) {
+                showMessage('Password must be at least 8 characters long', true);
+                return;
+            }
+            
             const data = {
                 mode: currentMode,
                 email,
@@ -119,6 +124,7 @@ export function getAuthPage(UNIFIED_CSS) {
                     headers: {
                         'Content-Type': 'application/json'
                     },
+                    credentials: 'include', // Important for session cookies
                     body: JSON.stringify(data)
                 });
                 

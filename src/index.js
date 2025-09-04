@@ -212,10 +212,10 @@ export default {
       // Health Check
       if (path === '/health') {
         return jsonResponse({
-          status: '✅ OAuth Hub Online - Modular v2.0',
-          version: '2.0-modular',
+          status: '✅ OAuth Hub Online - Modular v3.0',
+          version: '3.0-secure',
           timestamp: new Date().toISOString(),
-          features: ['Authentication', 'API Keys', 'OAuth Apps', 'Token Management', 'Analytics']
+          features: ['Authentication', 'API Keys', 'OAuth Apps', 'Token Management', 'Analytics', 'Direct Platform User ID Return']
         }, 200, corsHeaders);
       }
 
@@ -228,29 +228,34 @@ export default {
         return htmlResponse(getAuthPage(UNIFIED_CSS));
       }
 
-      // Dashboard Page
+      // Dashboard Page (require auth)
       if (path === '/dashboard') {
-        return htmlResponse(getDashboardPage(UNIFIED_CSS));
+        // User data is attached by auth middleware
+        const userData = request.user || {};
+        return htmlResponse(getDashboardPage(UNIFIED_CSS, userData));
       }
 
-      // API Keys Page
+      // API Keys Page (require auth)
       if (path === '/api-keys') {
-        return htmlResponse(getApiKeysPage(UNIFIED_CSS));
+        const userData = request.user || {};
+        return htmlResponse(getApiKeysPage(UNIFIED_CSS, userData));
       }
 
-      // App Credentials Page
+      // App Credentials Page (require auth)
       if (path === '/apps') {
-        return htmlResponse(getAppsPage(UNIFIED_CSS));
+        const userData = request.user || {};
+        return htmlResponse(getAppsPage(UNIFIED_CSS, userData));
       }
 
-      // Documentation Page
+      // Documentation Page (public)
       if (path === '/docs') {
         return htmlResponse(getDocsPage(UNIFIED_CSS));
       }
 
-      // Analytics Page
+      // Analytics Page (require auth)
       if (path === '/analytics') {
-        return htmlResponse(getAnalyticsPage(UNIFIED_CSS));
+        const userData = request.user || {};
+        return htmlResponse(getAnalyticsPage(UNIFIED_CSS, userData));
       }
 
       // 404 Not Found
@@ -313,8 +318,6 @@ async function handleAuth(request, env, corsHeaders) {
         ...userData,
         userId: userId // Include user ID in data
       }));
-      
-      // No lookup entry needed - search directly through user entries
       
       // Generate JWT session token
       const sessionToken = await generateJWT({
@@ -400,7 +403,10 @@ async function handleAuth(request, env, corsHeaders) {
 async function generateUserApiKey(request, env, corsHeaders) {
   try {
     const data = await parseJsonBody(request);
-    const { email, name } = data;
+    const { name } = data;
+    
+    // Get email from authenticated user
+    const email = request.user?.email || request.user?.userEmail;
     
     // Validate required fields
     if (!email || !name) {
@@ -508,7 +514,10 @@ async function getUserApiKeys(request, env, corsHeaders) {
 async function saveAppCredentials(request, env, corsHeaders) {
   try {
     const data = await parseJsonBody(request);
-    const { email, platform, name, clientId, clientSecret, scopes, redirectUri } = data;
+    const { platform, name, clientId, clientSecret, scopes, redirectUri } = data;
+    
+    // Get email from authenticated user
+    const email = request.user?.email || request.user?.userEmail;
     
     // Validate required fields
     if (!email || !platform || !clientId || !clientSecret) {

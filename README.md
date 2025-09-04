@@ -138,7 +138,7 @@ npx wrangler deploy
 
 If you're currently using webhooks:
 
-1. Replace webhook endpoint with the popup helper.
+1. Replace webhook endpoint with the popup helper
 2. Remove webhook configuration code  
 3. Update OAuth button to use `OAuthHub.connect()`
 4. Platform user IDs now returned directly - no polling needed!
