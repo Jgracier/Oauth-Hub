@@ -41,7 +41,7 @@ export async function verifyJWT(token, secret, env) {
   const jwtSecret = secret || env?.JWT_SECRET || 'development-secret-change-in-production';
   try {
     const [header, payload, signature] = token.split('.');
-    
+
     const key = await crypto.subtle.importKey(
       'raw',
       new TextEncoder().encode(jwtSecret),
@@ -49,9 +49,14 @@ export async function verifyJWT(token, secret, env) {
       false,
       ['verify']
     );
-    
+
+    // Restore base64 padding that was removed during generation
+    const paddedHeader = header + '='.repeat((4 - header.length % 4) % 4);
+    const paddedPayload = payload + '='.repeat((4 - payload.length % 4) % 4);
+    const paddedSignature = signature + '='.repeat((4 - signature.length % 4) % 4);
+
     const data = `${header}.${payload}`;
-    const signatureBytes = Uint8Array.from(atob(signature), c => c.charCodeAt(0));
+    const signatureBytes = Uint8Array.from(atob(paddedSignature), c => c.charCodeAt(0));
     
     const valid = await crypto.subtle.verify(
       'HMAC',
@@ -61,8 +66,8 @@ export async function verifyJWT(token, secret, env) {
     );
     
     if (!valid) return null;
-    
-    const decodedPayload = JSON.parse(atob(payload));
+
+    const decodedPayload = JSON.parse(atob(paddedPayload));
     
     // Check expiration
     if (decodedPayload.exp && decodedPayload.exp < Date.now() / 1000) {
