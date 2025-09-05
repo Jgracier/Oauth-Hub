@@ -447,12 +447,26 @@ async function handleAuth(request, env, corsHeaders) {
       
       // Generate JWT session token
       const jwtSecret = env?.JWT_SECRET || 'development-secret-change-in-production';
-      const sessionToken = await generateJWT({
+      const sessionPayload = {
         userId: user.id,
         email: user.email,
         name: user.name,
         exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60) // 24 hours
-      }, jwtSecret, env);
+      };
+
+      console.log('🔑 Login - Generating JWT:', {
+        userId: user.id,
+        email: user.email,
+        jwtSecretLength: jwtSecret.length,
+        expTime: new Date(sessionPayload.exp * 1000).toISOString()
+      });
+
+      const sessionToken = await generateJWT(sessionPayload, jwtSecret, env);
+
+      console.log('🔑 Login - JWT Generated:', {
+        tokenLength: sessionToken.length,
+        hasThreeParts: sessionToken.split('.').length === 3
+      });
       
       return jsonResponse({
         success: true,

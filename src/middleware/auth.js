@@ -39,15 +39,30 @@ export async function authMiddleware(request, env, ctx) {
   
   // Verify JWT session
   const jwtSecret = env?.JWT_SECRET || 'development-secret-change-in-production';
+
+  console.log('🔐 Auth Middleware - Session Check:', {
+    hasSessionCookie: !!session,
+    sessionLength: session?.length || 0,
+    jwtSecretLength: jwtSecret.length,
+    path: new URL(request.url).pathname
+  });
+
   const userData = await verifyJWT(session, jwtSecret, env);
-  
+
+  console.log('🔐 Auth Middleware - JWT Verification:', {
+    sessionValid: !!userData,
+    userData: userData ? { userId: userData.userId, email: userData.email } : null,
+    path: new URL(request.url).pathname
+  });
+
   if (!userData) {
+    console.log('🔐 Auth Middleware - Invalid session, clearing cookie');
     // Clear invalid session
     return new Response(JSON.stringify({ error: 'Invalid session' }), {
       status: 401,
       headers: {
         'Content-Type': 'application/json',
-        'Set-Cookie': 'session=; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=0'
+        'Set-Cookie': 'session=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0'
       }
     });
   }

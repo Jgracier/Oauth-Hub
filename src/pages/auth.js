@@ -160,13 +160,31 @@ export function getAuthPage(UNIFIED_CSS) {
                 const result = await response.json();
                 
                 if (response.ok) {
+                    // Debug: Check if session cookie was set
+                    console.log('🔑 Login successful - checking session cookie...');
+                    console.log('🔑 Response headers:', [...response.headers.entries()]);
+
+                    // Check for session cookie in response
+                    const setCookieHeader = response.headers.get('Set-Cookie');
+                    console.log('🔑 Set-Cookie header:', setCookieHeader);
+
                     // Session is set via secure cookie, no need for localStorage
                     const message = currentMode === 'reset' ? 'Password reset successfully! Redirecting to dashboard...' : 'Success! Redirecting to dashboard...';
                     showMessage(message, false);
-                    
-                    setTimeout(() => {
+
+                    // Debug: Check session status before redirect
+                    setTimeout(async () => {
+                        try {
+                            console.log('🔍 Checking session status before redirect...');
+                            const debugResponse = await fetch('/debug-session', { credentials: 'include' });
+                            const debugData = await debugResponse.json();
+                            console.log('🔍 Session debug result:', debugData);
+                        } catch (e) {
+                            console.log('🔍 Session debug failed:', e);
+                        }
+
                         window.location.href = '/dashboard';
-                    }, 1500);
+                    }, 1000);
                 } else {
                     // Check if this is a password reset required error
                     if (result.requiresPasswordReset) {
@@ -180,6 +198,9 @@ export function getAuthPage(UNIFIED_CSS) {
             }
         });
         
+        // Debug: Check current cookies
+        console.log('🍪 Current cookies:', document.cookie);
+
         // Check if already logged in via session cookie
         // This will be handled server-side, so we can remove this check
     </script>

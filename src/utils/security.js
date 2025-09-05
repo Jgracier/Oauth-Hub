@@ -54,7 +54,12 @@ export async function verifyJWT(token, secret, env) {
     );
     
     const data = `${header}.${payload}`;
-    const signatureBytes = Uint8Array.from(atob(signature.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
+    // Convert URL-safe base64 back to regular base64 and add padding
+    let regularBase64 = signature.replace(/-/g, '+').replace(/_/g, '/');
+    while (regularBase64.length % 4 !== 0) {
+      regularBase64 += '=';
+    }
+    const signatureBytes = Uint8Array.from(atob(regularBase64), c => c.charCodeAt(0));
     
     const valid = await crypto.subtle.verify(
       'HMAC',
@@ -65,7 +70,12 @@ export async function verifyJWT(token, secret, env) {
     
     if (!valid) return null;
     
-    const decodedPayload = JSON.parse(atob(payload));
+    // Handle base64 padding for payload decoding
+    let paddedPayload = payload;
+    while (paddedPayload.length % 4 !== 0) {
+      paddedPayload += '=';
+    }
+    const decodedPayload = JSON.parse(atob(paddedPayload));
     
     // Check expiration
     if (decodedPayload.exp && decodedPayload.exp < Date.now() / 1000) {
