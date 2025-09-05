@@ -200,9 +200,9 @@ export function getDocsPage(UNIFIED_CSS) {
                                 <li>Sign up for OAuth Hub</li>
                                 <li>Go to <a href="/api-keys">API Keys</a></li>
                                 <li>Generate new key (starts with <code>sk_</code>)</li>
-                            </ul>
-                        </div>
-                        
+                        </ul>
+                    </div>
+
                         <div>
                             <h3>2️⃣ Create OAuth Apps</h3>
                             <ul>
@@ -210,8 +210,8 @@ export function getDocsPage(UNIFIED_CSS) {
                                 <li>Create OAuth applications</li>
                                 <li>Use the callback URL above</li>
                             </ul>
-                        </div>
-                        
+                    </div>
+
                         <div>
                             <h3>3️⃣ Add Credentials</h3>
                             <ul>
@@ -219,9 +219,9 @@ export function getDocsPage(UNIFIED_CSS) {
                                 <li>Add Client ID & Secret</li>
                                 <li>Configure scopes</li>
                             </ul>
-                        </div>
                     </div>
-                    
+                </div>
+
                     <h3>🔗 Platform Developer Portals</h3>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-3); margin: var(--space-4) 0;">
                         <a href="https://developers.facebook.com/" target="_blank" class="platform-card" style="text-decoration: none; color: inherit;">
@@ -253,9 +253,51 @@ export function getDocsPage(UNIFIED_CSS) {
                             <h4>TikTok</h4>
                             <p style="margin: 0; font-size: 0.875rem; color: var(--gray-600);">Login Kit & API</p>
                         </a>
+                        
+                        <a href="https://developer.wordpress.com/apps/" target="_blank" class="platform-card" style="text-decoration: none; color: inherit;">
+                            <div style="font-size: 1.5rem; margin-bottom: var(--space-2);">📝</div>
+                            <h4>WordPress.com</h4>
+                            <p style="margin: 0; font-size: 0.875rem; color: var(--gray-600);">Sites & Content API</p>
+                        </a>
+                        
+                        <a href="https://www.reddit.com/dev/api/" target="_blank" class="platform-card" style="text-decoration: none; color: inherit;">
+                            <div style="font-size: 1.5rem; margin-bottom: var(--space-2);">🔴</div>
+                            <h4>Reddit</h4>
+                            <p style="margin: 0; font-size: 0.875rem; color: var(--gray-600);">Posts & Communities</p>
+                        </a>
+                        
+                        <a href="https://github.com/settings/developers" target="_blank" class="platform-card" style="text-decoration: none; color: inherit;">
+                            <div style="font-size: 1.5rem; margin-bottom: var(--space-2);">🐙</div>
+                            <h4>GitHub</h4>
+                            <p style="margin: 0; font-size: 0.875rem; color: var(--gray-600);">Repositories & Code</p>
+                        </a>
+                        
+                        <a href="https://developer.spotify.com/dashboard" target="_blank" class="platform-card" style="text-decoration: none; color: inherit;">
+                            <div style="font-size: 1.5rem; margin-bottom: var(--space-2);">🎵</div>
+                            <h4>Spotify</h4>
+                            <p style="margin: 0; font-size: 0.875rem; color: var(--gray-600);">Music & Playlists</p>
+                        </a>
+                        
+                        <a href="https://dev.twitch.tv/console" target="_blank" class="platform-card" style="text-decoration: none; color: inherit;">
+                            <div style="font-size: 1.5rem; margin-bottom: var(--space-2);">🎮</div>
+                            <h4>Twitch</h4>
+                            <p style="margin: 0; font-size: 0.875rem; color: var(--gray-600);">Streaming & Chat</p>
+                        </a>
+                        
+                        <a href="https://api.slack.com/apps" target="_blank" class="platform-card" style="text-decoration: none; color: inherit;">
+                            <div style="font-size: 1.5rem; margin-bottom: var(--space-2);">💬</div>
+                            <h4>Slack</h4>
+                            <p style="margin: 0; font-size: 0.875rem; color: var(--gray-600);">Workspace & Teams</p>
+                        </a>
+                        
+                        <a href="https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps" target="_blank" class="platform-card" style="text-decoration: none; color: inherit;">
+                            <div style="font-size: 1.5rem; margin-bottom: var(--space-2);">🏢</div>
+                            <h4>Microsoft</h4>
+                            <p style="margin: 0; font-size: 0.875rem; color: var(--gray-600);">Office 365 & Azure</p>
+                        </a>
                     </div>
-                </div>
-                
+                    </div>
+
                 <!-- API Usage -->
                 <div class="card">
                     <h2>💻 Implementation</h2>
@@ -319,22 +361,22 @@ console.log('Token:', result.tokens.accessToken);`, 'javascript', 'Complete impl
                         <div style="min-width: 0;">
                             <h4>⚛️ React</h4>
                             ${createCodeBlock(`const [user, setUser] = useState({});
-const [loading, setLoading] = useState(false);
-
+  const [loading, setLoading] = useState(false);
+  
 const handleConnect = async (platform) => {
-  setLoading(true);
+    setLoading(true);
   try {
     const result = await connectSocial(platform, 'sk_your_key');
     setUser(prev => ({
-      ...prev,
+        ...prev,
       [\`\${platform}Id\`]: result.platformUserId,
       [\`\${platform}Connected\`]: true
     }));
-  } catch (error) {
+    } catch (error) {
     alert('Connection failed: ' + error.message);
-  } finally {
-    setLoading(false);
-  }
+    } finally {
+      setLoading(false);
+    }
 };`, 'javascript')}
                         </div>
                         
@@ -355,19 +397,19 @@ const handleConnect = async (platform) => {
     loading.value = false;
   }
 };`, 'javascript')}
-                        </div>
                     </div>
-                    
+                </div>
+
                     <h3>🔗 API Endpoints</h3>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: var(--space-4); margin: var(--space-4) 0; max-width: 100%;">
                         <div class="endpoint" style="min-width: 0;">
                             <div style="display: flex; align-items: center; margin-bottom: var(--space-2); flex-wrap: wrap; gap: var(--space-2);">
                                 <span class="method get">GET</span>
                                 <code style="word-break: break-all;">/consent/{platform}/{apiKey}</code>
-                            </div>
-                            <p>Get OAuth authorization URL</p>
                         </div>
-                        
+                            <p>Get OAuth authorization URL</p>
+                    </div>
+
                         <div class="endpoint" style="min-width: 0;">
                             <div style="display: flex; align-items: center; margin-bottom: var(--space-2); flex-wrap: wrap; gap: var(--space-2);">
                                 <span class="method get">GET</span>
@@ -376,7 +418,7 @@ const handleConnect = async (platform) => {
                             <p>Get fresh access tokens</p>
                         </div>
                     </div>
-                    
+
                     <h3>🌐 Supported Platforms</h3>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: var(--space-2); margin: var(--space-4) 0; text-align: center; max-width: 100%;">
                         <div><div style="font-size: 1.5rem;">📘</div><code>facebook</code></div>
@@ -385,6 +427,156 @@ const handleConnect = async (platform) => {
                         <div><div style="font-size: 1.5rem;">🐦</div><code>twitter</code></div>
                         <div><div style="font-size: 1.5rem;">💼</div><code>linkedin</code></div>
                         <div><div style="font-size: 1.5rem;">🎵</div><code>tiktok</code></div>
+                        <div><div style="font-size: 1.5rem;">🎮</div><code>discord</code></div>
+                        <div><div style="font-size: 1.5rem;">📌</div><code>pinterest</code></div>
+                        <div><div style="font-size: 1.5rem;">📝</div><code>wordpress</code></div>
+                        <div><div style="font-size: 1.5rem;">🔴</div><code>reddit</code></div>
+                        <div><div style="font-size: 1.5rem;">🐙</div><code>github</code></div>
+                        <div><div style="font-size: 1.5rem;">🎵</div><code>spotify</code></div>
+                        <div><div style="font-size: 1.5rem;">🎮</div><code>twitch</code></div>
+                        <div><div style="font-size: 1.5rem;">💬</div><code>slack</code></div>
+                        <div><div style="font-size: 1.5rem;">🏢</div><code>microsoft</code></div>
+                        </div>
+                    </div>
+
+                <!-- WordPress.com Specific -->
+                <div class="card">
+                    <h2>📝 WordPress.com Integration</h2>
+                    
+                    <div class="success-box">
+                        <h4>✨ WordPress.com OAuth2</h4>
+                        <p>WordPress.com uses OAuth2 for secure authentication with fine-grained scope control. <a href="https://developer.wordpress.com/docs/api/oauth2/" target="_blank">Learn more about WordPress.com OAuth2</a>.</p>
+                    </div>
+                    
+                    <h3>🔧 WordPress App Setup</h3>
+                    <ol>
+                        <li><strong>Register your application</strong> at <a href="https://developer.wordpress.com/apps/" target="_blank">WordPress.com Applications Manager</a></li>
+                        <li><strong>Get your credentials:</strong>
+                            <ul>
+                                <li>Client ID (identifies your application)</li>
+                                <li>Client Secret (authenticates your application - keep secure)</li>
+                            </ul>
+                        </li>
+                        <li><strong>Set redirect URI:</strong> <code>https://oauth-handler.socialoauth.workers.dev/callback</code></li>
+                        <li><strong>Configure scopes</strong> based on your needs (posts, media, sites, etc.)</li>
+                    </ol>
+                    
+                    <h3>📋 WordPress Scopes</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: var(--space-3); margin: var(--space-4) 0;">
+                        <div>
+                            <h4>Content Management</h4>
+                            <ul style="font-size: 0.875rem;">
+                                <li><code>posts</code> - Manage posts</li>
+                                <li><code>media</code> - Upload media</li>
+                                <li><code>pages</code> - Manage pages</li>
+                                <li><code>comments</code> - Manage comments</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4>Site Management</h4>
+                            <ul style="font-size: 0.875rem;">
+                                <li><code>sites</code> - Site information</li>
+                                <li><code>themes</code> - Manage themes</li>
+                                <li><code>plugins</code> - Manage plugins</li>
+                                <li><code>users</code> - Manage users</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4>Analytics & Global</h4>
+                            <ul style="font-size: 0.875rem;">
+                                <li><code>stats</code> - Site statistics</li>
+                                <li><code>follows</code> - Followers</li>
+                                <li><code>global</code> - All user sites</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <h3>🔗 WordPress API Usage</h3>
+                    ${createCodeBlock(`// Connect to WordPress.com
+const result = await connectSocial('wordpress', 'sk_your_api_key');
+
+// Use the token with WordPress.com REST API
+const token = result.tokens.accessToken;
+
+// Get user sites
+const sitesResponse = await fetch('https://public-api.wordpress.com/rest/v1/me/sites', {
+  headers: { 'Authorization': \`Bearer \${token}\` }
+});
+const sites = await sitesResponse.json();
+
+// Create a new post
+const postData = {
+  title: 'Hello from OAuth Hub!',
+  content: 'This post was created using OAuth Hub integration.',
+  status: 'publish'
+};
+
+const postResponse = await fetch(\`https://public-api.wordpress.com/rest/v1/sites/\${siteId}/posts/new\`, {
+  method: 'POST',
+  headers: {
+    'Authorization': \`Bearer \${token}\`,
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify(postData)
+});`, 'javascript', 'WordPress.com API integration example')}
+                                    </div>
+                
+                <!-- Platform Showcase -->
+                <div class="card">
+                    <h2>🌟 Platform Showcase</h2>
+                    
+                    <div class="success-box">
+                        <h4>✨ 15 Major Platforms Supported</h4>
+                        <p>OAuth Hub now supports all major social media, developer, music, streaming, workplace, and enterprise platforms with comprehensive scope management.</p>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--space-4); margin: var(--space-4) 0; max-width: 100%;">
+                        <div style="min-width: 0;">
+                            <h4>🌐 Social & Media</h4>
+                            <ul style="font-size: 0.875rem;">
+                                <li><strong>📘 Facebook</strong> - Pages, ads, Instagram integration</li>
+                                <li><strong>📸 Instagram</strong> - Content, stories, business features</li>
+                                <li><strong>🐦 X (Twitter)</strong> - Tweets, follows, engagement</li>
+                                <li><strong>💼 LinkedIn</strong> - Professional profiles, content</li>
+                                <li><strong>🎵 TikTok</strong> - Videos, user info, analytics</li>
+                                <li><strong>🔴 Reddit</strong> - Posts, comments, moderation</li>
+                            </ul>
+                        </div>
+                        <div style="min-width: 0;">
+                            <h4>🎮 Gaming & Streaming</h4>
+                            <ul style="font-size: 0.875rem;">
+                                <li><strong>🎮 Discord</strong> - Servers, bots, rich presence</li>
+                                <li><strong>🎮 Twitch</strong> - Streams, chat, channel management</li>
+                                <li><strong>🎵 Spotify</strong> - Music, playlists, playback control</li>
+                            </ul>
+                            
+                            <h4>💼 Developer & Enterprise</h4>
+                            <ul style="font-size: 0.875rem;">
+                                <li><strong>🐙 GitHub</strong> - Repositories, organizations, packages</li>
+                                <li><strong>💬 Slack</strong> - Workspaces, channels, messaging</li>
+                                <li><strong>🏢 Microsoft</strong> - Office 365, Azure, Teams</li>
+                            </ul>
+                        </div>
+                        <div style="min-width: 0;">
+                            <h4>🎬 Content & Cloud</h4>
+                            <ul style="font-size: 0.875rem;">
+                                <li><strong>🎬 Google</strong> - YouTube, Drive, Gmail, Cloud</li>
+                                <li><strong>📝 WordPress.com</strong> - Sites, posts, media</li>
+                                <li><strong>📌 Pinterest</strong> - Boards, pins, business features</li>
+                            </ul>
+                            
+                            <h4>🔗 Quick Integration</h4>
+                            ${createCodeBlock(`// Connect to any platform
+const platforms = [
+  'facebook', 'google', 'instagram', 'twitter',
+  'linkedin', 'tiktok', 'discord', 'pinterest',
+  'wordpress', 'reddit', 'github', 'spotify',
+  'twitch', 'slack', 'microsoft'
+];
+
+// Universal connection
+const result = await connectSocial(platform, apiKey);`, 'javascript', 'Universal platform support')}
+                        </div>
                     </div>
                 </div>
                 
@@ -395,8 +587,8 @@ const handleConnect = async (platform) => {
                     <div class="warning-box">
                         <h4>🔑 Important</h4>
                         <p>Save the <strong>platformUserId</strong> from the popup result - you need it to retrieve tokens later!</p>
-                    </div>
-                    
+                </div>
+
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--space-4); max-width: 100%;">
                         <div style="min-width: 0;">
                             <h4>🟨 Node.js</h4>
@@ -413,8 +605,8 @@ const token = await getTokens('123456789', 'sk_your_key');
 const profile = await fetch('https://graph.facebook.com/me', {
   headers: { 'Authorization': \`Bearer \${token}\` }
 });`, 'javascript')}
-                        </div>
-                        
+                    </div>
+
                         <div style="min-width: 0;">
                             <h4>🐍 Python</h4>
                             ${createCodeBlock(`import requests
@@ -431,7 +623,7 @@ profile = requests.get('https://graph.facebook.com/me',
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Security & Tips -->
                 <div class="card">
                     <h2>🔐 Security & Tips</h2>
@@ -444,9 +636,9 @@ profile = requests.get('https://graph.facebook.com/me',
                                 <li>Store platform user IDs securely</li>
                                 <li>Use HTTPS for all requests</li>
                                 <li>Tokens auto-refresh when needed</li>
-                            </ul>
-                        </div>
-                        
+                    </ul>
+                </div>
+
                         <div style="min-width: 0;">
                             <h4>📋 Common Status Codes</h4>
                             <ul>
@@ -454,9 +646,9 @@ profile = requests.get('https://graph.facebook.com/me',
                                 <li><code>401</code> - Invalid API key</li>
                                 <li><code>404</code> - No tokens found</li>
                                 <li><code>500</code> - Server error</li>
-                            </ul>
-                        </div>
+                    </ul>
                     </div>
+                </div>
                 </div>
                 
             </div>

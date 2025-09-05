@@ -44,6 +44,41 @@ export function getPlatformConfig(platform, app) {
       authUrl: 'https://www.pinterest.com/oauth/',
       tokenUrl: 'https://api.pinterest.com/v5/oauth/token',
       userInfoUrl: 'https://api.pinterest.com/v5/user_account'
+    },
+    wordpress: {
+      authUrl: 'https://public-api.wordpress.com/oauth2/authorize',
+      tokenUrl: 'https://public-api.wordpress.com/oauth2/token',
+      userInfoUrl: 'https://public-api.wordpress.com/rest/v1/me'
+    },
+    reddit: {
+      authUrl: 'https://www.reddit.com/api/v1/authorize',
+      tokenUrl: 'https://www.reddit.com/api/v1/access_token',
+      userInfoUrl: 'https://oauth.reddit.com/api/v1/me'
+    },
+    github: {
+      authUrl: 'https://github.com/login/oauth/authorize',
+      tokenUrl: 'https://github.com/login/oauth/access_token',
+      userInfoUrl: 'https://api.github.com/user'
+    },
+    spotify: {
+      authUrl: 'https://accounts.spotify.com/authorize',
+      tokenUrl: 'https://accounts.spotify.com/api/token',
+      userInfoUrl: 'https://api.spotify.com/v1/me'
+    },
+    twitch: {
+      authUrl: 'https://id.twitch.tv/oauth2/authorize',
+      tokenUrl: 'https://id.twitch.tv/oauth2/token',
+      userInfoUrl: 'https://api.twitch.tv/helix/users'
+    },
+    slack: {
+      authUrl: 'https://slack.com/oauth/v2/authorize',
+      tokenUrl: 'https://slack.com/api/oauth.v2.access',
+      userInfoUrl: 'https://slack.com/api/users.identity'
+    },
+    microsoft: {
+      authUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
+      tokenUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
+      userInfoUrl: 'https://graph.microsoft.com/v1.0/me'
     }
   };
 
@@ -124,7 +159,14 @@ export async function getUserInfo(platform, accessToken) {
     linkedin: 'https://api.linkedin.com/v2/people/~?projection=(id,firstName,lastName,emailAddress)',
     tiktok: 'https://open-api.tiktok.com/oauth/userinfo/?fields=open_id,union_id,avatar_url,display_name',
     discord: 'https://discord.com/api/users/@me',
-    pinterest: 'https://api.pinterest.com/v5/user_account'
+    pinterest: 'https://api.pinterest.com/v5/user_account',
+    wordpress: 'https://public-api.wordpress.com/rest/v1/me',
+    reddit: 'https://oauth.reddit.com/api/v1/me',
+    github: 'https://api.github.com/user',
+    spotify: 'https://api.spotify.com/v1/me',
+    twitch: 'https://api.twitch.tv/helix/users',
+    slack: 'https://slack.com/api/users.identity',
+    microsoft: 'https://graph.microsoft.com/v1.0/me'
   };
 
   const url = configs[platform.toLowerCase()];
@@ -162,6 +204,27 @@ export async function getUserInfo(platform, accessToken) {
       platformUserId = userInfo.data?.user?.open_id || userInfo.open_id;
       break;
     case 'pinterest':
+      platformUserId = userInfo.id;
+      break;
+    case 'wordpress':
+      platformUserId = userInfo.ID;
+      break;
+    case 'reddit':
+      platformUserId = userInfo.id || userInfo.name;
+      break;
+    case 'github':
+      platformUserId = userInfo.id;
+      break;
+    case 'spotify':
+      platformUserId = userInfo.id;
+      break;
+    case 'twitch':
+      platformUserId = userInfo.data?.[0]?.id || userInfo.id;
+      break;
+    case 'slack':
+      platformUserId = userInfo.user?.id || userInfo.id;
+      break;
+    case 'microsoft':
       platformUserId = userInfo.id;
       break;
     default:
