@@ -141,10 +141,46 @@ export default {
         return await handleAuth(request, env, corsHeaders);
       }
       
-      // Password Reset for Migrated Users
-      if (path === '/reset-password' && method === 'POST') {
-        return await handlePasswordReset(request, env, corsHeaders);
-      }
+        // Password Reset for Migrated Users
+  if (path === '/reset-password' && method === 'POST') {
+    return await handlePasswordReset(request, env, corsHeaders);
+  }
+
+  // Debug endpoint to check session status
+  if (path === '/debug-session' && method === 'GET') {
+    try {
+      const session = getSessionFromCookie(request);
+      const jwtSecret = env?.JWT_SECRET || 'development-secret-change-in-production';
+
+      console.log('🔍 Debug Session Check:', {
+        hasSessionCookie: !!session,
+        sessionLength: session?.length || 0,
+        jwtSecretLength: jwtSecret.length
+      });
+
+      const userData = session ? await verifyJWT(session, jwtSecret, env) : null;
+
+      console.log('🔍 JWT Verification Result:', {
+        sessionValid: !!userData,
+        userData: userData ? { userId: userData.userId, email: userData.email } : null
+      });
+
+      return jsonResponse({
+        hasSession: !!session,
+        sessionValid: !!userData,
+        userData: userData ? { userId: userData.userId, email: userData.email, name: userData.name } : null,
+        sessionLength: session?.length || 0,
+        timestamp: new Date().toISOString()
+      }, 200, corsHeaders);
+    } catch (error) {
+      console.log('🔍 Debug Session Error:', error.message);
+      return jsonResponse({
+        error: error.message,
+        timestamp: new Date().toISOString(),
+        stack: error.stack
+      }, 500, corsHeaders);
+    }
+  }
       
       // Serve OAuth popup helper script
       if (path === '/oauth-popup.js' && method === 'GET') {

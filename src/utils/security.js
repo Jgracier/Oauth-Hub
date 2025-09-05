@@ -198,7 +198,11 @@ export function getSecurityHeaders() {
 
 // Session Cookie Helpers
 export function createSessionCookie(token, maxAge = 86400) {
-  return `session=${token}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=${maxAge}`;
+  // In development, don't use Secure flag to allow localhost
+  const isProduction = typeof globalThis !== 'undefined' && globalThis?.location?.protocol === 'https:';
+  const secureFlag = isProduction ? '; Secure' : '';
+
+  return `session=${token}; HttpOnly${secureFlag}; SameSite=Lax; Path=/; Max-Age=${maxAge}`;
 }
 
 export function getSessionFromCookie(request) {
