@@ -1,23 +1,28 @@
 // =============================================================================
-// 📖 DOCUMENTATION PAGE - API Documentation
+// 📖 DOCUMENTATION PAGE - Streamlined API Documentation
 // =============================================================================
 
 import { getNavigation, getSharedScript } from '../shared/navigation.js';
 
 export function getDocsPage(UNIFIED_CSS) {
-  // Helper function to create code blocks with copy buttons
-  const createCodeBlock = (code, language = 'javascript', title = '') => `
+  // Helper function to create clean code blocks with copy buttons
+  const createCodeBlock = (code, language = 'javascript', title = '') => {
+    const cleanCode = code.trim();
+    const escapedCode = cleanCode.replace(/"/g, '&quot;').replace(/\n/g, '\\n');
+    
+    return `
     <div class="code-block-container">
       <div class="code-block">
         <span class="language-label">${language}</span>
-        <button class="copy-button" onclick="copyToClipboard(this)" data-code="${code.replace(/"/g, '&quot;').replace(/\n/g, '\\n')}">
+        <button class="copy-button" onclick="copyToClipboard(this)" data-code="${escapedCode}">
           📋 Copy
         </button>
-        <pre style="margin: 0; padding-top: var(--space-8);"><code>${code}</code></pre>
+        <pre><code>${cleanCode}</code></pre>
       </div>
-      ${title ? `<p style="margin-top: var(--space-2); color: var(--gray-600); font-size: 0.875rem;">${title}</p>` : ''}
+      ${title ? `<p class="code-title">${title}</p>` : ''}
     </div>
-  `;
+    `;
+  };
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -37,10 +42,20 @@ export function getDocsPage(UNIFIED_CSS) {
             font-size: 0.875rem;
             overflow-x: auto;
             position: relative;
+            transition: border-color 0.2s ease;
+        }
+        .code-block:hover {
+            border-color: var(--primary-400);
         }
         .code-block-container {
             position: relative;
-            margin: var(--space-3) 0;
+            margin: var(--space-4) 0;
+        }
+        .code-title {
+            margin-top: var(--space-2);
+            color: var(--gray-600);
+            font-size: 0.875rem;
+            font-style: italic;
         }
         .copy-button {
             position: absolute;
@@ -138,457 +153,284 @@ export function getDocsPage(UNIFIED_CSS) {
             <div class="container" style="max-width: 1000px;">
                 <div class="page-header">
                     <h1 class="page-title">OAuth Hub Documentation</h1>
-                    <p class="page-description">Complete guide to OAuth token management for all platforms</p>
+                    <p class="page-description">Simple, unified OAuth token management for all social platforms</p>
                 </div>
 
                 <!-- Quick Start Guide -->
                 <div class="card">
-                    <h2>🚀 Quick Start (5 Minutes)</h2>
+                    <h2>🚀 Quick Start</h2>
                     
                     <div class="success-box">
-                        <h4>✅ One Callback URL for All Platforms</h4>
-                        <p>Set this single redirect URI for ALL your OAuth apps:</p>
-                        <div class="code-block" style="text-align: center; font-size: 1rem; font-weight: bold;">
+                        <h4>✨ One URL for Everything</h4>
+                        <p>Use this single redirect URI for ALL your OAuth apps:</p>
+                        <div class="code-block" style="text-align: center; font-size: 1rem; font-weight: bold; background: var(--primary-50); border-color: var(--primary-300);">
                             https://oauth-handler.socialoauth.workers.dev/callback
                         </div>
                     </div>
                     
-                    <h3>Step 1: Get Your API Key</h3>
-                    <ol>
-                        <li>Create an account on OAuth Hub</li>
-                        <li>Go to <a href="/api-keys">API Keys</a> page</li>
-                        <li>Click "Generate API Key" and give it a name</li>
-                        <li>Copy your key (starts with <code>sk_</code>)</li>
-                    </ol>
-                    
-                    <h3>Step 2: Create OAuth Apps</h3>
-                    <p>For each platform you want to use, create an OAuth app in their developer portal and get your Client ID & Secret:</p>
-                    
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--space-4); margin: var(--space-4) 0;">
-                        <div class="platform-card">
-                            <h4>📘 Facebook</h4>
-                            <p>Create apps for Facebook Login & Instagram API</p>
-                            <a href="https://developers.facebook.com/" target="_blank" class="platform-url">
-                                Create Facebook App →
-                            </a>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--space-4); margin: var(--space-4) 0;">
+                        <div>
+                            <h3>1️⃣ Get API Key</h3>
+                            <ul>
+                                <li>Sign up for OAuth Hub</li>
+                                <li>Go to <a href="/api-keys">API Keys</a></li>
+                                <li>Generate new key (starts with <code>sk_</code>)</li>
+                            </ul>
                         </div>
                         
-                        <div class="platform-card">
-                            <h4>🎬 Google</h4>
-                            <p>Access Gmail, Drive, Calendar & more APIs</p>
-                            <a href="https://console.cloud.google.com/" target="_blank" class="platform-url">
-                                Create Google App →
-                            </a>
+                        <div>
+                            <h3>2️⃣ Create OAuth Apps</h3>
+                            <ul>
+                                <li>Visit platform developer portals</li>
+                                <li>Create OAuth applications</li>
+                                <li>Use the callback URL above</li>
+                            </ul>
                         </div>
                         
-                        <div class="platform-card">
-                            <h4>🐦 X (Twitter)</h4>
-                            <p>Create apps for X API v2 access</p>
-                            <a href="https://developer.x.com/" target="_blank" class="platform-url">
-                                Create X App →
-                            </a>
-                        </div>
-                        
-                        <div class="platform-card">
-                            <h4>💼 LinkedIn</h4>
-                            <p>Access professional profiles & company data</p>
-                            <a href="https://developer.linkedin.com/" target="_blank" class="platform-url">
-                                Create LinkedIn App →
-                            </a>
-                        </div>
-                        
-                        <div class="platform-card">
-                            <h4>📸 Instagram</h4>
-                            <p>Use Facebook Developer Portal for Instagram API</p>
-                            <a href="https://developers.facebook.com/" target="_blank" class="platform-url">
-                                Create Instagram App →
-                            </a>
-                        </div>
-                        
-                        <div class="platform-card">
-                            <h4>🎵 TikTok</h4>
-                            <p>Create apps for TikTok Login Kit & API</p>
-                            <a href="https://developers.tiktok.com/" target="_blank" class="platform-url">
-                                Create TikTok App →
-                            </a>
+                        <div>
+                            <h3>3️⃣ Add Credentials</h3>
+                            <ul>
+                                <li>Go to <a href="/apps">App Credentials</a></li>
+                                <li>Add Client ID & Secret</li>
+                                <li>Configure scopes</li>
+                            </ul>
                         </div>
                     </div>
                     
-                    <h3>Step 3: Add App Credentials to OAuth Hub</h3>
-                    <p>Go to <a href="/apps">App Credentials</a> page and add your OAuth app details (Client ID, Secret, Scopes) for each platform.</p>
-                    
-                    <div class="warning-box">
-                        <h4>⚠️ Important: Redirect URI Setup</h4>
-                        <p>In each platform's OAuth app settings, make sure to add this exact redirect URI:</p>
-                        <code>https://oauth-handler.socialoauth.workers.dev/callback</code>
-                        <p><strong>This same URL works for ALL platforms!</strong></p>
+                    <h3>🔗 Platform Developer Portals</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-3); margin: var(--space-4) 0;">
+                        <a href="https://developers.facebook.com/" target="_blank" class="platform-card" style="text-decoration: none; color: inherit;">
+                            <div style="font-size: 1.5rem; margin-bottom: var(--space-2);">📘</div>
+                            <h4>Facebook</h4>
+                            <p style="margin: 0; font-size: 0.875rem; color: var(--gray-600);">Login & Instagram API</p>
+                        </a>
+                        
+                        <a href="https://console.cloud.google.com/" target="_blank" class="platform-card" style="text-decoration: none; color: inherit;">
+                            <div style="font-size: 1.5rem; margin-bottom: var(--space-2);">🎬</div>
+                            <h4>Google</h4>
+                            <p style="margin: 0; font-size: 0.875rem; color: var(--gray-600);">Gmail, Drive, Calendar</p>
+                        </a>
+                        
+                        <a href="https://developer.x.com/" target="_blank" class="platform-card" style="text-decoration: none; color: inherit;">
+                            <div style="font-size: 1.5rem; margin-bottom: var(--space-2);">🐦</div>
+                            <h4>X (Twitter)</h4>
+                            <p style="margin: 0; font-size: 0.875rem; color: var(--gray-600);">Posts, Profile, DMs</p>
+                        </a>
+                        
+                        <a href="https://developer.linkedin.com/" target="_blank" class="platform-card" style="text-decoration: none; color: inherit;">
+                            <div style="font-size: 1.5rem; margin-bottom: var(--space-2);">💼</div>
+                            <h4>LinkedIn</h4>
+                            <p style="margin: 0; font-size: 0.875rem; color: var(--gray-600);">Professional profiles</p>
+                        </a>
+                        
+                        <a href="https://developers.tiktok.com/" target="_blank" class="platform-card" style="text-decoration: none; color: inherit;">
+                            <div style="font-size: 1.5rem; margin-bottom: var(--space-2);">🎵</div>
+                            <h4>TikTok</h4>
+                            <p style="margin: 0; font-size: 0.875rem; color: var(--gray-600);">Login Kit & API</p>
+                        </a>
                     </div>
                 </div>
                 
-                <!-- API Endpoints -->
+                <!-- API Usage -->
                 <div class="card">
-                    <h2>📡 API Usage</h2>
+                    <h2>💻 Implementation</h2>
                     
                     <div class="success-box">
-                        <h4>🏁 Base URL</h4>
-                        <div class="code-block" style="text-align: center; font-size: 1rem;">
-                            https://oauth-handler.socialoauth.workers.dev
-                        </div>
+                        <h4>🎯 Simple Popup Flow</h4>
+                        <p>Get platform user ID and tokens instantly - no webhooks or polling needed!</p>
                     </div>
                     
-                    <h3>🎯 NEW: Direct OAuth Flow (No Webhooks Needed!)</h3>
-                    <div class="success-box">
-                        <h4>✨ Instant Platform User ID & Tokens</h4>
-                        <p>Get the platform user ID and tokens directly in your browser - no webhooks or polling required!</p>
-                        ${createCodeBlock(`// Simple popup flow - get data instantly
-const result = await connectSocial('facebook', 'sk_your_api_key');
-
-console.log('Facebook User ID:', result.platformUserId);
-console.log('Access Token:', result.tokens.accessToken);`)}
-                    </div>
-
-                    <h4>🔧 Complete Implementation</h4>
-                    ${createCodeBlock(`// Helper function for OAuth popup flow
-function connectSocial(platform, apiKey) {
+                    <h3>📋 Copy & Paste Solution</h3>
+                    ${createCodeBlock(`// Add this helper function to your app
+async function connectSocial(platform, apiKey) {
+  // 1. Get OAuth URL
+  const response = await fetch(\`https://oauth-handler.socialoauth.workers.dev/consent/\${platform}/\${apiKey}\`);
+  const { consentUrl } = await response.json();
+  
+  // 2. Open popup and wait for completion
   return new Promise((resolve, reject) => {
-    // 1. Get consent URL
-    fetch(\`/consent/\${platform}/\${apiKey}\`)
-      .then(res => res.json())
-      .then(data => {
-        // 2. Open popup
-        const popup = window.open(data.consentUrl, 'oauth', 'width=500,height=600');
-
-        // 3. Listen for completion
-        const messageHandler = (event) => {
-          if (event.data.type === 'oauth_complete') {
-            window.removeEventListener('message', messageHandler);
-            popup.close();
-
-            // 4. You immediately get everything!
-            resolve({
-              platform: event.data.platform,
-              platformUserId: event.data.platformUserId,
-              tokens: event.data.tokens
-            });
-          } else if (event.data.type === 'oauth_error') {
-            window.removeEventListener('message', messageHandler);
-            popup.close();
-            reject(new Error(event.data.error));
-          }
-        };
-
-        window.addEventListener('message', messageHandler);
-
-        // Handle popup closed without completion
-        const checkClosed = setInterval(() => {
-          if (popup.closed) {
-            clearInterval(checkClosed);
-            window.removeEventListener('message', messageHandler);
-            reject(new Error('User cancelled authorization'));
-          }
-        }, 1000);
-      })
-      .catch(reject);
+    const popup = window.open(consentUrl, 'oauth', 'width=500,height=600');
+    
+    const messageHandler = (event) => {
+      if (event.data.type === 'oauth_complete') {
+        cleanup();
+        resolve({
+          platform: event.data.platform,
+          platformUserId: event.data.platformUserId,
+          tokens: event.data.tokens
+        });
+      } else if (event.data.type === 'oauth_error') {
+        cleanup();
+        reject(new Error(event.data.error));
+      }
+    };
+    
+    const cleanup = () => {
+      window.removeEventListener('message', messageHandler);
+      popup.close();
+    };
+    
+    window.addEventListener('message', messageHandler);
+    
+    // Handle manual popup close
+    const checkClosed = setInterval(() => {
+      if (popup.closed) {
+        clearInterval(checkClosed);
+        cleanup();
+        reject(new Error('User cancelled'));
+      }
+    }, 1000);
   });
-}`, 'javascript', 'Copy this helper function to your application')}
-
-                    <h4>⚛️ Framework-Specific Examples</h4>
-
-                    <h5>React Hook</h5>
-                    ${createCodeBlock(`import { useState } from 'react';
-
-function useSocialConnect(apiKey) {
-  const [loading, setLoading] = useState(false);
-
-  const connectSocial = async (platform) => {
-    setLoading(true);
-    try {
-      const result = await connectSocial(platform, apiKey);
-      return result;
-    } catch (error) {
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return { connectSocial, loading };
 }
 
-// Usage in component
-const { connectSocial, loading } = useSocialConnect('sk_your_api_key');
+// Usage - it's that simple!
+const result = await connectSocial('facebook', 'sk_your_api_key');
+console.log('User ID:', result.platformUserId);
+console.log('Token:', result.tokens.accessToken);`, 'javascript', 'Complete implementation - just copy and paste!')}
 
-const handleConnect = async () => {
+                    <h3>🔧 Framework Examples</h3>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: var(--space-4);">
+                        <div>
+                            <h4>⚛️ React</h4>
+                            ${createCodeBlock(`const [user, setUser] = useState({});
+const [loading, setLoading] = useState(false);
+
+const handleConnect = async (platform) => {
+  setLoading(true);
   try {
-    const result = await connectSocial('facebook');
+    const result = await connectSocial(platform, 'sk_your_key');
     setUser(prev => ({
       ...prev,
-      facebookId: result.platformUserId,
-      facebookConnected: true
+      [\`\${platform}Id\`]: result.platformUserId,
+      [\`\${platform}Connected\`]: true
     }));
   } catch (error) {
-    console.error('Connection failed:', error);
-  }
-};`, 'javascript', 'React hook for social connections')}
-
-                    <h5>Vue.js Composition API</h5>
-                    ${createCodeBlock(`import { ref } from 'vue';
-
-export function useSocialConnect(apiKey) {
-  const loading = ref(false);
-
-  const connectSocial = async (platform) => {
-    loading.value = true;
-    try {
-      const result = await connectSocial(platform, apiKey);
-      return result;
-    } catch (error) {
-      throw error;
-    } finally {
-      loading.value = false;
-    }
-  };
-
-  return {
-    connectSocial,
-    loading: readonly(loading)
-  };
-}
-
-// Usage in component
-const { connectSocial, loading } = useSocialConnect('sk_your_api_key');
-
-const connectFacebook = async () => {
-  try {
-    const result = await connectSocial('facebook');
-    user.value.facebookId = result.platformUserId;
-    await saveConnection(result);
-  } catch (error) {
-    showError(error.message);
-  }
-};`, 'javascript', 'Vue.js composition API for social connections')}
-
-                    <h5>Vanilla JavaScript</h5>
-                    ${createCodeBlock(`// Simple button handler
-document.getElementById('connect-btn').addEventListener('click', async () => {
-  const btn = document.getElementById('connect-btn');
-  const status = document.getElementById('status');
-
-  btn.disabled = true;
-  btn.textContent = 'Connecting...';
-
-  try {
-    const result = await connectSocial('facebook', 'sk_your_api_key');
-
-    status.textContent = \`Connected: \${result.platformUserId}\`;
-    status.style.color = 'green';
-
-    // Save to your backend
-    await fetch('/api/users/connect-social', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        platform: 'facebook',
-        platformUserId: result.platformUserId,
-        accessToken: result.tokens.accessToken
-      })
-    });
-
-  } catch (error) {
-    status.textContent = \`Error: \${error.message}\`;
-    status.style.color = 'red';
+    alert('Connection failed: ' + error.message);
   } finally {
-    btn.disabled = false;
-    btn.textContent = 'Connect Facebook';
+    setLoading(false);
   }
-});`, 'javascript', 'Vanilla JavaScript implementation')}
-                    
-                    <h3>1. Generate OAuth URL</h3>
-                    <div class="endpoint">
-                        <div style="display: flex; align-items: center; margin-bottom: var(--space-2);">
-                            <span class="method get">GET</span>
-                            <code>/consent/{platform}/{apiKey}</code>
+};`, 'javascript')}
                         </div>
-                        <p>Get the authorization URL for users to grant permissions</p>
-                        <div class="code-block">
-<strong>Example:</strong><br>
-GET /consent/facebook/sk_abc123<br><br>
-<strong>Returns:</strong><br>
-{<br>
-&nbsp;&nbsp;"consentUrl": "https://facebook.com/oauth?...",<br>
-&nbsp;&nbsp;"platform": "FACEBOOK",<br>
-&nbsp;&nbsp;"state": "base64_encoded_state"<br>
-}
-                        </div>
-                    </div>
-                    
-                    <h3>2. Get Access Tokens</h3>
-                    <div class="endpoint">
-                        <div style="display: flex; align-items: center; margin-bottom: var(--space-2);">
-                            <span class="method get">GET</span>
-                            <code>/tokens/{platformUserId}/{apiKey}</code>
-                        </div>
-                        <p>Retrieve valid access tokens (auto-refreshes if expired)</p>
-                        <div class="code-block">
-<strong>Example:</strong><br>
-GET /tokens/123456789/sk_abc123<br><br>
-<strong>Returns:</strong><br>
-{<br>
-&nbsp;&nbsp;"accessToken": "EAAVfX...",<br>
-&nbsp;&nbsp;"tokenType": "bearer",<br>
-&nbsp;&nbsp;"expiresAt": 1756142188028,<br>
-&nbsp;&nbsp;"platform": "facebook",<br>
-&nbsp;&nbsp;"platformUserId": "123456789"<br>
-}
+                        
+                        <div>
+                            <h4>🟢 Vue.js</h4>
+                            ${createCodeBlock(`const user = ref({});
+const loading = ref(false);
+
+const handleConnect = async (platform) => {
+  loading.value = true;
+  try {
+    const result = await connectSocial(platform, 'sk_your_key');
+    user.value[\`\${platform}Id\`] = result.platformUserId;
+    user.value[\`\${platform}Connected\`] = true;
+  } catch (error) {
+    alert('Connection failed: ' + error.message);
+  } finally {
+    loading.value = false;
+  }
+};`, 'javascript')}
                         </div>
                     </div>
                     
-                    <h3>Supported Platforms</h3>
-                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-2); margin: var(--space-4) 0;">
-                        <div style="text-align: center; padding: var(--space-2);">
-                            <div style="font-size: 1.5rem;">📘</div>
-                            <code>facebook</code>
+                    <h3>🔗 API Endpoints</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin: var(--space-4) 0;">
+                        <div class="endpoint">
+                            <div style="display: flex; align-items: center; margin-bottom: var(--space-2);">
+                                <span class="method get">GET</span>
+                                <code>/consent/{platform}/{apiKey}</code>
+                            </div>
+                            <p>Get OAuth authorization URL</p>
                         </div>
-                        <div style="text-align: center; padding: var(--space-2);">
-                            <div style="font-size: 1.5rem;">🎬</div>
-                            <code>google</code>
+                        
+                        <div class="endpoint">
+                            <div style="display: flex; align-items: center; margin-bottom: var(--space-2);">
+                                <span class="method get">GET</span>
+                                <code>/tokens/{userId}/{apiKey}</code>
+                            </div>
+                            <p>Get fresh access tokens</p>
                         </div>
-                        <div style="text-align: center; padding: var(--space-2);">
-                            <div style="font-size: 1.5rem;">📸</div>
-                            <code>instagram</code>
-                        </div>
-                        <div style="text-align: center; padding: var(--space-2);">
-                            <div style="font-size: 1.5rem;">🐦</div>
-                            <code>twitter</code>
-                        </div>
-                        <div style="text-align: center; padding: var(--space-2);">
-                            <div style="font-size: 1.5rem;">💼</div>
-                            <code>linkedin</code>
-                        </div>
-                        <div style="text-align: center; padding: var(--space-2);">
-                            <div style="font-size: 1.5rem;">🎵</div>
-                            <code>tiktok</code>
-                        </div>
+                    </div>
+                    
+                    <h3>🌐 Supported Platforms</h3>
+                    <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: var(--space-2); margin: var(--space-4) 0; text-align: center;">
+                        <div><div style="font-size: 1.5rem;">📘</div><code>facebook</code></div>
+                        <div><div style="font-size: 1.5rem;">🎬</div><code>google</code></div>
+                        <div><div style="font-size: 1.5rem;">📸</div><code>instagram</code></div>
+                        <div><div style="font-size: 1.5rem;">🐦</div><code>twitter</code></div>
+                        <div><div style="font-size: 1.5rem;">💼</div><code>linkedin</code></div>
+                        <div><div style="font-size: 1.5rem;">🎵</div><code>tiktok</code></div>
                     </div>
                 </div>
                 
-                <!-- Implementation Guide -->
+                <!-- Backend Usage -->
                 <div class="card">
-                    <h2>💻 Implementation Guide</h2>
+                    <h2>🔧 Backend Integration</h2>
                     
                     <div class="warning-box">
-                        <h4>🔑 Critical: Capturing Platform User ID</h4>
-                        <p>After OAuth completion, you <strong>MUST</strong> capture the platform user ID to make token requests.</p>
+                        <h4>🔑 Important</h4>
+                        <p>Save the <strong>platformUserId</strong> from the popup result - you need it to retrieve tokens later!</p>
                     </div>
                     
-                    <h3>Frontend Implementation (JavaScript)</h3>
-                    <div class="code-block">
-// 1. Set up OAuth callback listener (BEFORE opening popup)
-window.addEventListener('message', (event) => {
-&nbsp;&nbsp;if (event.origin !== 'https://oauth-handler.socialoauth.workers.dev') return;
-&nbsp;&nbsp;
-&nbsp;&nbsp;if (event.data.type === 'oauth_success') {
-&nbsp;&nbsp;&nbsp;&nbsp;const platformUserId = event.data.userId;  // "822389666895701"
-&nbsp;&nbsp;&nbsp;&nbsp;const platform = event.data.platform;      // "facebook"
-&nbsp;&nbsp;&nbsp;&nbsp;
-&nbsp;&nbsp;&nbsp;&nbsp;// SAVE THIS ID! You need it for all token requests
-&nbsp;&nbsp;&nbsp;&nbsp;saveUserOAuthData(platform, platformUserId);
-&nbsp;&nbsp;}
-});
-
-// 2. Start OAuth flow
-async function startOAuth(platform) {
-&nbsp;&nbsp;const response = await fetch('/consent/' + platform + '/' + API_KEY);
-&nbsp;&nbsp;const { consentUrl } = await response.json();
-&nbsp;&nbsp;
-&nbsp;&nbsp;// Open popup window
-&nbsp;&nbsp;window.open(consentUrl, 'oauth', 'width=500,height=600');
-}
-                    </div>
-                    
-                    <h3>Backend Implementation (Node.js)</h3>
-                    <div class="code-block">
-const API_KEY = 'sk_your_api_key_here';
-const BASE_URL = 'https://oauth-handler.socialoauth.workers.dev';
-
-// Get access token for API calls
-async function getAccessToken(platformUserId) {
-&nbsp;&nbsp;const response = await fetch(BASE_URL + '/tokens/' + platformUserId + '/' + API_KEY);
-&nbsp;&nbsp;const data = await response.json();
-&nbsp;&nbsp;
-&nbsp;&nbsp;if (!response.ok) throw new Error(data.error);
-&nbsp;&nbsp;return data.accessToken;
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4);">
+                        <div>
+                            <h4>🟨 Node.js</h4>
+                            ${createCodeBlock(`// Get fresh tokens
+async function getTokens(platformUserId, apiKey) {
+  const url = \`https://oauth-handler.socialoauth.workers.dev/tokens/\${platformUserId}/\${apiKey}\`;
+  const response = await fetch(url);
+  const data = await response.json();
+  return data.accessToken;
 }
 
-// Use token for platform API calls
-async function callFacebookAPI(accessToken) {
-&nbsp;&nbsp;const response = await fetch('https://graph.facebook.com/me', {
-&nbsp;&nbsp;&nbsp;&nbsp;headers: { 'Authorization': 'Bearer ' + accessToken }
-&nbsp;&nbsp;});
-&nbsp;&nbsp;return response.json();
-}
-                    </div>
-                    
-                    <h3>Python Implementation</h3>
-                    <div class="code-block">
-import requests
+// Use with platform APIs
+const token = await getTokens('123456789', 'sk_your_key');
+const profile = await fetch('https://graph.facebook.com/me', {
+  headers: { 'Authorization': \`Bearer \${token}\` }
+});`, 'javascript')}
+                        </div>
+                        
+                        <div>
+                            <h4>🐍 Python</h4>
+                            ${createCodeBlock(`import requests
 
-API_KEY = 'sk_your_api_key_here'
-BASE_URL = 'https://oauth-handler.socialoauth.workers.dev'
+def get_tokens(platform_user_id, api_key):
+    url = f"https://oauth-handler.socialoauth.workers.dev/tokens/{platform_user_id}/{api_key}"
+    response = requests.get(url)
+    return response.json()['accessToken']
 
-def get_access_token(platform_user_id):
-&nbsp;&nbsp;&nbsp;&nbsp;url = f"{BASE_URL}/tokens/{platform_user_id}/{API_KEY}"
-&nbsp;&nbsp;&nbsp;&nbsp;response = requests.get(url)
-&nbsp;&nbsp;&nbsp;&nbsp;response.raise_for_status()
-&nbsp;&nbsp;&nbsp;&nbsp;return response.json()['accessToken']
-
-def call_facebook_api(access_token):
-&nbsp;&nbsp;&nbsp;&nbsp;headers = {'Authorization': f'Bearer {access_token}'}
-&nbsp;&nbsp;&nbsp;&nbsp;response = requests.get('https://graph.facebook.com/me', headers=headers)
-&nbsp;&nbsp;&nbsp;&nbsp;return response.json()
+# Use with platform APIs
+token = get_tokens('123456789', 'sk_your_key')
+profile = requests.get('https://graph.facebook.com/me', 
+    headers={'Authorization': f'Bearer {token}'})`, 'python')}
+                        </div>
                     </div>
                 </div>
                 
-                <!-- Security & Best Practices -->
+                <!-- Security & Tips -->
                 <div class="card">
-                    <h2>🔐 Security & Best Practices</h2>
+                    <h2>🔐 Security & Tips</h2>
                     
-                    <h3>API Key Security</h3>
-                    <ul>
-                        <li>✅ Keep API keys secret - never expose in client-side code</li>
-                        <li>✅ Use OAuth Hub from your backend server only</li>
-                        <li>✅ Rotate keys regularly for enhanced security</li>
-                        <li>✅ Use HTTPS for all API calls</li>
-                    </ul>
-                    
-                    <h3>OAuth Security</h3>
-                    <ul>
-                        <li>✅ Use unique state parameters to prevent CSRF attacks</li>
-                        <li>✅ Verify message origins in OAuth callbacks</li>
-                        <li>✅ Store platform user IDs securely in your database</li>
-                        <li>✅ Tokens are automatically encrypted and stored securely</li>
-                    </ul>
-                </div>
-                
-                <!-- Error Handling -->
-                <div class="card">
-                    <h2>🚨 Error Handling</h2>
-                    
-                    <h3>Common HTTP Status Codes</h3>
-                    <ul>
-                        <li><code>200</code> - Success</li>
-                        <li><code>400</code> - Bad Request (missing parameters)</li>
-                        <li><code>401</code> - Unauthorized (invalid API key)</li>
-                        <li><code>404</code> - Not Found (no tokens found)</li>
-                        <li><code>500</code> - Internal Server Error</li>
-                    </ul>
-                    
-                    <h3>Error Response Format</h3>
-                    <div class="code-block">
-{
-&nbsp;&nbsp;"error": "Error message",
-&nbsp;&nbsp;"message": "Additional details (optional)"
-}
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4);">
+                        <div>
+                            <h4>✅ Best Practices</h4>
+                            <ul>
+                                <li>Keep API keys secret (backend only)</li>
+                                <li>Store platform user IDs securely</li>
+                                <li>Use HTTPS for all requests</li>
+                                <li>Tokens auto-refresh when needed</li>
+                            </ul>
+                        </div>
+                        
+                        <div>
+                            <h4>📋 Common Status Codes</h4>
+                            <ul>
+                                <li><code>200</code> - Success</li>
+                                <li><code>401</code> - Invalid API key</li>
+                                <li><code>404</code> - No tokens found</li>
+                                <li><code>500</code> - Server error</li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
                 
@@ -642,17 +484,7 @@ def call_facebook_api(access_token):
             }
         }
 
-        // Show platform URL on hover for platform cards
-        document.querySelectorAll('.platform-card').forEach(card => {
-            card.addEventListener('click', function() {
-                const link = this.querySelector('.platform-url');
-                if (link) {
-                    link.click();
-                }
-            });
-        });
-
-        // Smooth scrolling for any internal links
+        // Smooth scrolling for internal links
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
                 e.preventDefault();
@@ -660,17 +492,6 @@ def call_facebook_api(access_token):
                 if (target) {
                     target.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }
-            });
-        });
-
-        // Highlight code blocks on hover
-        document.querySelectorAll('.code-block').forEach(block => {
-            block.addEventListener('mouseenter', function() {
-                this.style.borderColor = 'var(--primary-400)';
-            });
-
-            block.addEventListener('mouseleave', function() {
-                this.style.borderColor = 'var(--border-color)';
             });
         });
     </script>
