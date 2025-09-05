@@ -2,7 +2,7 @@
 // 📝 API KEYS PAGE - Simple and Working
 // =============================================================================
 
-import { getNavigation, getSharedScript } from '../shared/navigation.js';
+import { getNavigation, getSharedScript } from '../navigation.js';
 
 export function getApiKeysPage(UNIFIED_CSS) {
   return `<!DOCTYPE html>

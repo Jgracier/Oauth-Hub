@@ -2,7 +2,9 @@
 // 📖 DOCUMENTATION PAGE - Streamlined API Documentation
 // =============================================================================
 
-import { getNavigation, getSharedScript } from '../shared/navigation.js';
+import { CONFIG } from '../../core/config.js';
+import { PLATFORMS, getAllPlatforms } from '../../core/platforms.js';
+import { getNavigation, getSharedScript } from '../navigation.js';
 
 export function getDocsPage(UNIFIED_CSS) {
   // Helper function to create clean code blocks with copy buttons
@@ -189,7 +191,7 @@ export function getDocsPage(UNIFIED_CSS) {
                         <h4>✨ One URL for Everything</h4>
                         <p>Use this single redirect URI for ALL your OAuth apps:</p>
                         <div class="code-block" style="text-align: center; font-size: 1rem; font-weight: bold; background: var(--primary-50); border-color: var(--primary-300);">
-                            https://www.oauth-hub.com/callback
+                            ${CONFIG.WWW_CALLBACK_URL}
                         </div>
                     </div>
                     
@@ -224,77 +226,16 @@ export function getDocsPage(UNIFIED_CSS) {
 
                     <h3>🔗 Platform Developer Portals</h3>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-3); margin: var(--space-4) 0;">
-                        <a href="https://developers.facebook.com/" target="_blank" class="platform-card" style="text-decoration: none; color: inherit;">
-                            <div style="font-size: 1.5rem; margin-bottom: var(--space-2);">📘</div>
-                            <h4>Facebook</h4>
-                            <p style="margin: 0; font-size: 0.875rem; color: var(--gray-600);">Login & Instagram API</p>
-                        </a>
-                        
-                        <a href="https://console.cloud.google.com/" target="_blank" class="platform-card" style="text-decoration: none; color: inherit;">
-                            <div style="font-size: 1.5rem; margin-bottom: var(--space-2);">🎬</div>
-                            <h4>Google</h4>
-                            <p style="margin: 0; font-size: 0.875rem; color: var(--gray-600);">Gmail, Drive, Calendar</p>
-                        </a>
-                        
-                        <a href="https://developer.x.com/" target="_blank" class="platform-card" style="text-decoration: none; color: inherit;">
-                            <div style="font-size: 1.5rem; margin-bottom: var(--space-2);">🐦</div>
-                            <h4>X (Twitter)</h4>
-                            <p style="margin: 0; font-size: 0.875rem; color: var(--gray-600);">Posts, Profile, DMs</p>
-                        </a>
-                        
-                        <a href="https://developer.linkedin.com/" target="_blank" class="platform-card" style="text-decoration: none; color: inherit;">
-                            <div style="font-size: 1.5rem; margin-bottom: var(--space-2);">💼</div>
-                            <h4>LinkedIn</h4>
-                            <p style="margin: 0; font-size: 0.875rem; color: var(--gray-600);">Professional profiles</p>
-                        </a>
-                        
-                        <a href="https://developers.tiktok.com/" target="_blank" class="platform-card" style="text-decoration: none; color: inherit;">
-                            <div style="font-size: 1.5rem; margin-bottom: var(--space-2);">🎵</div>
-                            <h4>TikTok</h4>
-                            <p style="margin: 0; font-size: 0.875rem; color: var(--gray-600);">Login Kit & API</p>
-                        </a>
-                        
-                        <a href="https://developer.wordpress.com/apps/" target="_blank" class="platform-card" style="text-decoration: none; color: inherit;">
-                            <div style="font-size: 1.5rem; margin-bottom: var(--space-2);">📝</div>
-                            <h4>WordPress.com</h4>
-                            <p style="margin: 0; font-size: 0.875rem; color: var(--gray-600);">Sites & Content API</p>
-                        </a>
-                        
-                        <a href="https://www.reddit.com/dev/api/" target="_blank" class="platform-card" style="text-decoration: none; color: inherit;">
-                            <div style="font-size: 1.5rem; margin-bottom: var(--space-2);">🔴</div>
-                            <h4>Reddit</h4>
-                            <p style="margin: 0; font-size: 0.875rem; color: var(--gray-600);">Posts & Communities</p>
-                        </a>
-                        
-                        <a href="https://github.com/settings/developers" target="_blank" class="platform-card" style="text-decoration: none; color: inherit;">
-                            <div style="font-size: 1.5rem; margin-bottom: var(--space-2);">🐙</div>
-                            <h4>GitHub</h4>
-                            <p style="margin: 0; font-size: 0.875rem; color: var(--gray-600);">Repositories & Code</p>
-                        </a>
-                        
-                        <a href="https://developer.spotify.com/dashboard" target="_blank" class="platform-card" style="text-decoration: none; color: inherit;">
-                            <div style="font-size: 1.5rem; margin-bottom: var(--space-2);">🎵</div>
-                            <h4>Spotify</h4>
-                            <p style="margin: 0; font-size: 0.875rem; color: var(--gray-600);">Music & Playlists</p>
-                        </a>
-                        
-                        <a href="https://dev.twitch.tv/console" target="_blank" class="platform-card" style="text-decoration: none; color: inherit;">
-                            <div style="font-size: 1.5rem; margin-bottom: var(--space-2);">🎮</div>
-                            <h4>Twitch</h4>
-                            <p style="margin: 0; font-size: 0.875rem; color: var(--gray-600);">Streaming & Chat</p>
-                        </a>
-                        
-                        <a href="https://api.slack.com/apps" target="_blank" class="platform-card" style="text-decoration: none; color: inherit;">
-                            <div style="font-size: 1.5rem; margin-bottom: var(--space-2);">💬</div>
-                            <h4>Slack</h4>
-                            <p style="margin: 0; font-size: 0.875rem; color: var(--gray-600);">Workspace & Teams</p>
-                        </a>
-                        
-                        <a href="https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps" target="_blank" class="platform-card" style="text-decoration: none; color: inherit;">
-                            <div style="font-size: 1.5rem; margin-bottom: var(--space-2);">🏢</div>
-                            <h4>Microsoft</h4>
-                            <p style="margin: 0; font-size: 0.875rem; color: var(--gray-600);">Office 365 & Azure</p>
-                        </a>
+                        ${getAllPlatforms().map(platformKey => {
+                            const platform = PLATFORMS[platformKey];
+                            return `
+                                <a href="${platform.docsUrl}" target="_blank" class="platform-card" style="text-decoration: none; color: inherit;">
+                                    <div style="font-size: 1.5rem; margin-bottom: var(--space-2);">${platform.icon}</div>
+                                    <h4>${platform.displayName}</h4>
+                                    <p style="margin: 0; font-size: 0.875rem; color: var(--gray-600);">${platform.description}</p>
+                                </a>
+                            `;
+                        }).join('')}
                     </div>
                     </div>
 
@@ -311,7 +252,7 @@ export function getDocsPage(UNIFIED_CSS) {
                     ${createCodeBlock(`// Add this helper function to your app
 async function connectSocial(platform, apiKey) {
   // 1. Get OAuth URL
-  const response = await fetch(\`https://www.oauth-hub.com/consent/\${platform}/\${apiKey}\`);
+  const response = await fetch(\`${CONFIG.BASE_URL}/consent/\${platform}/\${apiKey}\`);
   const { consentUrl } = await response.json();
   
   // 2. Open popup and wait for completion
@@ -457,7 +398,7 @@ const handleConnect = async (platform) => {
                                 <li>Client Secret (authenticates your application - keep secure)</li>
                             </ul>
                         </li>
-                        <li><strong>Set redirect URI:</strong> <code>https://www.oauth-hub.com/callback</code></li>
+                        <li><strong>Set redirect URI:</strong> <code>${CONFIG.WWW_CALLBACK_URL}</code></li>
                         <li><strong>Configure scopes</strong> based on your needs (posts, media, sites, etc.)</li>
                     </ol>
                     
@@ -594,7 +535,7 @@ const result = await connectSocial(platform, apiKey);`, 'javascript', 'Universal
                             <h4>🟨 Node.js</h4>
                             ${createCodeBlock(`// Get fresh tokens
 async function getTokens(platformUserId, apiKey) {
-  const url = \`https://www.oauth-hub.com/tokens/\${platformUserId}/\${apiKey}\`;
+  const url = \`${CONFIG.BASE_URL}/tokens/\${platformUserId}/\${apiKey}\`;
   const response = await fetch(url);
   const data = await response.json();
   return data.accessToken;
@@ -612,7 +553,7 @@ const profile = await fetch('https://graph.facebook.com/me', {
                             ${createCodeBlock(`import requests
 
 def get_tokens(platform_user_id, api_key):
-    url = f"https://www.oauth-hub.com/tokens/{platform_user_id}/{api_key}"
+    url = f"${CONFIG.BASE_URL}/tokens/{platform_user_id}/{api_key}"
     response = requests.get(url)
     return response.json()['accessToken']
 

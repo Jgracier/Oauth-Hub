@@ -2,7 +2,7 @@
 // 📊 ANALYTICS PAGE - Usage Analytics and Token Management
 // =============================================================================
 
-import { getNavigation, getSharedScript } from '../shared/navigation.js';
+import { getNavigation, getSharedScript } from '../navigation.js';
 
 export function getAnalyticsPage(UNIFIED_CSS) {
   return `<!DOCTYPE html>

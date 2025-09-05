@@ -8,7 +8,7 @@
     "deploy": "wrangler deploy",
     "deploy:preview": "wrangler deploy --env preview",
     "tail": "wrangler tail --format pretty",
-    "health": "curl https://www.oauth-hub.com/health",
+    "health": "curl https://oauth-hub.com/health",
     "test:local": "node examples/backend-integration.js",
     "docs:serve": "python -m http.server 8000",
     "version": "echo $npm_package_version"

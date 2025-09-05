@@ -2,93 +2,17 @@
 // 🛠️ SIMPLIFIED OAUTH BACKEND - Core OAuth functionality
 // =============================================================================
 
+import { CONFIG } from '../../core/config.js';
+import { getPlatform } from '../../core/platforms.js';
+
 // Platform configurations
 export function getPlatformConfig(platform, app) {
-  const configs = {
-    google: {
-      authUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
-      tokenUrl: 'https://oauth2.googleapis.com/token',
-      userInfoUrl: 'https://www.googleapis.com/oauth2/v2/userinfo'
-    },
-    facebook: {
-      authUrl: 'https://www.facebook.com/v18.0/dialog/oauth',
-      tokenUrl: 'https://graph.facebook.com/v18.0/oauth/access_token',
-      userInfoUrl: 'https://graph.facebook.com/me'
-    },
-    instagram: {
-      authUrl: 'https://api.instagram.com/oauth/authorize',
-      tokenUrl: 'https://api.instagram.com/oauth/access_token',
-      userInfoUrl: 'https://graph.instagram.com/me'
-    },
-    twitter: {
-      authUrl: 'https://twitter.com/i/oauth2/authorize',
-      tokenUrl: 'https://api.twitter.com/2/oauth2/token',
-      userInfoUrl: 'https://api.twitter.com/2/users/me'
-    },
-    linkedin: {
-      authUrl: 'https://www.linkedin.com/oauth/v2/authorization',
-      tokenUrl: 'https://www.linkedin.com/oauth/v2/accessToken',
-      userInfoUrl: 'https://api.linkedin.com/v2/people/~'
-    },
-    tiktok: {
-      authUrl: 'https://www.tiktok.com/auth/authorize/',
-      tokenUrl: 'https://open-api.tiktok.com/oauth/access_token/',
-      userInfoUrl: 'https://open-api.tiktok.com/oauth/userinfo/'
-    },
-    discord: {
-      authUrl: 'https://discord.com/api/oauth2/authorize',
-      tokenUrl: 'https://discord.com/api/oauth2/token',
-      userInfoUrl: 'https://discord.com/api/users/@me'
-    },
-    pinterest: {
-      authUrl: 'https://www.pinterest.com/oauth/',
-      tokenUrl: 'https://api.pinterest.com/v5/oauth/token',
-      userInfoUrl: 'https://api.pinterest.com/v5/user_account'
-    },
-    wordpress: {
-      authUrl: 'https://public-api.wordpress.com/oauth2/authorize',
-      tokenUrl: 'https://public-api.wordpress.com/oauth2/token',
-      userInfoUrl: 'https://public-api.wordpress.com/rest/v1/me'
-    },
-    reddit: {
-      authUrl: 'https://www.reddit.com/api/v1/authorize',
-      tokenUrl: 'https://www.reddit.com/api/v1/access_token',
-      userInfoUrl: 'https://oauth.reddit.com/api/v1/me'
-    },
-    github: {
-      authUrl: 'https://github.com/login/oauth/authorize',
-      tokenUrl: 'https://github.com/login/oauth/access_token',
-      userInfoUrl: 'https://api.github.com/user'
-    },
-    spotify: {
-      authUrl: 'https://accounts.spotify.com/authorize',
-      tokenUrl: 'https://accounts.spotify.com/api/token',
-      userInfoUrl: 'https://api.spotify.com/v1/me'
-    },
-    twitch: {
-      authUrl: 'https://id.twitch.tv/oauth2/authorize',
-      tokenUrl: 'https://id.twitch.tv/oauth2/token',
-      userInfoUrl: 'https://api.twitch.tv/helix/users'
-    },
-    slack: {
-      authUrl: 'https://slack.com/oauth/v2/authorize',
-      tokenUrl: 'https://slack.com/api/oauth.v2.access',
-      userInfoUrl: 'https://slack.com/api/users.identity'
-    },
-    microsoft: {
-      authUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
-      tokenUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
-      userInfoUrl: 'https://graph.microsoft.com/v1.0/me'
-    }
-  };
-
-  const config = configs[platform.toLowerCase()];
-  if (!config) {
-    throw new Error(`Unsupported platform: ${platform}`);
-  }
+  const platformConfig = getPlatform(platform);
 
   return {
-    ...config,
+    authUrl: platformConfig.authUrl,
+    tokenUrl: platformConfig.tokenUrl,
+    userInfoUrl: platformConfig.userInfoUrl,
     clientId: app.clientId,
     clientSecret: app.clientSecret,
     redirectUri: app.redirectUri,
@@ -102,7 +26,7 @@ export function generateConsentUrl(platform, app, state, baseUrl) {
   
   const params = new URLSearchParams({
     client_id: config.clientId,
-    redirect_uri: 'https://www.oauth-hub.com/callback',
+    redirect_uri: CONFIG.WWW_CALLBACK_URL,
     scope: config.scopes.join(' '),
     response_type: 'code',
     state: state || `${platform}_${Date.now()}`
@@ -151,28 +75,8 @@ export async function exchangeCodeForTokens(platform, code, app) {
 
 // Get user info from platform
 export async function getUserInfo(platform, accessToken) {
-  const configs = {
-    google: 'https://www.googleapis.com/oauth2/v2/userinfo',
-    facebook: 'https://graph.facebook.com/me?fields=id,name,email',
-    instagram: 'https://graph.instagram.com/me?fields=id,username',
-    twitter: 'https://api.twitter.com/2/users/me',
-    linkedin: 'https://api.linkedin.com/v2/people/~?projection=(id,firstName,lastName,emailAddress)',
-    tiktok: 'https://open-api.tiktok.com/oauth/userinfo/?fields=open_id,union_id,avatar_url,display_name',
-    discord: 'https://discord.com/api/users/@me',
-    pinterest: 'https://api.pinterest.com/v5/user_account',
-    wordpress: 'https://public-api.wordpress.com/rest/v1/me',
-    reddit: 'https://oauth.reddit.com/api/v1/me',
-    github: 'https://api.github.com/user',
-    spotify: 'https://api.spotify.com/v1/me',
-    twitch: 'https://api.twitch.tv/helix/users',
-    slack: 'https://slack.com/api/users.identity',
-    microsoft: 'https://graph.microsoft.com/v1.0/me'
-  };
-
-  const url = configs[platform.toLowerCase()];
-  if (!url) {
-    throw new Error(`Unsupported platform: ${platform}`);
-  }
+  const platformConfig = getPlatform(platform);
+  const url = platformConfig.userInfoUrl;
 
   const response = await fetch(url, {
     headers: {
@@ -188,23 +92,13 @@ export async function getUserInfo(platform, accessToken) {
   const userInfo = await response.json();
   
   // Normalize user ID field based on platform
+  const platformConfigForUserId = getPlatform(platform);
   let platformUserId;
+  
+  // Handle special cases for user ID extraction
   switch (platform.toLowerCase()) {
-    case 'google':
-    case 'facebook':
-    case 'instagram':
-    case 'twitter':
-    case 'discord':
-      platformUserId = userInfo.id;
-      break;
-    case 'linkedin':
-      platformUserId = userInfo.id;
-      break;
     case 'tiktok':
       platformUserId = userInfo.data?.user?.open_id || userInfo.open_id;
-      break;
-    case 'pinterest':
-      platformUserId = userInfo.id;
       break;
     case 'wordpress':
       platformUserId = userInfo.ID;
@@ -212,23 +106,16 @@ export async function getUserInfo(platform, accessToken) {
     case 'reddit':
       platformUserId = userInfo.id || userInfo.name;
       break;
-    case 'github':
-      platformUserId = userInfo.id;
-      break;
-    case 'spotify':
-      platformUserId = userInfo.id;
-      break;
     case 'twitch':
       platformUserId = userInfo.data?.[0]?.id || userInfo.id;
       break;
     case 'slack':
       platformUserId = userInfo.user?.id || userInfo.id;
       break;
-    case 'microsoft':
-      platformUserId = userInfo.id;
-      break;
     default:
-      platformUserId = userInfo.id || userInfo.user_id;
+      // Use the configured userIdField or fallback to 'id'
+      const idField = platformConfigForUserId.userIdField || 'id';
+      platformUserId = userInfo[idField] || userInfo.id || userInfo.user_id;
   }
 
   return {

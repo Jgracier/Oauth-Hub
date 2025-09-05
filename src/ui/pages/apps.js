@@ -2,7 +2,9 @@
 // 📱 APP CREDENTIALS PAGE - OAuth App Management
 // =============================================================================
 
-import { getNavigation, getSharedScript } from '../shared/navigation.js';
+import { CONFIG } from '../../core/config.js';
+import { PLATFORMS, getAllPlatforms, getPlatformScopes } from '../../core/platforms.js';
+import { getNavigation, getSharedScript } from '../navigation.js';
 import { createScopeSelector } from '../components/scope-selector.js';
 
 export function getAppsPage(UNIFIED_CSS) {
@@ -61,14 +63,9 @@ export function getAppsPage(UNIFIED_CSS) {
                     <label class="form-label">Platform</label>
                     <select id="platform" class="form-input" required>
                         <option value="">Select a platform</option>
-                        <option value="google">Google (YouTube)</option>
-                        <option value="facebook">Facebook</option>
-                        <option value="instagram">Instagram</option>
-                        <option value="twitter">X (Twitter)</option>
-                        <option value="linkedin">LinkedIn</option>
-                        <option value="tiktok">TikTok</option>
-                        <option value="discord">Discord</option>
-                        <option value="pinterest">Pinterest</option>
+                        ${getAllPlatforms().map(platform => 
+                            `<option value="${platform}">${PLATFORMS[platform].displayName}</option>`
+                        ).join('')}
                     </select>
                 </div>
                 
@@ -97,7 +94,7 @@ export function getAppsPage(UNIFIED_CSS) {
                             <span style="color: var(--warning-600); font-size: 0.875rem;">
                                 Set this redirect URI in your app:
                                 <code style="background: var(--warning-100); padding: 2px 4px; border-radius: 3px;">
-                                    https://www.oauth-hub.com/callback
+                                    ${CONFIG.WWW_CALLBACK_URL}
                                 </code>
                             </span>
                         </div>
@@ -147,163 +144,41 @@ export function getAppsPage(UNIFIED_CSS) {
         // Note: In a real implementation, this would be imported at the top
         // For now, we'll fetch it from the shared module
         
-        // Import required scopes and scope functions
-        // These include basic profile/authentication + user identity scopes for all platforms
-        const REQUIRED_SCOPES = {
-          google: ['openid', 'profile', 'email'], // OpenID Connect + basic profile
-          facebook: ['public_profile', 'email'], // Facebook basic profile + email
-          instagram: ['public_profile', 'email'], // Uses Facebook OAuth + email
-          twitter: ['users.read'], // Basic user info (includes profile data)
-          linkedin: ['openid', 'profile', 'email'], // LinkedIn basic profile + email
-          tiktok: ['user.info.basic', 'user.info.profile'], // TikTok user profile scopes
-          discord: ['identify', 'email'], // Discord basic identity + email
-          pinterest: ['user_accounts:read'] // Pinterest user account info
-        };
-        
-        // OAuth Scopes Database - Comprehensive Platform Scopes (without required scopes)
-        const PLATFORM_SCOPES = {
-          google: {
-            name: 'Google (YouTube)',
-            categories: {
-              'Google Drive': [
-                { scope: 'https://www.googleapis.com/auth/drive', description: 'Full access to Google Drive files' },
-                { scope: 'https://www.googleapis.com/auth/drive.readonly', description: 'View Google Drive files' },
-                { scope: 'https://www.googleapis.com/auth/drive.file', description: 'Access files created by this app' },
-                { scope: 'https://www.googleapis.com/auth/drive.metadata', description: 'View and manage metadata of files' }
-              ],
-              'YouTube': [
-                { scope: 'https://www.googleapis.com/auth/youtube', description: 'Manage YouTube account' },
-                { scope: 'https://www.googleapis.com/auth/youtube.readonly', description: 'View YouTube account' },
-                { scope: 'https://www.googleapis.com/auth/youtube.upload', description: 'Upload videos to YouTube' }
-              ],
-              'Google Drive': [
-                { scope: 'https://www.googleapis.com/auth/drive', description: 'Full access to Google Drive files' },
-                { scope: 'https://www.googleapis.com/auth/drive.readonly', description: 'View Google Drive files' }
-              ]
-            }
-          },
-          facebook: {
-            name: 'Facebook',
-            categories: {
-              'Page Management': [
-                { scope: 'pages_show_list', description: 'Access the list of Pages a person manages' },
-                { scope: 'pages_manage_posts', description: 'Create, edit and delete posts on Pages' },
-                { scope: 'pages_read_engagement', description: 'Read engagement data on Pages posts' },
-                { scope: 'pages_manage_metadata', description: 'Manage Pages metadata including profile photo' },
-                { scope: 'pages_read_user_content', description: 'Read content posted by users on Pages' },
-                { scope: 'pages_manage_ads', description: 'Manage ads on Pages' },
-                { scope: 'pages_manage_instant_articles', description: 'Manage Instant Articles on Pages' },
-                { scope: 'page_events', description: 'Create and manage events on Pages' }
-              ],
-              'Instagram Integration': [
-                { scope: 'instagram_basic', description: 'Access Instagram account linked to Page' },
-                { scope: 'instagram_content_publish', description: 'Publish photos and videos to Instagram' },
-                { scope: 'instagram_manage_comments', description: 'Manage comments on Instagram posts' },
-                { scope: 'instagram_manage_insights', description: 'Access Instagram insights' },
-                { scope: 'instagram_manage_messages', description: 'Manage Instagram direct messages' }
-              ],
-              'User Data': [
-                { scope: 'user_friends', description: 'Access user friends list' },
-                { scope: 'user_posts', description: 'Access user posts' },
-                { scope: 'user_photos', description: 'Access user photos' },
-                { scope: 'user_videos', description: 'Access user videos' },
-                { scope: 'user_likes', description: 'Access user likes' },
-                { scope: 'user_events', description: 'Access user events' },
-                { scope: 'user_hometown', description: 'Access user hometown' },
-                { scope: 'user_location', description: 'Access user location' },
-                { scope: 'user_birthday', description: 'Access user birthday' },
-                { scope: 'user_age_range', description: 'Access user age range' },
-                { scope: 'user_gender', description: 'Access user gender' }
-              ],
-              'Business & Marketing': [
-                { scope: 'ads_management', description: 'Manage ads and ad campaigns' },
-                { scope: 'ads_read', description: 'Read ads insights and performance data' },
-                { scope: 'business_management', description: 'Manage business assets' },
-                { scope: 'leads_retrieval', description: 'Retrieve leads from lead ads' },
-                { scope: 'read_insights', description: 'Read insights for Pages and apps' },
-                { scope: 'publish_to_groups', description: 'Publish posts to groups' },
-                { scope: 'groups_access_member_info', description: 'Access member info in groups' },
-                { scope: 'publish_pages', description: 'Publish content to Pages' }
-              ],
-              'Messaging & Communication': [
-                { scope: 'pages_messaging', description: 'Send and receive messages on behalf of Pages' },
-                { scope: 'pages_messaging_subscriptions', description: 'Subscribe to messaging webhooks' },
-                { scope: 'pages_messaging_phone_number', description: 'Access messaging phone number' }
-              ],
-              'Live Streaming & Video': [
-                { scope: 'publish_video', description: 'Upload and publish videos' },
-                { scope: 'pages_manage_cta', description: 'Manage call-to-action buttons on Pages' },
-                { scope: 'read_page_mailboxes', description: 'Read Page inbox messages' }
-              ]
-            }
-          },
-          instagram: {
-            name: 'Instagram',
-            categories: {
-              'Graph API': [
-                { scope: 'instagram_graph_user_profile', description: 'Read user profile information' },
-                { scope: 'instagram_graph_user_media', description: 'Read user media' }
-              ],
-              'Content Management': [
-                { scope: 'instagram_manage_comments', description: 'Manage comments on posts' },
-                { scope: 'instagram_content_publish', description: 'Publish photos and videos' }
-              ]
-            }
-          },
-          twitter: {
-            name: 'X (Twitter)',
-            categories: {
-              'Tweet Operations': [
-                { scope: 'tweet.read', description: 'Read Tweets' },
-                { scope: 'tweet.write', description: 'Create, delete, and edit Tweets' }
-              ],
-              'User Operations': [
-                { scope: 'follows.read', description: 'Read following and followers lists' },
-                { scope: 'follows.write', description: 'Follow and unfollow users' }
-              ]
-            }
-          },
-          linkedin: {
-            name: 'LinkedIn',
-            categories: {
-              'Content Management': [
-                { scope: 'w_member_social', description: 'Post on behalf of members' },
-                { scope: 'w_organization_social', description: 'Post on behalf of organizations' }
-              ]
-            }
-          },
-          tiktok: {
-            name: 'TikTok',
-            categories: {
-              'Video Management': [
-                { scope: 'video.list', description: 'Access user video list' },
-                { scope: 'video.upload', description: 'Upload videos to TikTok' }
-              ]
-            }
-          },
-          discord: {
-            name: 'Discord',
-            categories: {
-              'Guild Management': [
-                { scope: 'guilds', description: 'View user\\'s guild information' },
-                { scope: 'guilds.join', description: 'Join users to guilds' }
-              ]
-            }
-          },
-          pinterest: {
-            name: 'Pinterest',
-            categories: {
-              'Board Management': [
-                { scope: 'boards:read', description: 'Read access to public boards' },
-                { scope: 'boards:write', description: 'Create, update, or delete public boards' }
-              ],
-              'Pin Management': [
-                { scope: 'pins:read', description: 'Read access to public pins' },
-                { scope: 'pins:write', description: 'Create, update, or delete public pins' }
-              ]
-            }
+        // Get required scopes from centralized platform configuration
+        function getRequiredScopes(platform) {
+          try {
+            return getPlatformScopes(platform).required;
+          } catch (error) {
+            console.warn('Platform not found:', platform);
+            return [];
           }
-        };
+        }
+        
+        // Get platform scopes from centralized configuration
+        function getPlatformScopesForUI(platform) {
+          try {
+            const platformConfig = PLATFORMS[platform];
+            if (!platformConfig || !platformConfig.availableScopes) return null;
+            
+            return {
+              name: platformConfig.displayName,
+              categories: {
+                'Available Scopes': platformConfig.availableScopes
+              }
+            };
+          } catch (error) {
+            console.warn('Platform not found:', platform);
+            return null;
+          }
+        }
+        
+        // Legacy PLATFORM_SCOPES object for backward compatibility
+        const PLATFORM_SCOPES = new Proxy({}, {
+          get(target, platform) {
+            return getPlatformScopesForUI(platform);
+          }
+        });
+
         
         // Scope selector implementation
         function createScopeSelector(containerId) {
@@ -606,51 +481,22 @@ export function getAppsPage(UNIFIED_CSS) {
             const helpDescription = document.getElementById('platform-help-description');
             const helpUrl = document.getElementById('platform-help-url');
             
-            const platformData = {
-                facebook: {
-                    title: '📘 Create Facebook App',
-                    description: 'Create apps for Facebook Login & Instagram API access',
-                    url: 'https://developers.facebook.com/'
-                },
-                google: {
-                    title: '🎬 Create Google App',
-                    description: 'Access Gmail, Drive, Calendar, YouTube & more APIs',
-                    url: 'https://console.cloud.google.com/'
-                },
-                twitter: {
-                    title: '🐦 Create X (Twitter) App',
-                    description: 'Create apps for X API v2 access',
-                    url: 'https://developer.x.com/'
-                },
-                linkedin: {
-                    title: '💼 Create LinkedIn App',
-                    description: 'Access professional profiles & company data',
-                    url: 'https://developer.linkedin.com/'
-                },
-                instagram: {
-                    title: '📸 Create Instagram App',
-                    description: 'Use Facebook Developer Portal for Instagram API',
-                    url: 'https://developers.facebook.com/'
-                },
-                tiktok: {
-                    title: '🎵 Create TikTok App',
-                    description: 'Create apps for TikTok Login Kit & API',
-                    url: 'https://developers.tiktok.com/'
-                },
-                discord: {
-                    title: '🎮 Create Discord App',
-                    description: 'Create Discord applications and bots',
-                    url: 'https://discord.com/developers/'
-                },
-                pinterest: {
-                    title: '📌 Create Pinterest App',
-                    description: 'Create apps for Pinterest API access',
-                    url: 'https://developers.pinterest.com/'
+            // Generate platform help from centralized configuration
+            function getPlatformData(platform) {
+                try {
+                    const platformConfig = PLATFORMS[platform];
+                    return {
+                        title: platformConfig.icon + ' Create ' + platformConfig.displayName + ' App',
+                        description: platformConfig.description,
+                        url: platformConfig.docsUrl
+                    };
+                } catch (error) {
+                    return null;
                 }
-            };
+            }
             
-            if (platform && platformData[platform]) {
-                const data = platformData[platform];
+            const data = getPlatformData(platform);
+            if (platform && data) {
                 helpTitle.textContent = data.title;
                 helpDescription.textContent = data.description;
                 helpUrl.href = data.url;
@@ -798,11 +644,11 @@ export function getAppsPage(UNIFIED_CSS) {
             e.preventDefault();
             
             const platform = document.getElementById('platform').value;
-            const redirectUri = 'https://www.oauth-hub.com/callback';
+            const redirectUri = '${CONFIG.WWW_CALLBACK_URL}';
             
             // Get selected scopes from scope selector and add required scopes
             const selectedScopes = scopeSelector ? scopeSelector.getSelectedScopes() : [];
-            const requiredScopes = REQUIRED_SCOPES[platform] || [];
+            const requiredScopes = getRequiredScopes(platform);
             const finalScopes = [...requiredScopes, ...selectedScopes];
             
             // Remove duplicates

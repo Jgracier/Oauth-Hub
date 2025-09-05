@@ -3,7 +3,7 @@
 A comprehensive, modular OAuth management platform built with Cloudflare Workers. Features user authentication, API key management, OAuth app credentials, and complete OAuth flow handling.
 
 ## 🚀 Live URL
-https://www.oauth-hub.com
+https://oauth-hub.com
 
 ## 🔄 Auto-Deployment
 ✅ **GitHub Actions Enabled** - Automatic deployment on every push to main branch!
