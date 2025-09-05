@@ -345,12 +345,13 @@ async function handleAuth(request, env, corsHeaders) {
       }));
       
       // Generate JWT session token
+      const jwtSecret = env?.JWT_SECRET || 'development-secret-change-in-production';
       const sessionToken = await generateJWT({
         userId: userData.id,
         email: userData.email,
         name: userData.name,
         exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60) // 24 hours
-      }, null, env);
+      }, jwtSecret, env);
       
       // Create default API key
       const apiKey = generateApiKey();
@@ -409,12 +410,13 @@ async function handleAuth(request, env, corsHeaders) {
       }
       
       // Generate JWT session token
+      const jwtSecret = env?.JWT_SECRET || 'development-secret-change-in-production';
       const sessionToken = await generateJWT({
         userId: user.id,
         email: user.email,
         name: user.name,
         exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60) // 24 hours
-      }, null, env);
+      }, jwtSecret, env);
       
       return jsonResponse({
         success: true,
@@ -466,16 +468,18 @@ async function handlePasswordReset(request, env, corsHeaders) {
       passwordResetAt: new Date().toISOString()
     };
     
-    // Store updated user data
-    await env.USERS.put(`user:${user.id}`, JSON.stringify(updatedUser));
-    
+    // Store updated user data using the correct existing key format
+    const userKey = userResult.userKey || `user ${user.firstName} ${user.lastName} ${user.email}`;
+    await env.USERS.put(userKey, JSON.stringify(updatedUser));
+
     // Generate JWT session token for immediate login
+    const jwtSecret = env?.JWT_SECRET || 'development-secret-change-in-production';
     const sessionToken = await generateJWT({
       userId: user.id,
       email: user.email,
       name: user.name,
       exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60) // 24 hours
-    }, null, env);
+    }, jwtSecret, env);
     
     return jsonResponse({
       success: true,

@@ -38,7 +38,8 @@ export async function authMiddleware(request, env, ctx) {
   }
   
   // Verify JWT session
-  const userData = await verifyJWT(session, env.JWT_SECRET, env);
+  const jwtSecret = env?.JWT_SECRET || 'development-secret-change-in-production';
+  const userData = await verifyJWT(session, jwtSecret, env);
   
   if (!userData) {
     // Clear invalid session

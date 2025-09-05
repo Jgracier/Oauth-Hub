@@ -54,12 +54,7 @@ export async function verifyJWT(token, secret, env) {
     );
     
     const data = `${header}.${payload}`;
-    // Fix base64 padding issues in signature
-    let signatureB64 = signature.replace(/-/g, '+').replace(/_/g, '/');
-    while (signatureB64.length % 4 !== 0) {
-      signatureB64 += '=';
-    }
-    const signatureBytes = Uint8Array.from(atob(signatureB64), c => c.charCodeAt(0));
+    const signatureBytes = Uint8Array.from(atob(signature.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
     
     const valid = await crypto.subtle.verify(
       'HMAC',
@@ -70,12 +65,7 @@ export async function verifyJWT(token, secret, env) {
     
     if (!valid) return null;
     
-    // Fix base64 padding issues in payload
-    let payloadB64 = payload;
-    while (payloadB64.length % 4 !== 0) {
-      payloadB64 += '=';
-    }
-    const decodedPayload = JSON.parse(atob(payloadB64));
+    const decodedPayload = JSON.parse(atob(payload));
     
     // Check expiration
     if (decodedPayload.exp && decodedPayload.exp < Date.now() / 1000) {
@@ -115,7 +105,7 @@ export async function hashPassword(password) {
 
 export async function verifyPassword(password, storedSalt, storedHash) {
   try {
-    // Fix base64 padding issues
+    // Handle base64 padding properly
     let paddedSalt = storedSalt;
     while (paddedSalt.length % 4 !== 0) {
       paddedSalt += '=';
@@ -146,7 +136,6 @@ export async function verifyPassword(password, storedSalt, storedHash) {
     // Byte-by-byte comparison instead of string comparison
     const isMatch = hash.length === storedHashBytes.length &&
                    hash.every((byte, index) => byte === storedHashBytes[index]);
-
     return isMatch;
   } catch (error) {
     console.error('Password verification error:', error);
@@ -170,14 +159,16 @@ export async function generateSecureState(userId, email, platform, env) {
     timestamp,
     nonce
   };
-  
-  // Sign the state
-  const signature = await generateJWT(data, env.JWT_SECRET, env);
+
+  // Sign the state with proper secret
+  const jwtSecret = env?.JWT_SECRET || 'development-secret-change-in-production';
+  const signature = await generateJWT(data, jwtSecret, env);
   return signature; // JWT itself serves as signed state
 }
 
 export async function validateSecureState(state, env) {
-  const data = await verifyJWT(state, env.JWT_SECRET, env);
+  const jwtSecret = env?.JWT_SECRET || 'development-secret-change-in-production';
+  const data = await verifyJWT(state, jwtSecret, env);
   
   if (!data) {
     throw new Error('Invalid state parameter');
