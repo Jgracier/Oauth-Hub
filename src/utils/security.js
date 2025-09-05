@@ -54,7 +54,10 @@ export async function verifyJWT(token, secret, env) {
     );
     
     const data = `${header}.${payload}`;
-    const signatureBytes = Uint8Array.from(atob(signature.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
+    // Fix base64 padding and convert URL-safe base64 back to standard base64
+    const paddedSignature = signature + '='.repeat((4 - signature.length % 4) % 4);
+    const standardBase64 = paddedSignature.replace(/-/g, '+').replace(/_/g, '/');
+    const signatureBytes = Uint8Array.from(atob(standardBase64), c => c.charCodeAt(0));
     
     const valid = await crypto.subtle.verify(
       'HMAC',
