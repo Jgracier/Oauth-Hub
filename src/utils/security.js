@@ -105,7 +105,7 @@ export async function hashPassword(password) {
 
 export async function verifyPassword(password, storedSalt, storedHash) {
   try {
-    // Handle base64 padding properly
+    // Handle base64 padding properly - add missing padding
     let paddedSalt = storedSalt;
     while (paddedSalt.length % 4 !== 0) {
       paddedSalt += '=';
@@ -118,6 +118,7 @@ export async function verifyPassword(password, storedSalt, storedHash) {
 
     const salt = Uint8Array.from(atob(paddedSalt), c => c.charCodeAt(0));
     const storedHashBytes = Uint8Array.from(atob(paddedHash), c => c.charCodeAt(0));
+
     const passwordBytes = new TextEncoder().encode(password);
 
     // Combine password and salt
@@ -133,7 +134,7 @@ export async function verifyPassword(password, storedSalt, storedHash) {
       );
     }
 
-    // Byte-by-byte comparison instead of string comparison
+    // Compare byte-by-byte instead of string comparison (handles padding differences)
     const isMatch = hash.length === storedHashBytes.length &&
                    hash.every((byte, index) => byte === storedHashBytes[index]);
     return isMatch;
@@ -160,25 +161,26 @@ export async function generateSecureState(userId, email, platform, env) {
     nonce
   };
 
-  // Sign the state with proper secret
+  // Sign the state - use proper JWT secret
   const jwtSecret = env?.JWT_SECRET || 'development-secret-change-in-production';
   const signature = await generateJWT(data, jwtSecret, env);
   return signature; // JWT itself serves as signed state
 }
 
 export async function validateSecureState(state, env) {
+  // Use proper JWT secret
   const jwtSecret = env?.JWT_SECRET || 'development-secret-change-in-production';
   const data = await verifyJWT(state, jwtSecret, env);
-  
+
   if (!data) {
     throw new Error('Invalid state parameter');
   }
-  
+
   // Check if state is not expired (5 minutes)
   if (Date.now() - data.timestamp > 300000) {
     throw new Error('State parameter expired');
   }
-  
+
   return data;
 }
 

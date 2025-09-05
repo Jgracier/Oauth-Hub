@@ -468,7 +468,8 @@ async function handlePasswordReset(request, env, corsHeaders) {
       passwordResetAt: new Date().toISOString()
     };
     
-    // Store updated user data using the correct existing key format
+    // Store updated user data
+    // Use the correct existing key format for password reset
     const userKey = userResult.userKey || `user ${user.firstName} ${user.lastName} ${user.email}`;
     await env.USERS.put(userKey, JSON.stringify(updatedUser));
 
