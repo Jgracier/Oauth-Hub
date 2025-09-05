@@ -45,7 +45,7 @@ export function getAuthPage(UNIFIED_CSS) {
                         
                         <div class="form-group">
                             <label class="form-label">Password</label>
-                            <input type="password" id="password" class="form-input" placeholder="Enter your password (min 8 chars)" required minlength="8">
+                            <input type="password" id="password" class="form-input" placeholder="Enter your password" required>
                         </div>
                         
                         <div id="signup-fields" style="display: none;">
@@ -103,11 +103,6 @@ export function getAuthPage(UNIFIED_CSS) {
             const password = document.getElementById('password').value;
             const fullName = document.getElementById('fullName').value;
             
-            if (password.length < 8) {
-                showMessage('Password must be at least 8 characters long', true);
-                return;
-            }
-            
             const data = {
                 mode: currentMode,
                 email,
@@ -124,19 +119,25 @@ export function getAuthPage(UNIFIED_CSS) {
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    credentials: 'include', // Important for session cookies
                     body: JSON.stringify(data)
                 });
                 
                 const result = await response.json();
                 
                 if (response.ok) {
-                    // Session is set via secure cookie, no need for localStorage
+                    // Store user info in localStorage for display only
+                    // Session cookie handles actual authentication
+                    localStorage.setItem('userEmail', result.email);
+                    localStorage.setItem('userName', result.name);
+                    if (result.apiKey) {
+                        localStorage.setItem('defaultApiKey', result.apiKey);
+                    }
+                    
                     showMessage('Success! Redirecting to dashboard...', false);
                     
                     setTimeout(() => {
                         window.location.href = '/dashboard';
-                    }, 1500);
+                    }, 1000);
                 } else {
                     showMessage(result.error || 'Authentication failed', true);
                 }
@@ -145,8 +146,14 @@ export function getAuthPage(UNIFIED_CSS) {
             }
         });
         
-        // Check if already logged in via session cookie
-        // This will be handled server-side, so we can remove this check
+        // Check if already logged in via session
+        fetch('/check-session')
+            .then(res => res.json())
+            .then(data => {
+                if (data.authenticated) {
+                    window.location.href = '/dashboard';
+                }
+            });
     </script>
 </body>
 </html>`;

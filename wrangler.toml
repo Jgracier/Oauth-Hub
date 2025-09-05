@@ -18,13 +18,6 @@ preview_id = "739dbeb63f964999b4d45d981874bb1a"
 binding = "USERS"
 id = "e523c4d4f3ea4bb79cacae28f85a0221"
 
-# Environment Variables
-[vars]
-# JWT_SECRET should be set via wrangler secret for production
-# wrangler secret put JWT_SECRET
-# Example for development only (replace with secure secret):
-# JWT_SECRET = "your-super-secret-jwt-key-change-this-in-production"
-
 # Production Environment
 [env.production]
 name = "oauth-handler-prod"

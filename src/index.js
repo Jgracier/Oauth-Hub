@@ -22,19 +22,14 @@ import {
   errorResponse
 } from './utils/helpers.js';
 import {
-  generateJWT,
-  verifyJWT,
   hashPassword,
   verifyPassword,
-  generateSecureState,
-  validateSecureState,
-  getSecurityHeaders,
+  createSessionToken,
   createSessionCookie,
-  getSessionFromCookie
-} from './utils/security.js';
-import { authMiddleware } from './middleware/auth.js';
-import { rateLimitMiddleware } from './middleware/rateLimit.js';
-import { getOAuthPopupScript } from './client/oauth-popup.js';
+  getSessionFromRequest,
+  generateOAuthState,
+  validateOAuthState
+} from './utils/auth.js';
 
 // Helper function to find API key by searching all entries
 async function validateApiKey(apiKey, env) {
@@ -97,7 +92,7 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname;
     const method = request.method;
-    const corsHeaders = { ...getCorsHeaders(), ...getSecurityHeaders() };
+    const corsHeaders = getCorsHeaders();
 
     // Handle CORS preflight
     if (method === 'OPTIONS') {
@@ -105,13 +100,6 @@ export default {
     }
 
     try {
-      // Apply middleware
-      const rateLimitResponse = await rateLimitMiddleware(request, env, ctx);
-      if (rateLimitResponse) return rateLimitResponse;
-      
-      const authResponse = await authMiddleware(request, env, ctx);
-      if (authResponse) return authResponse;
-      
       // =============================================================================
       // API ENDPOINTS (Before page routes to avoid conflicts)
       // =============================================================================
@@ -121,26 +109,38 @@ export default {
         return await handleAuth(request, env, corsHeaders);
       }
       
-      // Serve OAuth popup helper script
-      if (path === '/oauth-popup.js' && method === 'GET') {
-        return new Response(getOAuthPopupScript(), {
-          headers: {
-            'Content-Type': 'application/javascript',
-            'Cache-Control': 'public, max-age=3600',
-            ...corsHeaders
-          }
-        });
-      }
-      
       // Logout endpoint
-      if (path === '/auth/logout' && method === 'POST') {
-        return jsonResponse({
-          success: true,
-          message: 'Logged out successfully'
-        }, 200, {
+      if (path === '/logout' && method === 'POST') {
+        const sessionToken = getSessionFromRequest(request);
+        if (sessionToken) {
+          await env.USERS.delete(`session:${sessionToken}`);
+        }
+        return jsonResponse({ success: true, message: 'Logged out' }, 200, {
           ...corsHeaders,
           'Set-Cookie': 'session=; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=0'
         });
+      }
+      
+      // Session check endpoint
+      if (path === '/check-session' && method === 'GET') {
+        const sessionToken = getSessionFromRequest(request);
+        if (!sessionToken) {
+          return jsonResponse({ authenticated: false }, 200, corsHeaders);
+        }
+        
+        const sessionData = await env.USERS.get(`session:${sessionToken}`);
+        if (!sessionData) {
+          return jsonResponse({ authenticated: false }, 200, corsHeaders);
+        }
+        
+        const session = JSON.parse(sessionData);
+        return jsonResponse({ 
+          authenticated: true,
+          user: {
+            email: session.email,
+            name: session.name
+          }
+        }, 200, corsHeaders);
       }
       
       // API Key Management
@@ -212,10 +212,10 @@ export default {
       // Health Check
       if (path === '/health') {
         return jsonResponse({
-          status: '✅ OAuth Hub Online - Modular v3.0',
-          version: '3.0-secure',
+          status: '✅ OAuth Hub Online - Modular v2.0',
+          version: '2.0-modular',
           timestamp: new Date().toISOString(),
-          features: ['Authentication', 'API Keys', 'OAuth Apps', 'Token Management', 'Analytics', 'Direct Platform User ID Return']
+          features: ['Authentication', 'API Keys', 'OAuth Apps', 'Token Management', 'Analytics']
         }, 200, corsHeaders);
       }
 
@@ -228,34 +228,29 @@ export default {
         return htmlResponse(getAuthPage(UNIFIED_CSS));
       }
 
-      // Dashboard Page (require auth)
+      // Dashboard Page
       if (path === '/dashboard') {
-        // User data is attached by auth middleware
-        const userData = request.user || {};
-        return htmlResponse(getDashboardPage(UNIFIED_CSS, userData));
+        return htmlResponse(getDashboardPage(UNIFIED_CSS));
       }
 
-      // API Keys Page (require auth)
+      // API Keys Page
       if (path === '/api-keys') {
-        const userData = request.user || {};
-        return htmlResponse(getApiKeysPage(UNIFIED_CSS, userData));
+        return htmlResponse(getApiKeysPage(UNIFIED_CSS));
       }
 
-      // App Credentials Page (require auth)
+      // App Credentials Page
       if (path === '/apps') {
-        const userData = request.user || {};
-        return htmlResponse(getAppsPage(UNIFIED_CSS, userData));
+        return htmlResponse(getAppsPage(UNIFIED_CSS));
       }
 
-      // Documentation Page (public)
+      // Documentation Page
       if (path === '/docs') {
         return htmlResponse(getDocsPage(UNIFIED_CSS));
       }
 
-      // Analytics Page (require auth)
+      // Analytics Page
       if (path === '/analytics') {
-        const userData = request.user || {};
-        return htmlResponse(getAnalyticsPage(UNIFIED_CSS, userData));
+        return htmlResponse(getAnalyticsPage(UNIFIED_CSS));
       }
 
       // 404 Not Found
@@ -275,14 +270,14 @@ export default {
 // API HANDLER FUNCTIONS
 // =============================================================================
 
-// Authentication handler
+// Authentication handler with secure sessions
 async function handleAuth(request, env, corsHeaders) {
   try {
     const data = await parseJsonBody(request);
     const { mode, email, password, fullName } = data;
     
-    if (!validateEmail(email) || !password || password.length < 8) {
-      return jsonResponse({ error: 'Invalid email or password (minimum 8 characters)' }, 400, corsHeaders);
+    if (!validateEmail(email) || !password) {
+      return jsonResponse({ error: 'Invalid email or password' }, 400, corsHeaders);
     }
     
     if (mode === 'signup') {
@@ -292,8 +287,11 @@ async function handleAuth(request, env, corsHeaders) {
         return jsonResponse({ error: 'User already exists' }, 400, corsHeaders);
       }
       
-      // Create new user with hashed password
-      const { salt, hash } = await hashPassword(password);
+      // Hash password securely
+      const { hash, salt } = await hashPassword(password);
+      
+      // Create new user
+      const apiKey = generateApiKey();
       const userId = generateId();
       
       // Parse first and last name from full name
@@ -307,28 +305,16 @@ async function handleAuth(request, env, corsHeaders) {
         name: sanitizeInput(fullName || email.split('@')[0]),
         firstName: sanitizeInput(firstName),
         lastName: sanitizeInput(lastName),
-        passwordSalt: salt,
         passwordHash: hash,
+        passwordSalt: salt,
         createdAt: new Date().toISOString()
       };
       
-      // Store with resource type first - "user firstname lastname email"
+      // Store user
       const cleanUserKey = `user ${firstName} ${lastName} ${email}`;
-      await env.USERS.put(cleanUserKey, JSON.stringify({
-        ...userData,
-        userId: userId // Include user ID in data
-      }));
+      await env.USERS.put(cleanUserKey, JSON.stringify(userData));
       
-      // Generate JWT session token
-      const sessionToken = await generateJWT({
-        userId: userData.id,
-        email: userData.email,
-        name: userData.name,
-        exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60) // 24 hours
-      }, null, env);
-      
-      // Create default API key
-      const apiKey = generateApiKey();
+      // Store default API key
       const apiKeyInfo = {
         userId, 
         email,
@@ -340,7 +326,6 @@ async function handleAuth(request, env, corsHeaders) {
         createdAt: new Date().toISOString()
       };
       
-      // Store default API key with resource type first
       const defaultKeyName = 'Default Key';
       const cleanKey = `api-${defaultKeyName} ${firstName} ${lastName} ${email}`;
       await env.API_KEYS.put(cleanKey, JSON.stringify({
@@ -348,18 +333,36 @@ async function handleAuth(request, env, corsHeaders) {
         keyId: generateId()
       }));
       
+      // Create session
+      const sessionToken = createSessionToken();
+      const sessionData = {
+        userId,
+        email,
+        name: userData.name,
+        createdAt: Date.now()
+      };
+      
+      // Store session in KV with 24 hour expiry
+      await env.USERS.put(`session:${sessionToken}`, JSON.stringify(sessionData), {
+        expirationTtl: 86400
+      });
+      
+      // Return with session cookie
+      const headers = {
+        ...corsHeaders,
+        'Set-Cookie': createSessionCookie(sessionToken)
+      };
+      
       return jsonResponse({
         success: true,
+        apiKey,
         email: userData.email,
         name: userData.name,
         message: 'Account created successfully'
-      }, 200, {
-        ...corsHeaders,
-        'Set-Cookie': createSessionCookie(sessionToken)
-      });
+      }, 200, headers);
       
     } else if (mode === 'login') {
-      // Login existing user - search directly for user
+      // Login existing user
       const userResult = await findUserByEmail(email, env);
       if (!userResult) {
         return jsonResponse({ error: 'Invalid email or password' }, 401, corsHeaders);
@@ -368,28 +371,53 @@ async function handleAuth(request, env, corsHeaders) {
       const user = userResult.userData;
       
       // Verify password
-      const isValidPassword = await verifyPassword(password, user.passwordSalt, user.passwordHash);
-      if (!isValidPassword) {
+      const isValid = await verifyPassword(password, user.passwordHash, user.passwordSalt);
+      if (!isValid) {
         return jsonResponse({ error: 'Invalid email or password' }, 401, corsHeaders);
       }
       
-      // Generate JWT session token
-      const sessionToken = await generateJWT({
+      // Get user's default API key
+      const { keys } = await env.API_KEYS.list();
+      let userApiKey = null;
+      
+      for (const keyInfo of keys) {
+        if (keyInfo.name.includes('Default Key') && keyInfo.name.includes(email)) {
+          const keyData = await env.API_KEYS.get(keyInfo.name);
+          const parsed = JSON.parse(keyData);
+          if (parsed.userEmail === email || parsed.email === email) {
+            userApiKey = parsed.apiKey;
+            break;
+          }
+        }
+      }
+      
+      // Create session
+      const sessionToken = createSessionToken();
+      const sessionData = {
         userId: user.id,
         email: user.email,
         name: user.name,
-        exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60) // 24 hours
-      }, null, env);
+        createdAt: Date.now()
+      };
+      
+      // Store session in KV with 24 hour expiry
+      await env.USERS.put(`session:${sessionToken}`, JSON.stringify(sessionData), {
+        expirationTtl: 86400
+      });
+      
+      // Return with session cookie
+      const headers = {
+        ...corsHeaders,
+        'Set-Cookie': createSessionCookie(sessionToken)
+      };
       
       return jsonResponse({
         success: true,
+        apiKey: userApiKey,
         email: user.email,
         name: user.name,
         message: 'Login successful'
-      }, 200, {
-        ...corsHeaders,
-        'Set-Cookie': createSessionCookie(sessionToken)
-      });
+      }, 200, headers);
     }
     
     return jsonResponse({ error: 'Invalid mode' }, 400, corsHeaders);
@@ -403,10 +431,7 @@ async function handleAuth(request, env, corsHeaders) {
 async function generateUserApiKey(request, env, corsHeaders) {
   try {
     const data = await parseJsonBody(request);
-    const { name } = data;
-    
-    // Get email from authenticated user
-    const email = request.user?.email || request.user?.userEmail;
+    const { email, name } = data;
     
     // Validate required fields
     if (!email || !name) {
@@ -466,11 +491,11 @@ async function generateUserApiKey(request, env, corsHeaders) {
 
 async function getUserApiKeys(request, env, corsHeaders) {
   try {
-    // Get email from authenticated user
-    const email = request.user?.email || request.user?.userEmail;
+    const url = new URL(request.url);
+    const email = url.searchParams.get('email');
     
     if (!email) {
-      return jsonResponse({ error: 'Unauthorized' }, 401, corsHeaders);
+      return jsonResponse({ error: 'Email required' }, 401, corsHeaders);
     }
     // Get user by searching directly
     const userResult = await findUserByEmail(email, env);
@@ -514,10 +539,7 @@ async function getUserApiKeys(request, env, corsHeaders) {
 async function saveAppCredentials(request, env, corsHeaders) {
   try {
     const data = await parseJsonBody(request);
-    const { platform, name, clientId, clientSecret, scopes, redirectUri } = data;
-    
-    // Get email from authenticated user
-    const email = request.user?.email || request.user?.userEmail;
+    const { email, platform, name, clientId, clientSecret, scopes, redirectUri } = data;
     
     // Validate required fields
     if (!email || !platform || !clientId || !clientSecret) {
@@ -565,11 +587,11 @@ async function saveAppCredentials(request, env, corsHeaders) {
 
 async function getUserApps(request, env, corsHeaders) {
   try {
-    // Get email from authenticated user
-    const email = request.user?.email || request.user?.userEmail;
+    const url = new URL(request.url);
+    const email = url.searchParams.get('email');
     
     if (!email) {
-      return jsonResponse({ error: 'Unauthorized' }, 401, corsHeaders);
+      return jsonResponse({ error: 'Email required' }, 401, corsHeaders);
     }
     // Get user by searching directly
     const userResult = await findUserByEmail(email, env);
@@ -650,12 +672,9 @@ async function deleteAppCredentials(platform, request, env, corsHeaders) {
   }
 }
 
-// OAuth flow handlers
+// OAuth flow handlers - streamlined
 async function handleConsentRequest(platform, apiKey, request, env, corsHeaders) {
   try {
-    const url = new URL(request.url);
-    const state = url.searchParams.get('state');
-    
     if (!apiKey) {
       return jsonResponse({ error: 'API key required in URL path' }, 401, corsHeaders);
     }
@@ -690,15 +709,24 @@ async function handleConsentRequest(platform, apiKey, request, env, corsHeaders)
       }, 400, corsHeaders);
     }
     
-    // Generate secure state parameter with user info
-    const secureState = await generateSecureState(user.id || user.userId, email, platform, env);
+    // Generate simple state with user info
+    const state = generateOAuthState(email, platform);
+    
+    // Store state temporarily for validation (5 minute expiry)
+    await env.OAUTH_TOKENS.put(`state:${state}`, JSON.stringify({
+      email,
+      platform,
+      userId: user.id,
+      timestamp: Date.now()
+    }), { expirationTtl: 300 });
     
     // Generate consent URL using the OAuth backend
-    const consentUrl = generateConsentUrl(platform, app, secureState);
+    const consentUrl = generateConsentUrl(platform, app, state);
     
     return jsonResponse({
       platform: platform.toUpperCase(),
       consentUrl,
+      state,
       message: `OAuth consent URL for ${platform.toUpperCase()}`
     }, 200, corsHeaders);
     
@@ -824,17 +852,12 @@ async function handleOAuthCallback(request, env, corsHeaders) {
     const state = url.searchParams.get('state');
     const error = url.searchParams.get('error');
     
-    // Validate and extract data from secure state
-    let stateData = null;
-    let platform = 'unknown';
-    
+    // Extract platform from state parameter (format: platform_timestamp or just platform)
+    let platform = 'facebook'; // default fallback
     if (state) {
-      try {
-        stateData = await validateSecureState(state, env);
-        platform = stateData.platform || 'unknown';
-      } catch (stateError) {
-        console.error('Invalid state parameter:', stateError);
-        // Continue with fallback for backward compatibility
+      const stateParts = state.split('_');
+      if (stateParts.length > 0) {
+        platform = stateParts[0];
       }
     }
     
@@ -865,15 +888,28 @@ async function handleOAuthCallback(request, env, corsHeaders) {
           <p>This window will close automatically...</p>
           
           <script>
+            // Send error to parent immediately
+            const errorData = {
+              type: 'oauth_error',
+              platform: '${platform}',
+              error: '${error}',
+              description: '${url.searchParams.get('error_description') || 'Unknown error'}'
+            };
+            
+            if (window.opener && !window.opener.closed) {
+              window.opener.postMessage(errorData, '*');
+            }
+            if (window.parent && window.parent !== window) {
+              window.parent.postMessage(errorData, '*');
+            }
+            
             setTimeout(() => {
               try {
                 window.close();
               } catch (e) {
-                if (window.parent && window.parent !== window) {
-                  window.parent.postMessage({ type: 'oauth_error', platform: '${platform}', error: '${error}' }, '*');
-                }
+                document.body.innerHTML += '<p>You can close this window.</p>';
               }
-            }, 5000);
+            }, 3000);
           </script>
         </body>
         </html>
@@ -936,108 +972,83 @@ async function handleOAuthCallback(request, env, corsHeaders) {
       
       const { tokens, platformUserId } = tokenResult;
       
-      // Get user info from validated state
+      // Get user info from the state parameter if available
       let userInfo = {};
-      if (stateData) {
-        userInfo = {
-          email: stateData.email,
-          userId: stateData.userId,
-          name: stateData.name
-        };
-      }
-      
-      // Get additional user info from platform (optional)
-      let platformUserInfo = null;
-      try {
-        // We'll include basic user info if available from the token exchange
-        platformUserInfo = { platform };
-      } catch (e) {
-        console.log('Could not fetch platform user info:', e);
+      if (state && state.includes('_')) {
+        try {
+          const stateParts = state.split('_');
+          if (stateParts.length > 2) {
+            // State format: platform_timestamp_email
+            userInfo.email = stateParts[2];
+          }
+        } catch (e) {
+          console.log('Could not extract user info from state');
+        }
       }
       
       // Store tokens in KV storage with user info
       await storeOAuthTokens(platform, platformUserId, tokens, env, userInfo);
       
-      // Return enhanced success page with platform user ID and tokens
+      // Return success page with direct data to parent window
       return new Response(`
         <!DOCTYPE html>
         <html>
         <head>
           <title>Authorization Successful</title>
           <style>
-            body {
-              font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-              text-align: center;
-              padding: 40px 20px;
+            body { 
+              font-family: -apple-system, BlinkMacSystemFont, sans-serif; 
+              text-align: center; 
+              padding: 40px 20px; 
               background: #f0f9ff;
               color: #333;
             }
             .success-icon { font-size: 64px; margin-bottom: 20px; }
             .success-title { color: #10b981; margin: 20px 0; }
-            .loading { color: #666; font-size: 14px; }
+            .loading { color: #6b7280; }
           </style>
         </head>
         <body>
           <div class="success-icon">✅</div>
           <h1 class="success-title">Connected Successfully!</h1>
-          <p class="loading">Completing authorization...</p>
+          <p class="loading">Completing connection...</p>
           
           <script>
-            // Prepare data to send to parent window
-            const authData = {
+            // Send complete data to parent window
+            const data = {
               type: 'oauth_complete',
               platform: '${platform}',
               platformUserId: '${platformUserId}',
               tokens: {
                 accessToken: '${tokens.accessToken}',
-                tokenType: '${tokens.tokenType || 'bearer'}',
                 expiresAt: ${tokens.expiresAt || 'null'},
-                scope: '${tokens.scope || ''}'  
-              },
-              userInfo: ${platformUserInfo ? JSON.stringify(platformUserInfo) : 'null'}
+                tokenType: '${tokens.tokenType || 'bearer'}'
+              }
             };
             
             // Try multiple methods to communicate with parent
-            let messageSent = false;
-            
-            // Method 1: PostMessage to opener (popup)
             if (window.opener && !window.opener.closed) {
-              try {
-                window.opener.postMessage(authData, '*');
-                messageSent = true;
-              } catch (e) {
-                console.log('Could not post to opener:', e);
-              }
+              window.opener.postMessage(data, '*');
+              console.log('Sent data to opener');
             }
             
-            // Method 2: PostMessage to parent (iframe)
             if (window.parent && window.parent !== window) {
-              try {
-                window.parent.postMessage(authData, '*');
-                messageSent = true;
-              } catch (e) {
-                console.log('Could not post to parent:', e);
-              }
+              window.parent.postMessage(data, '*');
+              console.log('Sent data to parent');
             }
             
-            // Method 3: Broadcast channel (for same-origin)
-            try {
-              const channel = new BroadcastChannel('oauth_hub_auth');
-              channel.postMessage(authData);
-              channel.close();
-            } catch (e) {
-              // BroadcastChannel might not be supported
+            // Also broadcast to any listening windows
+            if (window.top && window.top !== window) {
+              window.top.postMessage(data, '*');
             }
             
-            // Close window after a short delay
+            // Close after a short delay to ensure message is sent
             setTimeout(() => {
               try {
                 window.close();
               } catch (e) {
-                // If can't close, show success message
-                if (!messageSent) {
-                  document.body.innerHTML = '<div style="padding: 40px; text-align: center;"><h2>✅ Authorization Complete!</h2><p>You can close this window.</p><p style="font-family: monospace; background: #f3f4f6; padding: 10px; margin-top: 20px;">Platform User ID: ${platformUserId}</p></div>';
-                }
+                // If close fails, show user they can close manually
+                document.querySelector('.loading').textContent = 'You can now close this window.';
               }
             }, 1000);
           </script>
