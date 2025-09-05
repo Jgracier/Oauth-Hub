@@ -31,10 +31,7 @@ export async function generateJWT(payload, secret, env) {
     new TextEncoder().encode(data)
   );
   
-  const encodedSignature = btoa(String.fromCharCode(...new Uint8Array(signature)))
-    .replace(/=/g, '')
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_');
+  const encodedSignature = btoa(String.fromCharCode(...new Uint8Array(signature)));
   
   return `${data}.${encodedSignature}`;
 }
@@ -54,10 +51,7 @@ export async function verifyJWT(token, secret, env) {
     );
     
     const data = `${header}.${payload}`;
-    // Fix base64 padding and convert URL-safe base64 back to standard base64
-    const paddedSignature = signature + '='.repeat((4 - signature.length % 4) % 4);
-    const standardBase64 = paddedSignature.replace(/-/g, '+').replace(/_/g, '/');
-    const signatureBytes = Uint8Array.from(atob(standardBase64), c => c.charCodeAt(0));
+    const signatureBytes = Uint8Array.from(atob(signature), c => c.charCodeAt(0));
     
     const valid = await crypto.subtle.verify(
       'HMAC',
