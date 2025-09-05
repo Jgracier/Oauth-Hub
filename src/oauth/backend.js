@@ -102,7 +102,7 @@ export function generateConsentUrl(platform, app, state, baseUrl) {
   
   const params = new URLSearchParams({
     client_id: config.clientId,
-    redirect_uri: 'https://oauth-handler.socialoauth.workers.dev/callback',
+    redirect_uri: 'https://www.oauth-hub.com/callback',
     scope: config.scopes.join(' '),
     response_type: 'code',
     state: state || `${platform}_${Date.now()}`

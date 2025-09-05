@@ -1142,7 +1142,7 @@ async function exchangeOAuthCodeForTokens(platform, code, env) {
     }
     
     // Prepare token exchange request
-    const redirectUri = `https://oauth-handler.socialoauth.workers.dev/callback`;
+    const redirectUri = `https://www.oauth-hub.com/callback`;
     
     const body = new URLSearchParams({
       grant_type: 'authorization_code',

@@ -4,7 +4,7 @@
 
 OAuth Hub is a comprehensive token management system built on Cloudflare Workers with KV storage. It provides user authentication, API key management, OAuth app credentials storage, and token management across multiple platforms.
 
-**Base URL**: `https://oauth-handler.socialoauth.workers.dev`
+**Base URL**: `https://www.oauth-hub.com`
 
 ---
 
@@ -429,7 +429,7 @@ curl -X DELETE "${BASE_URL}/delete-key/key-id?email=user@example.com"
 
 ## 📞 Support Information
 
-- **Base URL**: https://oauth-handler.socialoauth.workers.dev
+- **Base URL**: https://www.oauth-hub.com
 - **Version**: 2.0-modular
 - **Platform**: Cloudflare Workers
 - **Storage**: Cloudflare KV

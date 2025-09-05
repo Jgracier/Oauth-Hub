@@ -189,7 +189,7 @@ export function getDocsPage(UNIFIED_CSS) {
                         <h4>✨ One URL for Everything</h4>
                         <p>Use this single redirect URI for ALL your OAuth apps:</p>
                         <div class="code-block" style="text-align: center; font-size: 1rem; font-weight: bold; background: var(--primary-50); border-color: var(--primary-300);">
-                            https://oauth-handler.socialoauth.workers.dev/callback
+                            https://www.oauth-hub.com/callback
                         </div>
                     </div>
                     
@@ -311,7 +311,7 @@ export function getDocsPage(UNIFIED_CSS) {
                     ${createCodeBlock(`// Add this helper function to your app
 async function connectSocial(platform, apiKey) {
   // 1. Get OAuth URL
-  const response = await fetch(\`https://oauth-handler.socialoauth.workers.dev/consent/\${platform}/\${apiKey}\`);
+  const response = await fetch(\`https://www.oauth-hub.com/consent/\${platform}/\${apiKey}\`);
   const { consentUrl } = await response.json();
   
   // 2. Open popup and wait for completion
@@ -457,7 +457,7 @@ const handleConnect = async (platform) => {
                                 <li>Client Secret (authenticates your application - keep secure)</li>
                             </ul>
                         </li>
-                        <li><strong>Set redirect URI:</strong> <code>https://oauth-handler.socialoauth.workers.dev/callback</code></li>
+                        <li><strong>Set redirect URI:</strong> <code>https://www.oauth-hub.com/callback</code></li>
                         <li><strong>Configure scopes</strong> based on your needs (posts, media, sites, etc.)</li>
                     </ol>
                     
@@ -519,7 +519,7 @@ const postResponse = await fetch(\`https://public-api.wordpress.com/rest/v1/site
   },
   body: JSON.stringify(postData)
 });`, 'javascript', 'WordPress.com API integration example')}
-                                    </div>
+                        </div>
                 
                 <!-- Platform Showcase -->
                 <div class="card">
@@ -529,7 +529,7 @@ const postResponse = await fetch(\`https://public-api.wordpress.com/rest/v1/site
                         <h4>✨ 15 Major Platforms Supported</h4>
                         <p>OAuth Hub now supports all major social media, developer, music, streaming, workplace, and enterprise platforms with comprehensive scope management.</p>
                     </div>
-                    
+
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--space-4); margin: var(--space-4) 0; max-width: 100%;">
                         <div style="min-width: 0;">
                             <h4>🌐 Social & Media</h4>
@@ -579,7 +579,7 @@ const result = await connectSocial(platform, apiKey);`, 'javascript', 'Universal
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Backend Usage -->
                 <div class="card">
                     <h2>🔧 Backend Integration</h2>
@@ -587,14 +587,14 @@ const result = await connectSocial(platform, apiKey);`, 'javascript', 'Universal
                     <div class="warning-box">
                         <h4>🔑 Important</h4>
                         <p>Save the <strong>platformUserId</strong> from the popup result - you need it to retrieve tokens later!</p>
-                </div>
+                        </div>
 
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--space-4); max-width: 100%;">
                         <div style="min-width: 0;">
                             <h4>🟨 Node.js</h4>
                             ${createCodeBlock(`// Get fresh tokens
 async function getTokens(platformUserId, apiKey) {
-  const url = \`https://oauth-handler.socialoauth.workers.dev/tokens/\${platformUserId}/\${apiKey}\`;
+  const url = \`https://www.oauth-hub.com/tokens/\${platformUserId}/\${apiKey}\`;
   const response = await fetch(url);
   const data = await response.json();
   return data.accessToken;
@@ -612,7 +612,7 @@ const profile = await fetch('https://graph.facebook.com/me', {
                             ${createCodeBlock(`import requests
 
 def get_tokens(platform_user_id, api_key):
-    url = f"https://oauth-handler.socialoauth.workers.dev/tokens/{platform_user_id}/{api_key}"
+    url = f"https://www.oauth-hub.com/tokens/{platform_user_id}/{api_key}"
     response = requests.get(url)
     return response.json()['accessToken']
 

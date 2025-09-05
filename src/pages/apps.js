@@ -97,7 +97,7 @@ export function getAppsPage(UNIFIED_CSS) {
                             <span style="color: var(--warning-600); font-size: 0.875rem;">
                                 Set this redirect URI in your app:
                                 <code style="background: var(--warning-100); padding: 2px 4px; border-radius: 3px;">
-                                    https://oauth-handler.socialoauth.workers.dev/callback
+                                    https://www.oauth-hub.com/callback
                                 </code>
                             </span>
                         </div>
@@ -798,7 +798,7 @@ export function getAppsPage(UNIFIED_CSS) {
             e.preventDefault();
             
             const platform = document.getElementById('platform').value;
-            const redirectUri = 'https://oauth-handler.socialoauth.workers.dev/callback';
+            const redirectUri = 'https://www.oauth-hub.com/callback';
             
             // Get selected scopes from scope selector and add required scopes
             const selectedScopes = scopeSelector ? scopeSelector.getSelectedScopes() : [];
