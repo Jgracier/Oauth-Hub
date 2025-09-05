@@ -20,14 +20,14 @@ id = "e523c4d4f3ea4bb79cacae28f85a0221"
 
 # Environment Variables
 [vars]
-JWT_SECRET = "oauth-handler-production-secret-key-2024-secure-random-string"
+# JWT_SECRET should be set via wrangler secret for production
+# wrangler secret put JWT_SECRET
+# Example for development only (replace with secure secret):
+# JWT_SECRET = "your-super-secret-jwt-key-change-this-in-production"
 
 # Production Environment
 [env.production]
 name = "oauth-handler-prod"
-
-[env.production.vars]
-JWT_SECRET = "oauth-handler-production-secret-key-2024-secure-random-string"
 
 [[env.production.kv_namespaces]]
 binding = "OAUTH_TOKENS"

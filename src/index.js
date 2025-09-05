@@ -118,43 +118,19 @@ export default {
     const path = url.pathname;
     const method = request.method;
     const corsHeaders = { ...getCorsHeaders(), ...getSecurityHeaders() };
-    const userAgent = request.headers.get('User-Agent') || 'Unknown';
-    const clientIP = request.headers.get('CF-Connecting-IP') || request.headers.get('X-Forwarded-For') || 'Unknown';
-
-    console.log(`🚀 ===== REQUEST START =====`);
-    console.log(`🚀 MAIN HANDLER: ${method} ${path}`);
-    console.log(`🚀 CLIENT: ${clientIP} | UA: ${userAgent.substring(0, 50)}...`);
-    console.log(`🚀 TIMESTAMP: ${new Date().toISOString()}`);
-    console.log(`🚀 REQUEST HEADERS:`, Object.fromEntries(request.headers.entries()));
 
     // Handle CORS preflight
     if (method === 'OPTIONS') {
-      console.log(`🚀 CORS PREFLIGHT: ${method} ${path}`);
-      console.log(`🚀 ===== REQUEST END =====`);
       return new Response(null, { headers: corsHeaders });
     }
 
     try {
-      console.log(`🚀 APPLYING MIDDLEWARE`);
-
       // Apply middleware
       const rateLimitResponse = await rateLimitMiddleware(request, env, ctx);
-      if (rateLimitResponse) {
-        console.log(`🚀 RATE LIMITED: ${method} ${path} - Status: ${rateLimitResponse.status}`);
-        console.log(`🚀 ===== REQUEST END =====`);
-        return rateLimitResponse;
-      }
-
+      if (rateLimitResponse) return rateLimitResponse;
+      
       const authResponse = await authMiddleware(request, env, ctx);
-      if (authResponse) {
-        console.log(`🚀 AUTH FAILED: ${method} ${path} - Status: ${authResponse.status}`);
-        console.log(`🚀 AUTH RESPONSE BODY:`, await authResponse.clone().text());
-        console.log(`🚀 ===== REQUEST END =====`);
-        return authResponse;
-      }
-
-      console.log(`🚀 AUTH PASSED: ${method} ${path} - proceeding to route handling`);
-      console.log(`🚀 USER INFO: ${JSON.stringify(request.user || 'NO USER ATTACHED')}`);
+      if (authResponse) return authResponse;
       
       // =============================================================================
       // API ENDPOINTS (Before page routes to avoid conflicts)
@@ -198,23 +174,7 @@ export default {
       }
       
       if (path === '/user-keys' && method === 'GET') {
-        console.log(`🚀 HANDLING /user-keys for user: ${request.user?.email || 'UNKNOWN'}`);
-        console.log(`🚀 USER OBJECT:`, JSON.stringify(request.user || 'NO USER OBJECT'));
-
-        try {
-          const result = await getUserApiKeys(request, env, corsHeaders);
-          console.log(`🚀 /user-keys RESPONSE: Status ${result.status}`);
-
-          if (result.status !== 200) {
-            const responseText = await result.clone().text();
-            console.log(`🚀 /user-keys ERROR RESPONSE:`, responseText);
-          }
-
-          return result;
-        } catch (error) {
-          console.log(`🚀 /user-keys EXCEPTION:`, error.message);
-          throw error;
-        }
+        return await getUserApiKeys(request, env, corsHeaders);
       }
       
       if (path.startsWith('/delete-key/') && method === 'DELETE') {
@@ -228,23 +188,7 @@ export default {
       }
       
       if (path === '/user-apps' && method === 'GET') {
-        console.log(`🚀 HANDLING /user-apps for user: ${request.user?.email || 'UNKNOWN'}`);
-        console.log(`🚀 USER OBJECT:`, JSON.stringify(request.user || 'NO USER OBJECT'));
-
-        try {
-          const result = await getUserApps(request, env, corsHeaders);
-          console.log(`🚀 /user-apps RESPONSE: Status ${result.status}`);
-
-          if (result.status !== 200) {
-            const responseText = await result.clone().text();
-            console.log(`🚀 /user-apps ERROR RESPONSE:`, responseText);
-          }
-
-          return result;
-        } catch (error) {
-          console.log(`🚀 /user-apps EXCEPTION:`, error.message);
-          throw error;
-        }
+        return await getUserApps(request, env, corsHeaders);
       }
       
       if (path.startsWith('/delete-app/') && method === 'DELETE') {
@@ -340,20 +284,13 @@ export default {
       }
 
       // 404 Not Found
-      console.log(`🚀 404 NOT FOUND: ${method} ${path}`);
-      console.log(`🚀 ===== REQUEST END =====`);
       return new Response('Not Found', { status: 404, headers: corsHeaders });
-
+      
     } catch (error) {
-      console.log(`🚀 REQUEST EXCEPTION: ${method} ${path}`);
-      console.log(`🚀 ERROR MESSAGE:`, error.message);
-      console.log(`🚀 ERROR STACK:`, error.stack);
-      console.log(`🚀 ===== REQUEST END =====`);
-
       console.error('Request error:', error);
-      return jsonResponse({
-        error: 'Internal server error',
-        message: error.message
+      return jsonResponse({ 
+        error: 'Internal server error', 
+        message: error.message 
       }, 500, corsHeaders);
     }
   }
@@ -366,31 +303,19 @@ export default {
 // Authentication handler
 async function handleAuth(request, env, corsHeaders) {
   try {
-    console.log(`🔐 HANDLE AUTH: Starting authentication process`);
-
     const data = await parseJsonBody(request);
     const { mode, email, password, fullName } = data;
-
-    console.log(`🔐 HANDLE AUTH: Mode=${mode}, Email=${email}, HasPassword=${!!password}, FullName=${fullName}`);
-
+    
     if (!validateEmail(email) || !password || password.length < 8) {
-      console.log(`🔐 HANDLE AUTH: Validation failed - email or password invalid`);
       return jsonResponse({ error: 'Invalid email or password (minimum 8 characters)' }, 400, corsHeaders);
     }
-
-    console.log(`🔐 HANDLE AUTH: Validation passed, proceeding with ${mode} mode`);
     
     if (mode === 'signup') {
-      console.log(`🔐 HANDLE AUTH: Signup mode - checking if user exists`);
-
       // Check if user already exists
       const existingUser = await findUserByEmail(email, env);
       if (existingUser) {
-        console.log(`🔐 HANDLE AUTH: User already exists: ${email}`);
         return jsonResponse({ error: 'User already exists' }, 400, corsHeaders);
       }
-
-      console.log(`🔐 HANDLE AUTH: User doesn't exist, proceeding with signup`);
       
       // Create new user with hashed password
       const { salt, hash } = await hashPassword(password);
@@ -420,20 +345,15 @@ async function handleAuth(request, env, corsHeaders) {
       }));
       
       // Generate JWT session token
-      console.log(`🔐 HANDLE AUTH: Generating JWT for user: ${userData.email}`);
-
       const sessionToken = await generateJWT({
         userId: userData.id,
         email: userData.email,
         name: userData.name,
         exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60) // 24 hours
       }, null, env);
-
-      console.log(`🔐 HANDLE AUTH: JWT generated successfully`);
-
+      
       // Create default API key
       const apiKey = generateApiKey();
-      console.log(`🔐 HANDLE AUTH: Generated default API key`);
       const apiKeyInfo = {
         userId, 
         email,
@@ -453,7 +373,6 @@ async function handleAuth(request, env, corsHeaders) {
         keyId: generateId()
       }));
       
-      console.log(`🔐 HANDLE AUTH: Signup successful for user: ${userData.email}`);
       return jsonResponse({
         success: true,
         email: userData.email,
@@ -463,42 +382,32 @@ async function handleAuth(request, env, corsHeaders) {
         ...corsHeaders,
         'Set-Cookie': createSessionCookie(sessionToken)
       });
-
+      
     } else if (mode === 'login') {
-      console.log(`🔐 HANDLE AUTH: Login mode - finding user: ${email}`);
-
       // Login existing user - search directly for user
       const userResult = await findUserByEmail(email, env);
       if (!userResult) {
-        console.log(`🔐 HANDLE AUTH: User not found: ${email}`);
         return jsonResponse({ error: 'Invalid email or password' }, 401, corsHeaders);
       }
-
+      
       const user = userResult.userData;
-      console.log(`🔐 HANDLE AUTH: User found: ${user.email} (${user.id})`);
-
+      
       // Check if user has password data (migrated users might not)
       if (!user.passwordSalt || !user.passwordHash) {
-        console.log(`🔐 HANDLE AUTH: Password reset required for user: ${user.email}`);
-        return jsonResponse({
-          error: 'Password reset required',
+        return jsonResponse({ 
+          error: 'Password reset required', 
           message: 'Your account was migrated and requires a password reset. Please use the password reset feature.',
           requiresPasswordReset: true,
           email: user.email
         }, 401, corsHeaders);
       }
-
-      console.log(`🔐 HANDLE AUTH: Password data found, verifying password`);
-
+      
       // Verify password
       const isValidPassword = await verifyPassword(password, user.passwordSalt, user.passwordHash);
       if (!isValidPassword) {
-        console.log(`🔐 HANDLE AUTH: Invalid password for user: ${user.email}`);
         return jsonResponse({ error: 'Invalid email or password' }, 401, corsHeaders);
       }
-
-      console.log(`🔐 HANDLE AUTH: Password verified, generating JWT`);
-
+      
       // Generate JWT session token
       const sessionToken = await generateJWT({
         userId: user.id,
@@ -506,10 +415,7 @@ async function handleAuth(request, env, corsHeaders) {
         name: user.name,
         exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60) // 24 hours
       }, null, env);
-
-      console.log(`🔐 HANDLE AUTH: JWT generated for login`);
       
-      console.log(`🔐 HANDLE AUTH: Login successful for user: ${user.email}`);
       return jsonResponse({
         success: true,
         email: user.email,
@@ -524,8 +430,6 @@ async function handleAuth(request, env, corsHeaders) {
     return jsonResponse({ error: 'Invalid mode' }, 400, corsHeaders);
     
   } catch (error) {
-    console.log(`🔐 HANDLE AUTH: Exception occurred:`, error.message);
-    console.log(`🔐 HANDLE AUTH: Stack trace:`, error.stack);
     return jsonResponse({ error: 'Authentication failed', message: error.message }, 500, corsHeaders);
   }
 }

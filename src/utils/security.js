@@ -6,9 +6,6 @@
 export async function generateJWT(payload, secret, env) {
   // Use environment variable if available, fallback for development
   const jwtSecret = secret || env?.JWT_SECRET || 'development-secret-change-in-production';
-
-  console.log(`🔐 JWT GENERATE: Payload: ${JSON.stringify(payload)}`);
-  console.log(`🔐 JWT SECRET: ${jwtSecret.substring(0, 10)}... (length: ${jwtSecret.length})`);
   
   const header = {
     alg: 'HS256',
@@ -34,27 +31,20 @@ export async function generateJWT(payload, secret, env) {
     new TextEncoder().encode(data)
   );
   
-  const encodedSignature = btoa(String.fromCharCode(...new Uint8Array(signature)));
-
-  const finalToken = `${data}.${encodedSignature}`;
-  console.log(`🔐 JWT GENERATED: Token length: ${finalToken.length}`);
-  console.log(`🔐 JWT STRUCTURE: ${finalToken.split('.').map((part, i) => `${i === 0 ? 'Header' : i === 1 ? 'Payload' : 'Signature'}: ${part.length} chars`).join(' | ')}`);
-
-  return finalToken;
+  const encodedSignature = btoa(String.fromCharCode(...new Uint8Array(signature)))
+    .replace(/=/g, '')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_');
+  
+  return `${data}.${encodedSignature}`;
 }
 
 export async function verifyJWT(token, secret, env) {
   // Use environment variable if available, fallback for development
   const jwtSecret = secret || env?.JWT_SECRET || 'development-secret-change-in-production';
-
-  console.log(`🔑 JWT VERIFY: Token length: ${token.length}`);
-  console.log(`🔑 JWT SECRET: ${jwtSecret.substring(0, 10)}... (length: ${jwtSecret.length})`);
-
   try {
     const [header, payload, signature] = token.split('.');
-
-    console.log(`🔑 JWT PARTS: Header(${header.length}), Payload(${payload.length}), Signature(${signature.length})`);
-
+    
     const key = await crypto.subtle.importKey(
       'raw',
       new TextEncoder().encode(jwtSecret),
@@ -62,47 +52,38 @@ export async function verifyJWT(token, secret, env) {
       false,
       ['verify']
     );
-
-    // Restore base64 padding that was removed during generation
-    const paddedHeader = header + '='.repeat((4 - header.length % 4) % 4);
-    const paddedPayload = payload + '='.repeat((4 - payload.length % 4) % 4);
-    const paddedSignature = signature + '='.repeat((4 - signature.length % 4) % 4);
-
-    console.log(`🔑 JWT PADDING: Header(${paddedHeader.length}), Payload(${paddedPayload.length}), Signature(${paddedSignature.length})`);
-
+    
     const data = `${header}.${payload}`;
-    const signatureBytes = Uint8Array.from(atob(paddedSignature), c => c.charCodeAt(0));
-
-    console.log(`🔑 JWT SIGNATURE: ${signatureBytes.length} bytes`);
-
+    // Fix base64 padding issues in signature
+    let signatureB64 = signature.replace(/-/g, '+').replace(/_/g, '/');
+    while (signatureB64.length % 4 !== 0) {
+      signatureB64 += '=';
+    }
+    const signatureBytes = Uint8Array.from(atob(signatureB64), c => c.charCodeAt(0));
+    
     const valid = await crypto.subtle.verify(
       'HMAC',
       key,
       signatureBytes,
       new TextEncoder().encode(data)
     );
-
-    console.log(`🔑 JWT SIGNATURE VERIFICATION: ${valid ? 'VALID' : 'INVALID'}`);
-
-    if (!valid) {
-      console.log(`🔑 JWT SIGNATURE MISMATCH`);
-      return null;
+    
+    if (!valid) return null;
+    
+    // Fix base64 padding issues in payload
+    let payloadB64 = payload;
+    while (payloadB64.length % 4 !== 0) {
+      payloadB64 += '=';
     }
-
-    const decodedPayload = JSON.parse(atob(paddedPayload));
-    console.log(`🔑 JWT PAYLOAD: ${JSON.stringify(decodedPayload)}`);
-
+    const decodedPayload = JSON.parse(atob(payloadB64));
+    
     // Check expiration
     if (decodedPayload.exp && decodedPayload.exp < Date.now() / 1000) {
-      console.log(`🔑 JWT EXPIRED: ${new Date(decodedPayload.exp * 1000)} vs ${new Date()}`);
       return null;
     }
-
-    console.log(`🔑 JWT VERIFICATION SUCCESS`);
+    
     return decodedPayload;
   } catch (error) {
-    console.log(`🔑 JWT VERIFICATION ERROR: ${error.message}`);
-    console.log(`🔑 JWT VERIFICATION STACK: ${error.stack}`);
     return null;
   }
 }
@@ -133,24 +114,44 @@ export async function hashPassword(password) {
 }
 
 export async function verifyPassword(password, storedSalt, storedHash) {
-  const salt = Uint8Array.from(atob(storedSalt), c => c.charCodeAt(0));
-  const passwordBytes = new TextEncoder().encode(password);
-  
-  // Combine password and salt
-  const combined = new Uint8Array(passwordBytes.length + salt.length);
-  combined.set(passwordBytes);
-  combined.set(salt, passwordBytes.length);
-  
-  // Hash using same method
-  let hash = combined;
-  for (let i = 0; i < 10000; i++) {
-    hash = new Uint8Array(
-      await crypto.subtle.digest('SHA-256', hash)
-    );
+  try {
+    // Fix base64 padding issues
+    let paddedSalt = storedSalt;
+    while (paddedSalt.length % 4 !== 0) {
+      paddedSalt += '=';
+    }
+
+    let paddedHash = storedHash;
+    while (paddedHash.length % 4 !== 0) {
+      paddedHash += '=';
+    }
+
+    const salt = Uint8Array.from(atob(paddedSalt), c => c.charCodeAt(0));
+    const storedHashBytes = Uint8Array.from(atob(paddedHash), c => c.charCodeAt(0));
+    const passwordBytes = new TextEncoder().encode(password);
+
+    // Combine password and salt
+    const combined = new Uint8Array(passwordBytes.length + salt.length);
+    combined.set(passwordBytes);
+    combined.set(salt, passwordBytes.length);
+
+    // Hash using same method
+    let hash = combined;
+    for (let i = 0; i < 10000; i++) {
+      hash = new Uint8Array(
+        await crypto.subtle.digest('SHA-256', hash)
+      );
+    }
+
+    // Byte-by-byte comparison instead of string comparison
+    const isMatch = hash.length === storedHashBytes.length &&
+                   hash.every((byte, index) => byte === storedHashBytes[index]);
+
+    return isMatch;
+  } catch (error) {
+    console.error('Password verification error:', error);
+    return false;
   }
-  
-  const hashString = btoa(String.fromCharCode(...hash));
-  return hashString === storedHash;
 }
 
 // CSRF Token Generation
@@ -171,12 +172,12 @@ export async function generateSecureState(userId, email, platform, env) {
   };
   
   // Sign the state
-  const signature = await generateJWT(data, null, env);
+  const signature = await generateJWT(data, env.JWT_SECRET, env);
   return signature; // JWT itself serves as signed state
 }
 
 export async function validateSecureState(state, env) {
-  const data = await verifyJWT(state, null, env);
+  const data = await verifyJWT(state, env.JWT_SECRET, env);
   
   if (!data) {
     throw new Error('Invalid state parameter');
@@ -204,31 +205,19 @@ export function getSecurityHeaders() {
 
 // Session Cookie Helpers
 export function createSessionCookie(token, maxAge = 86400) {
-  // Secure cookie settings for HTTPS
-  const cookieValue = `session=${token}; Path=/; Max-Age=${maxAge}; Secure; SameSite=None`;
-  console.log(`🍪 CREATING SESSION COOKIE: ${cookieValue.substring(0, 100)}...`);
-  console.log(`🍪 COOKIE LENGTH: ${cookieValue.length} characters`);
-  return cookieValue;
+  return `session=${token}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=${maxAge}`;
 }
 
 export function getSessionFromCookie(request) {
   const cookieHeader = request.headers.get('Cookie');
-  console.log(`🍪 COOKIE HEADER RECEIVED: ${cookieHeader ? cookieHeader.substring(0, 100) + '...' : 'NO COOKIE HEADER'}`);
-
-  if (!cookieHeader) {
-    console.log(`🍪 NO COOKIE HEADER FOUND`);
-    return null;
-  }
-
+  if (!cookieHeader) return null;
+  
   const cookies = cookieHeader.split(';').reduce((acc, cookie) => {
     const [key, value] = cookie.trim().split('=');
     acc[key] = value;
     return acc;
   }, {});
-
-  console.log(`🍪 PARSED COOKIES: ${Object.keys(cookies).join(', ')}`);
-  console.log(`🍪 SESSION COOKIE: ${cookies.session ? cookies.session.substring(0, 50) + '...' : 'NO SESSION COOKIE'}`);
-
+  
   return cookies.session || null;
 }
 
