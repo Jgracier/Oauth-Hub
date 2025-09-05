@@ -177,8 +177,8 @@ export function getSecurityHeaders() {
 
 // Session Cookie Helpers
 export function createSessionCookie(token, maxAge = 86400) {
-  // Most permissive cookie settings for testing
-  return `session=${token}; Path=/; Max-Age=${maxAge}; SameSite=None`;
+  // Secure cookie settings for HTTPS
+  return `session=${token}; Path=/; Max-Age=${maxAge}; Secure; SameSite=None`;
 }
 
 export function getSessionFromCookie(request) {

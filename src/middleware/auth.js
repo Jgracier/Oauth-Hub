@@ -46,7 +46,7 @@ export async function authMiddleware(request, env, ctx) {
       status: 401,
       headers: {
         'Content-Type': 'application/json',
-        'Set-Cookie': 'session=; Path=/; Max-Age=0'
+        'Set-Cookie': 'session=; Path=/; Max-Age=0; Secure; SameSite=None'
       }
     });
   }
