@@ -58,46 +58,26 @@ async function validateApiKey(apiKey, env) {
   return null;
 }
 
-// Helper function to find user by email using optimized lookup
+// Helper function to find user by email by searching through entries
 async function findUserByEmail(email, env) {
-  try {
-    // First try the optimized email lookup
-    const userId = await env.USERS.get(`email:${email}`);
-    if (userId) {
-      const userData = await env.USERS.get(`user:${userId}`);
+  const { keys } = await env.USERS.list();
+  
+  for (const keyInfo of keys) {
+    if (keyInfo.name.startsWith('user ')) {
+      const userData = await env.USERS.get(keyInfo.name);
       if (userData) {
         const parsedUser = JSON.parse(userData);
-        return {
-          userData: parsedUser,
-          userKey: `user:${userId}`
-        };
-      }
-    }
-    
-    // Fallback: search through all entries (for backward compatibility)
-    const { keys } = await env.USERS.list();
-    
-    for (const keyInfo of keys) {
-      // Check both old format (user FirstName LastName email) and new format (user:UUID)
-      if (keyInfo.name.startsWith('user ') || keyInfo.name.startsWith('user:')) {
-        const userData = await env.USERS.get(keyInfo.name);
-        if (userData) {
-          const parsedUser = JSON.parse(userData);
-          if (parsedUser.email === email) {
-            return {
-              userData: parsedUser,
-              userKey: keyInfo.name
-            };
-          }
+        if (parsedUser.email === email) {
+          return {
+            userData: parsedUser,
+            userKey: keyInfo.name
+          };
         }
       }
     }
-    
-    return null;
-  } catch (error) {
-    console.error('Error finding user by email:', error);
-    return null;
   }
+  
+  return null;
 }
 
 // Import OAuth backend
@@ -140,47 +120,6 @@ export default {
       if (path === '/auth' && method === 'POST') {
         return await handleAuth(request, env, corsHeaders);
       }
-      
-        // Password Reset for Migrated Users
-  if (path === '/reset-password' && method === 'POST') {
-    return await handlePasswordReset(request, env, corsHeaders);
-  }
-
-  // Debug endpoint to check session status
-  if (path === '/debug-session' && method === 'GET') {
-    try {
-      const session = getSessionFromCookie(request);
-      const jwtSecret = env?.JWT_SECRET || 'development-secret-change-in-production';
-
-      console.log('🔍 Debug Session Check:', {
-        hasSessionCookie: !!session,
-        sessionLength: session?.length || 0,
-        jwtSecretLength: jwtSecret.length
-      });
-
-      const userData = session ? await verifyJWT(session, jwtSecret, env) : null;
-
-      console.log('🔍 JWT Verification Result:', {
-        sessionValid: !!userData,
-        userData: userData ? { userId: userData.userId, email: userData.email } : null
-      });
-
-      return jsonResponse({
-        hasSession: !!session,
-        sessionValid: !!userData,
-        userData: userData ? { userId: userData.userId, email: userData.email, name: userData.name } : null,
-        sessionLength: session?.length || 0,
-        timestamp: new Date().toISOString()
-      }, 200, corsHeaders);
-    } catch (error) {
-      console.log('🔍 Debug Session Error:', error.message);
-      return jsonResponse({
-        error: error.message,
-        timestamp: new Date().toISOString(),
-        stack: error.stack
-      }, 500, corsHeaders);
-    }
-  }
       
       // Serve OAuth popup helper script
       if (path === '/oauth-popup.js' && method === 'GET') {
@@ -381,13 +320,12 @@ async function handleAuth(request, env, corsHeaders) {
       }));
       
       // Generate JWT session token
-      const jwtSecret = env?.JWT_SECRET || 'development-secret-change-in-production';
       const sessionToken = await generateJWT({
         userId: userData.id,
         email: userData.email,
         name: userData.name,
         exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60) // 24 hours
-      }, jwtSecret, env);
+      }, null, env);
       
       // Create default API key
       const apiKey = generateApiKey();
@@ -429,16 +367,6 @@ async function handleAuth(request, env, corsHeaders) {
       
       const user = userResult.userData;
       
-      // Check if user has password data (migrated users might not)
-      if (!user.passwordSalt || !user.passwordHash) {
-        return jsonResponse({ 
-          error: 'Password reset required', 
-          message: 'Your account was migrated and requires a password reset. Please use the password reset feature.',
-          requiresPasswordReset: true,
-          email: user.email
-        }, 401, corsHeaders);
-      }
-      
       // Verify password
       const isValidPassword = await verifyPassword(password, user.passwordSalt, user.passwordHash);
       if (!isValidPassword) {
@@ -446,27 +374,12 @@ async function handleAuth(request, env, corsHeaders) {
       }
       
       // Generate JWT session token
-      const jwtSecret = env?.JWT_SECRET || 'development-secret-change-in-production';
-      const sessionPayload = {
+      const sessionToken = await generateJWT({
         userId: user.id,
         email: user.email,
         name: user.name,
         exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60) // 24 hours
-      };
-
-      console.log('🔑 Login - Generating JWT:', {
-        userId: user.id,
-        email: user.email,
-        jwtSecretLength: jwtSecret.length,
-        expTime: new Date(sessionPayload.exp * 1000).toISOString()
-      });
-
-      const sessionToken = await generateJWT(sessionPayload, jwtSecret, env);
-
-      console.log('🔑 Login - JWT Generated:', {
-        tokenLength: sessionToken.length,
-        hasThreeParts: sessionToken.split('.').length === 3
-      });
+      }, null, env);
       
       return jsonResponse({
         success: true,
@@ -483,67 +396,6 @@ async function handleAuth(request, env, corsHeaders) {
     
   } catch (error) {
     return jsonResponse({ error: 'Authentication failed', message: error.message }, 500, corsHeaders);
-  }
-}
-
-// Password reset handler for migrated users
-async function handlePasswordReset(request, env, corsHeaders) {
-  try {
-    const data = await parseJsonBody(request);
-    const { email, newPassword } = data;
-    
-    if (!validateEmail(email) || !newPassword || newPassword.length < 8) {
-      return jsonResponse({ error: 'Invalid email or password (minimum 8 characters)' }, 400, corsHeaders);
-    }
-    
-    // Find user by email
-    const userResult = await findUserByEmail(email, env);
-    if (!userResult) {
-      return jsonResponse({ error: 'User not found' }, 404, corsHeaders);
-    }
-    
-    const user = userResult.userData;
-    
-    // Generate new password hash
-    const { salt, hash } = await hashPassword(newPassword);
-    
-    // Update user with new password
-    const updatedUser = {
-      ...user,
-      passwordSalt: salt,
-      passwordHash: hash,
-      updatedAt: new Date().toISOString(),
-      tempPassword: false,
-      mustChangePassword: false,
-      passwordResetAt: new Date().toISOString()
-    };
-    
-    // Store updated user data
-    // Use the correct existing key format for password reset
-    const userKey = userResult.userKey || `user ${user.firstName} ${user.lastName} ${user.email}`;
-    await env.USERS.put(userKey, JSON.stringify(updatedUser));
-
-    // Generate JWT session token for immediate login
-    const jwtSecret = env?.JWT_SECRET || 'development-secret-change-in-production';
-    const sessionToken = await generateJWT({
-      userId: user.id,
-      email: user.email,
-      name: user.name,
-      exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60) // 24 hours
-    }, jwtSecret, env);
-    
-    return jsonResponse({
-      success: true,
-      email: user.email,
-      name: user.name,
-      message: 'Password reset successfully. You are now logged in.'
-    }, 200, {
-      ...corsHeaders,
-      'Set-Cookie': createSessionCookie(sessionToken)
-    });
-    
-  } catch (error) {
-    return jsonResponse({ error: 'Password reset failed', message: error.message }, 500, corsHeaders);
   }
 }
 

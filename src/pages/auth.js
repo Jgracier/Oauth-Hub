@@ -31,11 +31,10 @@ export function getAuthPage(UNIFIED_CSS) {
                 
                 <div class="card">
                     <div style="text-align: center; margin-bottom: var(--space-6);">
-                                            <div id="mode-switcher">
-                        <button id="login-tab" class="btn btn-primary" onclick="switchMode('login')">Login</button>
-                        <button id="signup-tab" class="btn btn-secondary" onclick="switchMode('signup')">Sign Up</button>
-                        <button id="reset-tab" class="btn btn-secondary" onclick="switchMode('reset')" style="display: none;">Reset Password</button>
-                    </div>
+                        <div id="mode-switcher">
+                            <button id="login-tab" class="btn btn-primary" onclick="switchMode('login')">Login</button>
+                            <button id="signup-tab" class="btn btn-secondary" onclick="switchMode('signup')">Sign Up</button>
+                        </div>
                     </div>
                     
                     <form id="auth-form">
@@ -45,7 +44,7 @@ export function getAuthPage(UNIFIED_CSS) {
                         </div>
                         
                         <div class="form-group">
-                            <label class="form-label" id="password-label">Password</label>
+                            <label class="form-label">Password</label>
                             <input type="password" id="password" class="form-input" placeholder="Enter your password (min 8 chars)" required minlength="8">
                         </div>
                         
@@ -74,43 +73,20 @@ export function getAuthPage(UNIFIED_CSS) {
             currentMode = mode;
             const loginTab = document.getElementById('login-tab');
             const signupTab = document.getElementById('signup-tab');
-            const resetTab = document.getElementById('reset-tab');
             const signupFields = document.getElementById('signup-fields');
             const submitText = document.getElementById('submit-text');
-            const passwordLabel = document.getElementById('password-label');
-            const passwordInput = document.getElementById('password');
-            
-            // Reset all tabs
-            loginTab.className = 'btn btn-secondary';
-            signupTab.className = 'btn btn-secondary';
-            resetTab.className = 'btn btn-secondary';
             
             if (mode === 'login') {
                 loginTab.className = 'btn btn-primary';
+                signupTab.className = 'btn btn-secondary';
                 signupFields.style.display = 'none';
                 submitText.textContent = 'Login';
-                passwordLabel.textContent = 'Password';
-                passwordInput.placeholder = 'Enter your password (min 8 chars)';
-            } else if (mode === 'signup') {
+            } else {
+                loginTab.className = 'btn btn-secondary';
                 signupTab.className = 'btn btn-primary';
                 signupFields.style.display = 'block';
                 submitText.textContent = 'Sign Up';
-                passwordLabel.textContent = 'Password';
-                passwordInput.placeholder = 'Enter your password (min 8 chars)';
-            } else if (mode === 'reset') {
-                resetTab.className = 'btn btn-primary';
-                signupFields.style.display = 'none';
-                submitText.textContent = 'Reset Password';
-                passwordLabel.textContent = 'New Password';
-                passwordInput.placeholder = 'Enter your new password (min 8 chars)';
             }
-        }
-        
-        function showPasswordReset(email) {
-            document.getElementById('reset-tab').style.display = 'inline-block';
-            document.getElementById('email').value = email;
-            switchMode('reset');
-            showMessage('Your account requires a password reset. Please set a new password.', false);
         }
         
         function showMessage(text, isError = false) {
@@ -132,7 +108,6 @@ export function getAuthPage(UNIFIED_CSS) {
                 return;
             }
             
-            let endpoint = '/auth';
             const data = {
                 mode: currentMode,
                 email,
@@ -141,14 +116,10 @@ export function getAuthPage(UNIFIED_CSS) {
             
             if (currentMode === 'signup') {
                 data.fullName = fullName;
-            } else if (currentMode === 'reset') {
-                endpoint = '/reset-password';
-                data.newPassword = password;
-                delete data.mode;
             }
             
             try {
-                const response = await fetch(endpoint, {
+                const response = await fetch('/auth', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -160,47 +131,20 @@ export function getAuthPage(UNIFIED_CSS) {
                 const result = await response.json();
                 
                 if (response.ok) {
-                    // Debug: Check if session cookie was set
-                    console.log('🔑 Login successful - checking session cookie...');
-                    console.log('🔑 Response headers:', [...response.headers.entries()]);
-
-                    // Check for session cookie in response
-                    const setCookieHeader = response.headers.get('Set-Cookie');
-                    console.log('🔑 Set-Cookie header:', setCookieHeader);
-
                     // Session is set via secure cookie, no need for localStorage
-                    const message = currentMode === 'reset' ? 'Password reset successfully! Redirecting to dashboard...' : 'Success! Redirecting to dashboard...';
-                    showMessage(message, false);
-
-                    // Debug: Check session status before redirect
-                    setTimeout(async () => {
-                        try {
-                            console.log('🔍 Checking session status before redirect...');
-                            const debugResponse = await fetch('/debug-session', { credentials: 'include' });
-                            const debugData = await debugResponse.json();
-                            console.log('🔍 Session debug result:', debugData);
-                        } catch (e) {
-                            console.log('🔍 Session debug failed:', e);
-                        }
-
+                    showMessage('Success! Redirecting to dashboard...', false);
+                    
+                    setTimeout(() => {
                         window.location.href = '/dashboard';
-                    }, 1000);
+                    }, 1500);
                 } else {
-                    // Check if this is a password reset required error
-                    if (result.requiresPasswordReset) {
-                        showPasswordReset(result.email);
-                    } else {
-                        showMessage(result.error || 'Authentication failed', true);
-                    }
+                    showMessage(result.error || 'Authentication failed', true);
                 }
             } catch (error) {
                 showMessage('Network error. Please try again.', true);
             }
         });
         
-        // Debug: Check current cookies
-        console.log('🍪 Current cookies:', document.cookie);
-
         // Check if already logged in via session cookie
         // This will be handled server-side, so we can remove this check
     </script>

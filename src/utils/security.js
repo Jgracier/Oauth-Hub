@@ -5,8 +5,8 @@
 // Simple JWT implementation for Cloudflare Workers
 export async function generateJWT(payload, secret, env) {
   // Use environment variable if available, fallback for development
-  const jwtSecret = secret || env?.JWT_SECRET || 'development-secret-change-in-production';
-  
+  const jwtSecret = secret || env?.JWT_SECRET || 'your-production-secret-key-minimum-32-chars-please-change-this';
+
   const header = {
     alg: 'HS256',
     typ: 'JWT'
@@ -41,7 +41,7 @@ export async function generateJWT(payload, secret, env) {
 
 export async function verifyJWT(token, secret, env) {
   // Use environment variable if available, fallback for development
-  const jwtSecret = secret || env?.JWT_SECRET || 'development-secret-change-in-production';
+  const jwtSecret = secret || env?.JWT_SECRET || 'your-production-secret-key-minimum-32-chars-please-change-this';
   try {
     const [header, payload, signature] = token.split('.');
     
@@ -54,12 +54,7 @@ export async function verifyJWT(token, secret, env) {
     );
     
     const data = `${header}.${payload}`;
-    // Convert URL-safe base64 back to regular base64 and add padding
-    let regularBase64 = signature.replace(/-/g, '+').replace(/_/g, '/');
-    while (regularBase64.length % 4 !== 0) {
-      regularBase64 += '=';
-    }
-    const signatureBytes = Uint8Array.from(atob(regularBase64), c => c.charCodeAt(0));
+    const signatureBytes = Uint8Array.from(atob(signature.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
     
     const valid = await crypto.subtle.verify(
       'HMAC',
@@ -70,12 +65,7 @@ export async function verifyJWT(token, secret, env) {
     
     if (!valid) return null;
     
-    // Handle base64 padding for payload decoding
-    let paddedPayload = payload;
-    while (paddedPayload.length % 4 !== 0) {
-      paddedPayload += '=';
-    }
-    const decodedPayload = JSON.parse(atob(paddedPayload));
+    const decodedPayload = JSON.parse(atob(payload));
     
     // Check expiration
     if (decodedPayload.exp && decodedPayload.exp < Date.now() / 1000) {
@@ -114,44 +104,24 @@ export async function hashPassword(password) {
 }
 
 export async function verifyPassword(password, storedSalt, storedHash) {
-  try {
-    // Handle base64 padding properly - add missing padding
-    let paddedSalt = storedSalt;
-    while (paddedSalt.length % 4 !== 0) {
-      paddedSalt += '=';
-    }
-
-    let paddedHash = storedHash;
-    while (paddedHash.length % 4 !== 0) {
-      paddedHash += '=';
-    }
-
-    const salt = Uint8Array.from(atob(paddedSalt), c => c.charCodeAt(0));
-    const storedHashBytes = Uint8Array.from(atob(paddedHash), c => c.charCodeAt(0));
-
-    const passwordBytes = new TextEncoder().encode(password);
-
-    // Combine password and salt
-    const combined = new Uint8Array(passwordBytes.length + salt.length);
-    combined.set(passwordBytes);
-    combined.set(salt, passwordBytes.length);
-
-    // Hash using same method
-    let hash = combined;
-    for (let i = 0; i < 10000; i++) {
-      hash = new Uint8Array(
-        await crypto.subtle.digest('SHA-256', hash)
-      );
-    }
-
-    // Compare byte-by-byte instead of string comparison (handles padding differences)
-    const isMatch = hash.length === storedHashBytes.length &&
-                   hash.every((byte, index) => byte === storedHashBytes[index]);
-    return isMatch;
-  } catch (error) {
-    console.error('Password verification error:', error);
-    return false;
+  const salt = Uint8Array.from(atob(storedSalt), c => c.charCodeAt(0));
+  const passwordBytes = new TextEncoder().encode(password);
+  
+  // Combine password and salt
+  const combined = new Uint8Array(passwordBytes.length + salt.length);
+  combined.set(passwordBytes);
+  combined.set(salt, passwordBytes.length);
+  
+  // Hash using same method
+  let hash = combined;
+  for (let i = 0; i < 10000; i++) {
+    hash = new Uint8Array(
+      await crypto.subtle.digest('SHA-256', hash)
+    );
   }
+  
+  const hashString = btoa(String.fromCharCode(...hash));
+  return hashString === storedHash;
 }
 
 // CSRF Token Generation
@@ -170,27 +140,24 @@ export async function generateSecureState(userId, email, platform, env) {
     timestamp,
     nonce
   };
-
-  // Sign the state - use proper JWT secret
-  const jwtSecret = env?.JWT_SECRET || 'development-secret-change-in-production';
-  const signature = await generateJWT(data, jwtSecret, env);
+  
+  // Sign the state
+  const signature = await generateJWT(data, null, env);
   return signature; // JWT itself serves as signed state
 }
 
 export async function validateSecureState(state, env) {
-  // Use proper JWT secret
-  const jwtSecret = env?.JWT_SECRET || 'development-secret-change-in-production';
-  const data = await verifyJWT(state, jwtSecret, env);
-
+  const data = await verifyJWT(state, null, env);
+  
   if (!data) {
     throw new Error('Invalid state parameter');
   }
-
+  
   // Check if state is not expired (5 minutes)
   if (Date.now() - data.timestamp > 300000) {
     throw new Error('State parameter expired');
   }
-
+  
   return data;
 }
 
@@ -208,11 +175,7 @@ export function getSecurityHeaders() {
 
 // Session Cookie Helpers
 export function createSessionCookie(token, maxAge = 86400) {
-  // In development, don't use Secure flag to allow localhost
-  const isProduction = typeof globalThis !== 'undefined' && globalThis?.location?.protocol === 'https:';
-  const secureFlag = isProduction ? '; Secure' : '';
-
-  return `session=${token}; HttpOnly${secureFlag}; SameSite=Lax; Path=/; Max-Age=${maxAge}`;
+  return `session=${token}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=${maxAge}`;
 }
 
 export function getSessionFromCookie(request) {

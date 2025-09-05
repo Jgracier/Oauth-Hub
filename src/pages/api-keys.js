@@ -140,10 +140,8 @@ export function getApiKeysPage(UNIFIED_CSS) {
         // Load existing API keys from server
         async function loadApiKeys() {
             try {
-                console.log('Loading API keys from server using session...');
-                const response = await fetch('/user-keys', {
-                    credentials: 'include' // Include session cookie
-                });
+                console.log('Loading API keys for email:', localStorage.getItem('userEmail'));
+                const response = await fetch(\`/user-keys?email=\${encodeURIComponent(localStorage.getItem('userEmail'))}\`);
                 console.log('Response status:', response.status);
                 
                 if (response.ok) {
@@ -232,8 +230,8 @@ export function getApiKeysPage(UNIFIED_CSS) {
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    credentials: 'include', // Include session cookie
                     body: JSON.stringify({
+                        email: localStorage.getItem('userEmail'),
                         name: keyName
                     })
                 });

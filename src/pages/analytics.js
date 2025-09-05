@@ -112,9 +112,7 @@ export function getAnalyticsPage(UNIFIED_CSS) {
         async function loadAnalytics() {
             try {
                 // Load tokens data (this would come from your KV storage)
-                const response = await fetch('/analytics', {
-                    credentials: 'include' // Include session cookie
-                });
+                const response = await fetch(\`/analytics?email=\${encodeURIComponent(localStorage.getItem('userEmail'))}\`);
                 if (response.ok) {
                     const data = await response.json();
                     tokensData = data.tokens || [];
