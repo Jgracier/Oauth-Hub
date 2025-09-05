@@ -6,6 +6,9 @@
 export async function generateJWT(payload, secret, env) {
   // Use environment variable if available, fallback for development
   const jwtSecret = secret || env?.JWT_SECRET || 'development-secret-change-in-production';
+
+  console.log(`🔐 JWT GENERATE: Payload: ${JSON.stringify(payload)}`);
+  console.log(`🔐 JWT SECRET: ${jwtSecret.substring(0, 10)}... (length: ${jwtSecret.length})`);
   
   const header = {
     alg: 'HS256',
@@ -32,8 +35,12 @@ export async function generateJWT(payload, secret, env) {
   );
   
   const encodedSignature = btoa(String.fromCharCode(...new Uint8Array(signature)));
-  
-  return `${data}.${encodedSignature}`;
+
+  const finalToken = `${data}.${encodedSignature}`;
+  console.log(`🔐 JWT GENERATED: Token length: ${finalToken.length}`);
+  console.log(`🔐 JWT STRUCTURE: ${finalToken.split('.').map((part, i) => `${i === 0 ? 'Header' : i === 1 ? 'Payload' : 'Signature'}: ${part.length} chars`).join(' | ')}`);
+
+  return finalToken;
 }
 
 export async function verifyJWT(token, secret, env) {
@@ -198,7 +205,10 @@ export function getSecurityHeaders() {
 // Session Cookie Helpers
 export function createSessionCookie(token, maxAge = 86400) {
   // Secure cookie settings for HTTPS
-  return `session=${token}; Path=/; Max-Age=${maxAge}; Secure; SameSite=None`;
+  const cookieValue = `session=${token}; Path=/; Max-Age=${maxAge}; Secure; SameSite=None`;
+  console.log(`🍪 CREATING SESSION COOKIE: ${cookieValue.substring(0, 100)}...`);
+  console.log(`🍪 COOKIE LENGTH: ${cookieValue.length} characters`);
+  return cookieValue;
 }
 
 export function getSessionFromCookie(request) {
