@@ -119,18 +119,31 @@ export default {
     const method = request.method;
     const corsHeaders = { ...getCorsHeaders(), ...getSecurityHeaders() };
 
+    console.log(`🚀 MAIN HANDLER: ${method} ${path}`);
+
     // Handle CORS preflight
     if (method === 'OPTIONS') {
+      console.log(`🚀 CORS PREFLIGHT: ${method} ${path}`);
       return new Response(null, { headers: corsHeaders });
     }
 
     try {
+      console.log(`🚀 APPLYING MIDDLEWARE`);
+
       // Apply middleware
       const rateLimitResponse = await rateLimitMiddleware(request, env, ctx);
-      if (rateLimitResponse) return rateLimitResponse;
-      
+      if (rateLimitResponse) {
+        console.log(`🚀 RATE LIMITED: ${method} ${path}`);
+        return rateLimitResponse;
+      }
+
       const authResponse = await authMiddleware(request, env, ctx);
-      if (authResponse) return authResponse;
+      if (authResponse) {
+        console.log(`🚀 AUTH FAILED: ${method} ${path} - Status: ${authResponse.status}`);
+        return authResponse;
+      }
+
+      console.log(`🚀 AUTH PASSED: ${method} ${path} - proceeding to route handling`);
       
       // =============================================================================
       // API ENDPOINTS (Before page routes to avoid conflicts)
@@ -174,7 +187,10 @@ export default {
       }
       
       if (path === '/user-keys' && method === 'GET') {
-        return await getUserApiKeys(request, env, corsHeaders);
+        console.log(`🚀 HANDLING /user-keys for user: ${request.user?.email || 'UNKNOWN'}`);
+        const result = await getUserApiKeys(request, env, corsHeaders);
+        console.log(`🚀 /user-keys RESPONSE: Status ${result.status}`);
+        return result;
       }
       
       if (path.startsWith('/delete-key/') && method === 'DELETE') {
@@ -188,7 +204,10 @@ export default {
       }
       
       if (path === '/user-apps' && method === 'GET') {
-        return await getUserApps(request, env, corsHeaders);
+        console.log(`🚀 HANDLING /user-apps for user: ${request.user?.email || 'UNKNOWN'}`);
+        const result = await getUserApps(request, env, corsHeaders);
+        console.log(`🚀 /user-apps RESPONSE: Status ${result.status}`);
+        return result;
       }
       
       if (path.startsWith('/delete-app/') && method === 'DELETE') {

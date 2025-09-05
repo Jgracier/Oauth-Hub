@@ -39,8 +39,14 @@ export async function generateJWT(payload, secret, env) {
 export async function verifyJWT(token, secret, env) {
   // Use environment variable if available, fallback for development
   const jwtSecret = secret || env?.JWT_SECRET || 'development-secret-change-in-production';
+
+  console.log(`🔑 JWT VERIFY: Token length: ${token.length}`);
+  console.log(`🔑 JWT SECRET: ${jwtSecret.substring(0, 10)}... (length: ${jwtSecret.length})`);
+
   try {
     const [header, payload, signature] = token.split('.');
+
+    console.log(`🔑 JWT PARTS: Header(${header.length}), Payload(${payload.length}), Signature(${signature.length})`);
 
     const key = await crypto.subtle.importKey(
       'raw',
@@ -55,27 +61,41 @@ export async function verifyJWT(token, secret, env) {
     const paddedPayload = payload + '='.repeat((4 - payload.length % 4) % 4);
     const paddedSignature = signature + '='.repeat((4 - signature.length % 4) % 4);
 
+    console.log(`🔑 JWT PADDING: Header(${paddedHeader.length}), Payload(${paddedPayload.length}), Signature(${paddedSignature.length})`);
+
     const data = `${header}.${payload}`;
     const signatureBytes = Uint8Array.from(atob(paddedSignature), c => c.charCodeAt(0));
-    
+
+    console.log(`🔑 JWT SIGNATURE: ${signatureBytes.length} bytes`);
+
     const valid = await crypto.subtle.verify(
       'HMAC',
       key,
       signatureBytes,
       new TextEncoder().encode(data)
     );
-    
-    if (!valid) return null;
 
-    const decodedPayload = JSON.parse(atob(paddedPayload));
-    
-    // Check expiration
-    if (decodedPayload.exp && decodedPayload.exp < Date.now() / 1000) {
+    console.log(`🔑 JWT SIGNATURE VERIFICATION: ${valid ? 'VALID' : 'INVALID'}`);
+
+    if (!valid) {
+      console.log(`🔑 JWT SIGNATURE MISMATCH`);
       return null;
     }
-    
+
+    const decodedPayload = JSON.parse(atob(paddedPayload));
+    console.log(`🔑 JWT PAYLOAD: ${JSON.stringify(decodedPayload)}`);
+
+    // Check expiration
+    if (decodedPayload.exp && decodedPayload.exp < Date.now() / 1000) {
+      console.log(`🔑 JWT EXPIRED: ${new Date(decodedPayload.exp * 1000)} vs ${new Date()}`);
+      return null;
+    }
+
+    console.log(`🔑 JWT VERIFICATION SUCCESS`);
     return decodedPayload;
   } catch (error) {
+    console.log(`🔑 JWT VERIFICATION ERROR: ${error.message}`);
+    console.log(`🔑 JWT VERIFICATION STACK: ${error.stack}`);
     return null;
   }
 }
@@ -183,14 +203,22 @@ export function createSessionCookie(token, maxAge = 86400) {
 
 export function getSessionFromCookie(request) {
   const cookieHeader = request.headers.get('Cookie');
-  if (!cookieHeader) return null;
-  
+  console.log(`🍪 COOKIE HEADER RECEIVED: ${cookieHeader ? cookieHeader.substring(0, 100) + '...' : 'NO COOKIE HEADER'}`);
+
+  if (!cookieHeader) {
+    console.log(`🍪 NO COOKIE HEADER FOUND`);
+    return null;
+  }
+
   const cookies = cookieHeader.split(';').reduce((acc, cookie) => {
     const [key, value] = cookie.trim().split('=');
     acc[key] = value;
     return acc;
   }, {});
-  
+
+  console.log(`🍪 PARSED COOKIES: ${Object.keys(cookies).join(', ')}`);
+  console.log(`🍪 SESSION COOKIE: ${cookies.session ? cookies.session.substring(0, 50) + '...' : 'NO SESSION COOKIE'}`);
+
   return cookies.session || null;
 }
 
