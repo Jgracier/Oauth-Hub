@@ -32,6 +32,21 @@ export function getDocsPage(UNIFIED_CSS) {
     <title>Documentation - OAuth Hub</title>
     <style>
         ${UNIFIED_CSS}
+        
+        /* Prevent horizontal overflow */
+        body {
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
         .code-block {
             background: var(--gray-50);
             border: 1px solid var(--border-color);
@@ -43,6 +58,8 @@ export function getDocsPage(UNIFIED_CSS) {
             overflow-x: auto;
             position: relative;
             transition: border-color 0.2s ease;
+            max-width: 100%;
+            word-wrap: break-word;
         }
         .code-block:hover {
             border-color: var(--primary-400);
@@ -50,6 +67,14 @@ export function getDocsPage(UNIFIED_CSS) {
         .code-block-container {
             position: relative;
             margin: var(--space-4) 0;
+            max-width: 100%;
+            overflow: hidden;
+        }
+        .code-block pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-width: 100%;
+            overflow-x: auto;
         }
         .code-title {
             margin-top: var(--space-2);
@@ -290,8 +315,8 @@ console.log('Token:', result.tokens.accessToken);`, 'javascript', 'Complete impl
 
                     <h3>🔧 Framework Examples</h3>
                     
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: var(--space-4);">
-                        <div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--space-4); max-width: 100%;">
+                        <div style="min-width: 0;">
                             <h4>⚛️ React</h4>
                             ${createCodeBlock(`const [user, setUser] = useState({});
 const [loading, setLoading] = useState(false);
@@ -313,7 +338,7 @@ const handleConnect = async (platform) => {
 };`, 'javascript')}
                         </div>
                         
-                        <div>
+                        <div style="min-width: 0;">
                             <h4>🟢 Vue.js</h4>
                             ${createCodeBlock(`const user = ref({});
 const loading = ref(false);
@@ -334,26 +359,26 @@ const handleConnect = async (platform) => {
                     </div>
                     
                     <h3>🔗 API Endpoints</h3>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin: var(--space-4) 0;">
-                        <div class="endpoint">
-                            <div style="display: flex; align-items: center; margin-bottom: var(--space-2);">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: var(--space-4); margin: var(--space-4) 0; max-width: 100%;">
+                        <div class="endpoint" style="min-width: 0;">
+                            <div style="display: flex; align-items: center; margin-bottom: var(--space-2); flex-wrap: wrap; gap: var(--space-2);">
                                 <span class="method get">GET</span>
-                                <code>/consent/{platform}/{apiKey}</code>
+                                <code style="word-break: break-all;">/consent/{platform}/{apiKey}</code>
                             </div>
                             <p>Get OAuth authorization URL</p>
                         </div>
                         
-                        <div class="endpoint">
-                            <div style="display: flex; align-items: center; margin-bottom: var(--space-2);">
+                        <div class="endpoint" style="min-width: 0;">
+                            <div style="display: flex; align-items: center; margin-bottom: var(--space-2); flex-wrap: wrap; gap: var(--space-2);">
                                 <span class="method get">GET</span>
-                                <code>/tokens/{userId}/{apiKey}</code>
+                                <code style="word-break: break-all;">/tokens/{userId}/{apiKey}</code>
                             </div>
                             <p>Get fresh access tokens</p>
                         </div>
                     </div>
                     
                     <h3>🌐 Supported Platforms</h3>
-                    <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: var(--space-2); margin: var(--space-4) 0; text-align: center;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: var(--space-2); margin: var(--space-4) 0; text-align: center; max-width: 100%;">
                         <div><div style="font-size: 1.5rem;">📘</div><code>facebook</code></div>
                         <div><div style="font-size: 1.5rem;">🎬</div><code>google</code></div>
                         <div><div style="font-size: 1.5rem;">📸</div><code>instagram</code></div>
@@ -372,8 +397,8 @@ const handleConnect = async (platform) => {
                         <p>Save the <strong>platformUserId</strong> from the popup result - you need it to retrieve tokens later!</p>
                     </div>
                     
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4);">
-                        <div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--space-4); max-width: 100%;">
+                        <div style="min-width: 0;">
                             <h4>🟨 Node.js</h4>
                             ${createCodeBlock(`// Get fresh tokens
 async function getTokens(platformUserId, apiKey) {
@@ -390,7 +415,7 @@ const profile = await fetch('https://graph.facebook.com/me', {
 });`, 'javascript')}
                         </div>
                         
-                        <div>
+                        <div style="min-width: 0;">
                             <h4>🐍 Python</h4>
                             ${createCodeBlock(`import requests
 
@@ -411,8 +436,8 @@ profile = requests.get('https://graph.facebook.com/me',
                 <div class="card">
                     <h2>🔐 Security & Tips</h2>
                     
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4);">
-                        <div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: var(--space-4); max-width: 100%;">
+                        <div style="min-width: 0;">
                             <h4>✅ Best Practices</h4>
                             <ul>
                                 <li>Keep API keys secret (backend only)</li>
@@ -422,7 +447,7 @@ profile = requests.get('https://graph.facebook.com/me',
                             </ul>
                         </div>
                         
-                        <div>
+                        <div style="min-width: 0;">
                             <h4>📋 Common Status Codes</h4>
                             <ul>
                                 <li><code>200</code> - Success</li>

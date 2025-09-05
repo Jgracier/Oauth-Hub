@@ -328,6 +328,10 @@ async function handleAuth(request, env, corsHeaders) {
       
       const defaultKeyName = 'Default Key';
       const cleanKey = `api-${defaultKeyName} ${firstName} ${lastName} ${email}`;
+      
+      // SAFEGUARD: Validate namespace usage before storing
+      validateNamespaceUsage('API_KEYS', cleanKey, 'PUT');
+      
       await env.API_KEYS.put(cleanKey, JSON.stringify({
         ...apiKeyInfo,
         keyId: generateId()
@@ -471,6 +475,9 @@ async function generateUserApiKey(request, env, corsHeaders) {
     
     // Store API key with resource type first - "api-keyname firstname lastname email"
     const cleanKey = `api-${name} ${firstName} ${lastName} ${email}`; // Resource type first for easy identification
+    
+    // SAFEGUARD: Validate namespace usage before storing
+    validateNamespaceUsage('API_KEYS', cleanKey, 'PUT');
     
     // Store with clean key containing all data - ONLY this entry needed
     await env.API_KEYS.put(cleanKey, JSON.stringify({
@@ -1401,6 +1408,48 @@ async function revokeUserToken(platformUserId, email, request, env, corsHeaders)
 }
 
 
+// Analytics helper function to track events (ONLY in analytics namespace)
+async function trackAnalyticsEvent(eventType, eventData, env) {
+  try {
+    const eventId = `evt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const eventKey = `analytics:event:${new Date().toISOString().split('T')[0]}:${eventId}`;
+    
+    const analyticsEvent = {
+      eventId,
+      eventType,
+      timestamp: Date.now(),
+      date: new Date().toISOString(),
+      ...eventData
+    };
+    
+    // CRITICAL SAFEGUARD: Ensure analytics events NEVER go to API_KEYS namespace
+    if (!env.analytics) {
+      console.error('CRITICAL: Analytics namespace not available - analytics event NOT stored');
+      return;
+    }
+    
+    // IMPORTANT: Store ONLY in analytics namespace, never in API_KEYS
+    await env.analytics.put(eventKey, JSON.stringify(analyticsEvent));
+    
+  } catch (error) {
+    console.error('Failed to track analytics event:', error);
+    // Don't throw - analytics failures shouldn't break the main flow
+  }
+}
+
+// Safeguard function to prevent analytics data in wrong namespace
+function validateNamespaceUsage(namespace, key, operation) {
+  // Prevent analytics events from being stored in API_KEYS namespace
+  if (namespace === 'API_KEYS' && (key.includes('analytics:event') || key.includes('evt_'))) {
+    throw new Error(`BLOCKED: Attempted to store analytics event "${key}" in API_KEYS namespace. Use analytics namespace instead.`);
+  }
+  
+  // Prevent API keys from being stored in analytics namespace
+  if (namespace === 'analytics' && key.startsWith('api-')) {
+    throw new Error(`BLOCKED: Attempted to store API key "${key}" in analytics namespace. Use API_KEYS namespace instead.`);
+  }
+}
+
 // Analytics and other handlers
 async function getAnalyticsData(request, env, corsHeaders) {
   try {
@@ -1417,16 +1466,46 @@ async function getAnalyticsData(request, env, corsHeaders) {
       return jsonResponse({ error: 'User not found' }, 404, corsHeaders);
     }
     
-    // For now, return mock analytics data
-    // TODO: Implement real analytics from KV storage
+    // Get real analytics data from analytics namespace (not API_KEYS!)
+    let tokens = [];
+    let apiCalls = 0;
+    let uniqueUsers = 0;
+    let platforms = 0;
+    
+    try {
+      // Get tokens from OAUTH_TOKENS namespace for this user
+      const { keys: tokenKeys } = await env.OAUTH_TOKENS.list();
+      const userTokens = [];
+      
+      for (const keyInfo of tokenKeys) {
+        if (keyInfo.name.includes(email)) {
+          const tokenData = await env.OAUTH_TOKENS.get(keyInfo.name);
+          if (tokenData) {
+            const token = JSON.parse(tokenData);
+            userTokens.push(token);
+          }
+        }
+      }
+      
+      tokens = userTokens;
+      uniqueUsers = new Set(tokens.map(t => t.platformUserId)).size;
+      platforms = new Set(tokens.map(t => t.platform)).size;
+      
+      // Get API call analytics from analytics namespace (if implemented)
+      // For now, return 0 as we don't track API calls yet
+      
+    } catch (error) {
+      console.error('Error fetching analytics data:', error);
+    }
+    
     return jsonResponse({
       success: true,
-      tokens: [],
+      tokens,
       stats: {
-        totalTokens: 0,
-        apiCalls: 0,
-        uniqueUsers: 0,
-        platforms: 0
+        totalTokens: tokens.length,
+        apiCalls,
+        uniqueUsers,
+        platforms
       }
     }, 200, corsHeaders);
     
