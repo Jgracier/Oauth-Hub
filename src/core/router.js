@@ -5,13 +5,15 @@
 import { htmlResponse, jsonResponse, getCorsHeaders } from '../lib/utils/helpers.js';
 import { UNIFIED_CSS } from '../ui/styles.js';
 
-// Import UI pages
-import { getAuthPage } from '../ui/pages/auth.js';
-import { getDashboardPage } from '../ui/pages/dashboard.js';
-import { getApiKeysPage } from '../ui/pages/api-keys.js';
-import { getAppsPage } from '../ui/pages/apps.js';
+// Import UI pages - Using modern versions
+import { getModernAuthPage } from '../ui/pages/modern-auth.js';
+import { getModernDashboardPage } from '../ui/pages/modern-dashboard.js';
+import { getModernApiKeysPage } from '../ui/pages/modern-api-keys.js';
+import { getModernAppsPage } from '../ui/pages/modern-apps.js';
 import { getDocsPage } from '../ui/pages/docs.js';
 import { getAnalyticsPage } from '../ui/pages/analytics.js';
+import { getModernSettingsPage } from '../ui/pages/modern-settings.js';
+import { getModernProfilePage } from '../ui/pages/modern-profile.js';
 
 // Import handlers
 import { AuthHandler } from '../api/handlers/auth.handler.js';
@@ -558,22 +560,32 @@ export class Router {
 
       // Authentication page
       if (path === '/' || path === '/auth') {
-        return htmlResponse(getAuthPage(UNIFIED_CSS));
+        return htmlResponse(getModernAuthPage());
       }
 
       // Dashboard page
       if (path === '/dashboard') {
-        return htmlResponse(getDashboardPage(UNIFIED_CSS));
+        return htmlResponse(getModernDashboardPage());
       }
 
       // API Keys page
       if (path === '/api-keys') {
-        return htmlResponse(getApiKeysPage(UNIFIED_CSS));
+        return htmlResponse(getModernApiKeysPage());
       }
 
       // Apps page
       if (path === '/apps') {
-        return htmlResponse(getAppsPage(UNIFIED_CSS));
+        return htmlResponse(getModernAppsPage());
+      }
+
+      // Settings page
+      if (path === '/settings') {
+        return htmlResponse(getModernSettingsPage());
+      }
+
+      // Profile page
+      if (path === '/profile') {
+        return htmlResponse(getModernProfilePage());
       }
 
       // Documentation page
