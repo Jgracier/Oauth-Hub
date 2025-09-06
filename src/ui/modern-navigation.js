@@ -13,9 +13,7 @@ export function getModernSidebar(activePage = '', userEmail = '', userName = '')
       <div class="sidebar-header">
         <a href="/dashboard" class="sidebar-logo">
           <div class="sidebar-logo-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"/>
-            </svg>
+            ${MODERN_ICONS.logo}
           </div>
           <span>OAuth Hub</span>
         </a>

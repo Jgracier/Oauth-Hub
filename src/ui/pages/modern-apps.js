@@ -323,6 +323,9 @@ export function getModernAppsPage() {
     ${getModernScripts()}
     
     <script>
+      // Define PLATFORMS for client-side use (moved to top to fix template literal issues)
+      const PLATFORMS = ${JSON.stringify(PLATFORMS)};
+      
       let apps = [];
       let editingApp = null;
       let selectedScopes = new Set();
@@ -609,9 +612,6 @@ export function getModernAppsPage() {
       
       // Platform selector change
       document.getElementById('platform').addEventListener('change', initializeScopeSelector);
-      
-      // Define PLATFORMS for client-side use
-      const PLATFORMS = ${JSON.stringify(PLATFORMS)};
       
       // Initialize
       document.addEventListener('DOMContentLoaded', () => {

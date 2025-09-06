@@ -8,26 +8,26 @@ export const MODERN_CSS = `
   @import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700&display=swap');
 
   :root {
-    /* Modern Neutral Palette */
+    /* Modern Neutral Palette - Auth Page Inspired */
     --neutral-0: #ffffff;
     --neutral-50: #fafafa;
     --neutral-100: #f5f5f5;
-    --neutral-200: #e5e5e5;
-    --neutral-300: #d4d4d4;
-    --neutral-400: #a3a3a3;
-    --neutral-500: #737373;
-    --neutral-600: #525252;
-    --neutral-700: #404040;
-    --neutral-800: #262626;
-    --neutral-900: #171717;
-    --neutral-950: #0a0a0a;
+    --neutral-200: #e5e5e7;
+    --neutral-300: #d2d2d7;
+    --neutral-400: #86868b;
+    --neutral-500: #86868b;
+    --neutral-600: #48484a;
+    --neutral-700: #3a3a3c;
+    --neutral-800: #2c2c2e;
+    --neutral-900: #1c1c1e;
+    --neutral-950: #000000;
     
-    /* Brand Colors */
-    --brand-primary: #000000;
-    --brand-accent: #0071e3;
-    --brand-success: #34c759;
-    --brand-warning: #ff9500;
-    --brand-danger: #ff3b30;
+    /* Brand Colors - Matching Auth Page */
+    --brand-primary: #1d1d1f;
+    --brand-accent: #007AFF;
+    --brand-success: #34C759;
+    --brand-warning: #FF9500;
+    --brand-danger: #FF3B30;
     
     /* Semantic Colors */
     --text-primary: var(--neutral-900);
@@ -101,23 +101,23 @@ export const MODERN_CSS = `
     --z-tooltip: 1600;
   }
 
-  /* Dark mode variables */
+  /* Dark mode variables - Auth Page Inspired */
   [data-theme="dark"] {
-    --text-primary: var(--neutral-100);
+    --text-primary: #f5f5f7;
     --text-secondary: var(--neutral-400);
     --text-tertiary: var(--neutral-500);
     --text-inverse: var(--neutral-900);
     
-    --bg-primary: var(--neutral-950);
-    --bg-secondary: var(--neutral-900);
-    --bg-tertiary: var(--neutral-800);
-    --bg-elevated: var(--neutral-900);
+    --bg-primary: #1c1c1e;
+    --bg-secondary: #2c2c2e;
+    --bg-tertiary: #3a3a3c;
+    --bg-elevated: #2c2c2e;
     
-    --border-light: var(--neutral-800);
-    --border-medium: var(--neutral-700);
+    --border-light: #48484a;
+    --border-medium: #3a3a3c;
     --border-dark: var(--neutral-600);
     
-    --brand-primary: #ffffff;
+    --brand-primary: #f5f5f7;
   }
 
   /* Reset */
@@ -913,6 +913,16 @@ export const MODERN_CSS = `
 `;
 
 export const MODERN_ICONS = {
+  // OAuth Hub Logo
+  logo: `<svg viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 2L2 7L3 19L12 22L21 19L22 7L12 2Z" stroke="currentColor" stroke-width="0.5" fill="none"/>
+    <circle cx="12" cy="10" r="2.5" fill="currentColor"/>
+    <path d="M8 14C8 16.2 9.8 18 12 18S16 16.2 16 14" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+    <path d="M6 12L12 10L18 12" stroke="currentColor" stroke-width="1" fill="none" stroke-linecap="round"/>
+    <circle cx="6" cy="12" r="1" fill="currentColor"/>
+    <circle cx="18" cy="12" r="1" fill="currentColor"/>
+  </svg>`,
+
   // Navigation Icons
   dashboard: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>`,
   

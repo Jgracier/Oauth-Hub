@@ -5,13 +5,13 @@
 import { htmlResponse, jsonResponse, getCorsHeaders } from '../lib/utils/helpers.js';
 import { UNIFIED_CSS } from '../ui/styles.js';
 
-// Import UI pages - Using modern versions
+// Import UI pages - All using modern versions
 import { getModernAuthPage } from '../ui/pages/modern-auth.js';
 import { getModernDashboardPage } from '../ui/pages/modern-dashboard.js';
 import { getModernApiKeysPage } from '../ui/pages/modern-api-keys.js';
 import { getModernAppsPage } from '../ui/pages/modern-apps.js';
-import { getDocsPage } from '../ui/pages/docs.js';
-import { getAnalyticsPage } from '../ui/pages/analytics.js';
+import { getModernDocsPage } from '../ui/pages/modern-docs.js';
+import { getModernAnalyticsPage } from '../ui/pages/modern-analytics.js';
 import { getModernSettingsPage } from '../ui/pages/modern-settings.js';
 import { getModernProfilePage } from '../ui/pages/modern-profile.js';
 
@@ -590,12 +590,12 @@ export class Router {
 
       // Documentation page
       if (path === '/docs') {
-        return htmlResponse(getDocsPage(UNIFIED_CSS));
+        return htmlResponse(getModernDocsPage());
       }
 
       // Analytics page
       if (path === '/analytics') {
-        return htmlResponse(getAnalyticsPage(UNIFIED_CSS));
+        return htmlResponse(getModernAnalyticsPage());
       }
 
       // 404 for unmatched routes
