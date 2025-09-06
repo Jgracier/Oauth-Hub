@@ -16,6 +16,11 @@ export const PLATFORMS = {
     docsUrl: 'https://console.cloud.google.com/',
     description: 'Access Google services like YouTube, Drive, Gmail',
     requiredScopes: ['openid', 'email', 'profile'],
+    scopeDelimiter: ' ', // Space-delimited
+    additionalParams: {
+      access_type: 'offline', // For refresh tokens
+      prompt: 'consent' // Force consent screen
+    },
     availableScopes: [
       { scope: 'https://www.googleapis.com/auth/drive', description: 'Full access to Google Drive files' },
       { scope: 'https://www.googleapis.com/auth/drive.readonly', description: 'View Google Drive files' },
@@ -40,7 +45,11 @@ export const PLATFORMS = {
     userIdField: 'id',
     docsUrl: 'https://developers.facebook.com/',
     description: 'Access Facebook Graph API for posts, pages, and user data',
-    requiredScopes: ['email'],
+    requiredScopes: ['public_profile', 'email'],
+    scopeDelimiter: ',', // Comma-delimited
+    additionalParams: {
+      response_type: 'code'
+    },
     availableScopes: [
       { scope: 'public_profile', description: 'Access public profile information' },
       { scope: 'email', description: 'Access email address' },
@@ -62,6 +71,10 @@ export const PLATFORMS = {
     docsUrl: 'https://developers.facebook.com/',
     description: 'Access Instagram Basic Display API for media and profile',
     requiredScopes: ['user_profile'],
+    scopeDelimiter: ',', // Comma-delimited
+    additionalParams: {
+      response_type: 'code'
+    },
     availableScopes: [
       { scope: 'user_profile', description: 'Access profile information' },
       { scope: 'user_media', description: 'Access media (photos and videos)' }
@@ -80,6 +93,12 @@ export const PLATFORMS = {
     docsUrl: 'https://developer.x.com/',
     description: 'Access X (Twitter) API v2 for tweets, users, and engagement',
     requiredScopes: ['tweet.read', 'users.read'],
+    scopeDelimiter: ' ', // Space-delimited
+    additionalParams: {
+      response_type: 'code',
+      code_challenge_method: 'S256' // PKCE required
+    },
+    requiresPKCE: true, // Twitter requires PKCE
     availableScopes: [
       { scope: 'tweet.read', description: 'Read tweets' },
       { scope: 'tweet.write', description: 'Create and delete tweets' },
@@ -96,16 +115,20 @@ export const PLATFORMS = {
     color: '#0077b5',
     authUrl: 'https://www.linkedin.com/oauth/v2/authorization',
     tokenUrl: 'https://www.linkedin.com/oauth/v2/accessToken',
-    userInfoUrl: 'https://api.linkedin.com/v2/people/~?projection=(id,firstName,lastName,emailAddress)',
-    userIdField: 'id',
+    userInfoUrl: 'https://api.linkedin.com/v2/userinfo',
+    userIdField: 'sub',
     docsUrl: 'https://developer.linkedin.com/',
     description: 'Access LinkedIn APIs for profile and company data',
-    requiredScopes: ['r_liteprofile', 'r_emailaddress'],
+    requiredScopes: ['openid', 'profile', 'email'],
+    scopeDelimiter: ' ', // Space-delimited
+    additionalParams: {
+      response_type: 'code'
+    },
     availableScopes: [
-      { scope: 'r_liteprofile', description: 'Access basic profile information' },
-      { scope: 'r_emailaddress', description: 'Access email address' },
-      { scope: 'w_member_social', description: 'Post on behalf of user' },
-      { scope: 'r_organization_social', description: 'Read organization posts' }
+      { scope: 'openid', description: 'OpenID Connect authentication' },
+      { scope: 'profile', description: 'Access basic profile information' },
+      { scope: 'email', description: 'Access email address' },
+      { scope: 'w_member_social', description: 'Post on behalf of user' }
     ]
   },
 
@@ -121,6 +144,10 @@ export const PLATFORMS = {
     docsUrl: 'https://developers.tiktok.com/',
     description: 'Access TikTok for Developers API',
     requiredScopes: ['user.info.basic'],
+    scopeDelimiter: ',', // Comma-delimited
+    additionalParams: {
+      response_type: 'code'
+    },
     availableScopes: [
       { scope: 'user.info.basic', description: 'Access basic user information' },
       { scope: 'video.list', description: 'Access user video list' },
@@ -140,6 +167,10 @@ export const PLATFORMS = {
     docsUrl: 'https://discord.com/developers/',
     description: 'Access Discord API for bot and user functionality',
     requiredScopes: ['identify'],
+    scopeDelimiter: ' ', // Space-delimited
+    additionalParams: {
+      response_type: 'code'
+    },
     availableScopes: [
       { scope: 'identify', description: 'Access basic user information' },
       { scope: 'email', description: 'Access email address' },
@@ -160,6 +191,8 @@ export const PLATFORMS = {
     docsUrl: 'https://developers.pinterest.com/',
     description: 'Access Pinterest API for boards and pins',
     requiredScopes: ['user_accounts:read'],
+    scopeDelimiter: ',',
+    additionalParams: { response_type: 'code' },
     availableScopes: [
       { scope: 'user_accounts:read', description: 'Read user account information' },
       { scope: 'boards:read', description: 'Read boards' },
@@ -181,6 +214,8 @@ export const PLATFORMS = {
     docsUrl: 'https://developer.wordpress.com/apps/',
     description: 'Access WordPress.com API for sites and posts',
     requiredScopes: ['auth'],
+    scopeDelimiter: ' ',
+    additionalParams: { response_type: 'code' },
     availableScopes: [
       { scope: 'auth', description: 'Authenticate and access basic profile' },
       { scope: 'global', description: 'Access all sites and perform all actions' }
@@ -199,6 +234,8 @@ export const PLATFORMS = {
     docsUrl: 'https://www.reddit.com/dev/api/',
     description: 'Access Reddit API for posts and user data',
     requiredScopes: ['identity'],
+    scopeDelimiter: ' ',
+    additionalParams: { response_type: 'code' },
     availableScopes: [
       { scope: 'identity', description: 'Access user identity' },
       { scope: 'read', description: 'Read posts and comments' },
@@ -219,6 +256,8 @@ export const PLATFORMS = {
     docsUrl: 'https://github.com/settings/developers',
     description: 'Access GitHub API for repositories and user data',
     requiredScopes: ['user:email'],
+    scopeDelimiter: ' ',
+    additionalParams: { response_type: 'code' },
     availableScopes: [
       { scope: 'user', description: 'Access user profile information' },
       { scope: 'user:email', description: 'Access user email addresses' },
@@ -239,6 +278,8 @@ export const PLATFORMS = {
     docsUrl: 'https://developer.spotify.com/dashboard',
     description: 'Access Spotify Web API for music and playlists',
     requiredScopes: ['user-read-private'],
+    scopeDelimiter: ' ',
+    additionalParams: { response_type: 'code' },
     availableScopes: [
       { scope: 'user-read-private', description: 'Access user profile information' },
       { scope: 'user-read-email', description: 'Access user email address' },
@@ -259,6 +300,8 @@ export const PLATFORMS = {
     docsUrl: 'https://dev.twitch.tv/console',
     description: 'Access Twitch API for streams and user data',
     requiredScopes: ['user:read:email'],
+    scopeDelimiter: ' ',
+    additionalParams: { response_type: 'code' },
     availableScopes: [
       { scope: 'user:read:email', description: 'Read user email address' },
       { scope: 'channel:read:subscriptions', description: 'Read channel subscriptions' },
@@ -278,6 +321,8 @@ export const PLATFORMS = {
     docsUrl: 'https://api.slack.com/apps',
     description: 'Access Slack API for messaging and workspace data',
     requiredScopes: ['users:read'],
+    scopeDelimiter: ' ',
+    additionalParams: { response_type: 'code' },
     availableScopes: [
       { scope: 'users:read', description: 'View people in workspace' },
       { scope: 'chat:write', description: 'Send messages' },
@@ -297,6 +342,8 @@ export const PLATFORMS = {
     docsUrl: 'https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps',
     description: 'Access Microsoft Graph API for Office 365 and Azure',
     requiredScopes: ['User.Read'],
+    scopeDelimiter: ' ',
+    additionalParams: { response_type: 'code' },
     availableScopes: [
       { scope: 'User.Read', description: 'Read user profile' },
       { scope: 'Mail.Read', description: 'Read user mail' },

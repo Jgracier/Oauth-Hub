@@ -92,7 +92,7 @@ export function getAppsPage(UNIFIED_CSS) {
                         <div style="background: var(--warning-50); border: 1px solid var(--warning-200); border-radius: var(--radius-sm); padding: var(--space-3); margin-top: var(--space-3);">
                             <strong style="color: var(--warning-700);">⚠️ Important:</strong>
                             <span style="color: var(--warning-600); font-size: 0.875rem;">
-                                Set this redirect URI in your app:
+                                Set this redirect URI in your app (replace {apiKey} with your actual API key):
                                 <code style="background: var(--warning-100); padding: 2px 4px; border-radius: 3px;">
                                     ${CONFIG.WWW_CALLBACK_URL}
                                 </code>

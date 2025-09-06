@@ -7,9 +7,9 @@ export const CONFIG = {
   // Base URL - change this one place to update everywhere
   BASE_URL: 'https://oauth-hub.com',
   
-  // Derived URLs
+  // Derived URLs - these are templates, actual URLs will include API key
   get CALLBACK_URL() {
-    return `${this.BASE_URL}/callback`;
+    return `${this.BASE_URL}/callback/{apiKey}`;
   },
   
   get WWW_URL() {
@@ -17,7 +17,7 @@ export const CONFIG = {
   },
   
   get WWW_CALLBACK_URL() {
-    return `${this.WWW_URL}/callback`;
+    return `${this.BASE_URL}/callback/{apiKey}`;
   },
   
   // API endpoints

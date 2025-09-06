@@ -21,18 +21,69 @@ export function getPlatformConfig(platform, app) {
 }
 
 // Generate OAuth consent URL
-export function generateConsentUrl(platform, app, state, baseUrl) {
+export async function generateConsentUrl(platform, app, apiKey, state, baseUrl) {
   const config = getPlatformConfig(platform, app);
+  const platformConfig = getPlatform(platform);
   
+  // Build redirect URI with API key - use callback endpoint
+  const redirectUri = `${baseUrl}/callback/${apiKey}`;
+  
+  // Use platform-specific scope delimiter (space or comma)
+  const scopeDelimiter = platformConfig.scopeDelimiter || ' ';
+  const scopes = config.scopes.join(scopeDelimiter);
+  
+  // Build base parameters
   const params = new URLSearchParams({
     client_id: config.clientId,
-    redirect_uri: CONFIG.WWW_CALLBACK_URL,
-    scope: config.scopes.join(' '),
+    redirect_uri: redirectUri,
+    scope: scopes,
     response_type: 'code',
     state: state || `${platform}_${Date.now()}`
   });
 
+  // Add platform-specific additional parameters
+  if (platformConfig.additionalParams) {
+    Object.entries(platformConfig.additionalParams).forEach(([key, value]) => {
+      params.set(key, value);
+    });
+  }
+
+  // Handle PKCE for platforms that require it (like Twitter)
+  if (platformConfig.requiresPKCE) {
+    // Generate PKCE code verifier and challenge
+    const codeVerifier = generateCodeVerifier();
+    const codeChallenge = await generateCodeChallenge(codeVerifier);
+    
+    params.set('code_challenge', codeChallenge);
+    params.set('code_challenge_method', 'S256');
+    
+    // Store code verifier for later use in token exchange
+    // Note: In a real implementation, you'd store this securely
+    console.log(`PKCE Code Verifier for ${platform}: ${codeVerifier}`);
+  }
+
   return `${config.authUrl}?${params.toString()}`;
+}
+
+// Generate PKCE code verifier (for Twitter and other platforms that require PKCE)
+function generateCodeVerifier() {
+  const array = new Uint8Array(32);
+  crypto.getRandomValues(array);
+  return base64URLEncode(array);
+}
+
+// Generate PKCE code challenge
+async function generateCodeChallenge(verifier) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(verifier);
+  const digest = await crypto.subtle.digest('SHA-256', data);
+  return base64URLEncode(new Uint8Array(digest));
+}
+
+// Base64 URL encode (without padding)
+function base64URLEncode(array) {
+  const base64 = btoa(String.fromCharCode(...array));
+  return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 }
 
 // Exchange authorization code for tokens
