@@ -1,15 +1,16 @@
 /**
  * Centralized Configuration
  * All URLs and environment-specific settings in one place
+ * OAuth callbacks use root domain with API key embedded in state parameter
  */
 
 export const CONFIG = {
   // Base URL - change this one place to update everywhere
   BASE_URL: 'https://oauth-hub.com',
   
-  // Derived URLs - these are templates, actual URLs will include API key
+  // Derived URLs - simplified OAuth callback
   get CALLBACK_URL() {
-    return `${this.BASE_URL}/callback/{apiKey}`;
+    return this.BASE_URL;
   },
   
   get WWW_URL() {
@@ -17,7 +18,7 @@ export const CONFIG = {
   },
   
   get WWW_CALLBACK_URL() {
-    return `${this.BASE_URL}/callback/{apiKey}`;
+    return this.BASE_URL;
   },
   
   // API endpoints

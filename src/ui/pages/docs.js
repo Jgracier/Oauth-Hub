@@ -1,5 +1,5 @@
 // =============================================================================
-// 📖 DOCUMENTATION PAGE - Streamlined API Documentation
+// 📖 DOCUMENTATION PAGE - Clean & Organized OAuth Hub Documentation
 // =============================================================================
 
 import { CONFIG } from '../../core/config.js';
@@ -35,60 +35,30 @@ export function getDocsPage(UNIFIED_CSS) {
     <style>
         ${UNIFIED_CSS}
         
-        /* Prevent horizontal overflow */
-        body {
-            overflow-x: hidden;
-        }
-        
-        .container {
-            max-width: 100%;
-            overflow-x: hidden;
-        }
-        
-        * {
-            box-sizing: border-box;
-        }
-        
+        /* Documentation specific styles */
+        .container { max-width: 1000px; overflow-x: hidden; }
+        .code-block-container { margin: var(--space-4) 0; }
         .code-block {
-            background: var(--gray-50);
-            border: 1px solid var(--border-color);
+            position: relative;
+            background: var(--gray-900);
+            color: var(--gray-100);
             border-radius: var(--radius-md);
-            padding: var(--space-4);
-            margin: var(--space-3) 0;
-            font-family: var(--font-mono);
-            font-size: 0.875rem;
-            overflow-x: auto;
-            position: relative;
-            transition: border-color 0.2s ease;
-            max-width: 100%;
-            word-wrap: break-word;
-        }
-        .code-block:hover {
-            border-color: var(--primary-400);
-        }
-        .code-block-container {
-            position: relative;
-            margin: var(--space-4) 0;
-            max-width: 100%;
             overflow: hidden;
+            border: 1px solid var(--border-color);
         }
         .code-block pre {
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            max-width: 100%;
+            padding: var(--space-4);
+            margin: 0;
             overflow-x: auto;
-        }
-        .code-title {
-            margin-top: var(--space-2);
-            color: var(--gray-600);
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
             font-size: 0.875rem;
-            font-style: italic;
+            line-height: 1.5;
         }
         .copy-button {
             position: absolute;
             top: var(--space-2);
             right: var(--space-2);
-            background: var(--primary-600);
+            background: var(--gray-700);
             color: white;
             border: none;
             padding: var(--space-1) var(--space-2);
@@ -96,14 +66,10 @@ export function getDocsPage(UNIFIED_CSS) {
             font-size: 0.75rem;
             cursor: pointer;
             opacity: 0.7;
-            transition: opacity 0.2s;
+            transition: all 0.2s;
         }
-        .copy-button:hover {
-            opacity: 1;
-        }
-        .copy-button.copied {
-            background: var(--success-600);
-        }
+        .copy-button:hover { opacity: 1; }
+        .copy-button.copied { background: var(--success-600); }
         .language-label {
             position: absolute;
             top: var(--space-2);
@@ -115,7 +81,6 @@ export function getDocsPage(UNIFIED_CSS) {
             font-size: 0.75rem;
             font-weight: 500;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
         }
         .endpoint {
             background: var(--primary-50);
@@ -140,28 +105,12 @@ export function getDocsPage(UNIFIED_CSS) {
             border: 1px solid var(--border-color);
             border-radius: var(--radius-md);
             margin-bottom: var(--space-3);
+            text-align: center;
+            transition: all 0.2s;
         }
-        .platform-url {
-            display: inline-block;
-            padding: var(--space-2) var(--space-3);
-            background: var(--primary-500);
-            color: white;
-            text-decoration: none;
-            border-radius: var(--radius-md);
-            margin-top: var(--space-2);
-            font-weight: 600;
-            transition: background-color 0.2s;
-        }
-        .platform-url:hover {
-            background: var(--primary-600);
-            color: white;
-        }
-        .warning-box {
-            background: var(--warning-50);
-            border: 1px solid var(--warning-200);
-            border-radius: var(--radius-md);
-            padding: var(--space-4);
-            margin: var(--space-4) 0;
+        .platform-card:hover {
+            border-color: var(--primary-300);
+            transform: translateY(-2px);
         }
         .success-box {
             background: var(--success-50);
@@ -170,6 +119,23 @@ export function getDocsPage(UNIFIED_CSS) {
             padding: var(--space-4);
             margin: var(--space-4) 0;
         }
+        .warning-box {
+            background: var(--warning-50);
+            border: 1px solid var(--warning-200);
+            border-radius: var(--radius-md);
+            padding: var(--space-4);
+            margin: var(--space-4) 0;
+        }
+        .info-box {
+            background: var(--primary-50);
+            border: 1px solid var(--primary-200);
+            border-radius: var(--radius-md);
+            padding: var(--space-4);
+            margin: var(--space-4) 0;
+        }
+        .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--space-4); }
+        .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: var(--space-3); }
+        .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-3); }
     </style>
 </head>
 <body>
@@ -177,481 +143,354 @@ export function getDocsPage(UNIFIED_CSS) {
         ${getNavigation('docs')}
         
         <main class="main">
-            <div class="container" style="max-width: 1000px;">
+            <div class="container">
                 <div class="page-header">
                     <h1 class="page-title">OAuth Hub Documentation</h1>
-                    <p class="page-description">Simple, unified OAuth token management for all social platforms</p>
+                    <p class="page-description">Unified OAuth token management for 15+ social platforms</p>
                 </div>
 
-                <!-- Quick Start Guide -->
+                <!-- 1. OVERVIEW -->
+                <div class="card">
+                    <h2>🎯 Overview</h2>
+                    <p>OAuth Hub provides a unified API for managing OAuth tokens across all major social platforms. One simple integration works for Google, Facebook, Twitter, LinkedIn, Instagram, TikTok, and more.</p>
+                    
+                    <div class="success-box">
+                        <h4>✨ Single Redirect URI for All Platforms</h4>
+                        <p>Register this URL in ALL your OAuth applications:</p>
+                        <div class="code-block" style="text-align: center; font-size: 1.2rem; font-weight: bold;">
+                            <pre><code>https://oauth-hub.com</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="grid-3">
+                        <div>
+                            <h4>🔄 Unified Flow</h4>
+                            <p>Same API endpoints work for all platforms. No platform-specific code needed.</p>
+                        </div>
+                        <div>
+                            <h4>🔐 Secure Storage</h4>
+                            <p>Tokens stored securely in Cloudflare KV with automatic refresh handling.</p>
+                        </div>
+                        <div>
+                            <h4>⚡ Fast Integration</h4>
+                            <p>Add OAuth to your app in minutes, not hours. Copy-paste ready code.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. QUICK START -->
                 <div class="card">
                     <h2>🚀 Quick Start</h2>
                     
-                    <div class="success-box">
-                        <h4>✨ One URL for Everything</h4>
-                        <p>Use this single redirect URI for ALL your OAuth apps:</p>
-                        <div class="code-block" style="text-align: center; font-size: 1rem; font-weight: bold; background: var(--primary-50); border-color: var(--primary-300);">
-                            ${CONFIG.WWW_CALLBACK_URL}
-                        </div>
-                    </div>
-                    
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--space-4); margin: var(--space-4) 0;">
+                    <div class="grid-3">
                         <div>
                             <h3>1️⃣ Get API Key</h3>
                             <ul>
-                                <li>Sign up for OAuth Hub</li>
+                                <li><a href="/auth">Sign up</a> for OAuth Hub</li>
                                 <li>Go to <a href="/api-keys">API Keys</a></li>
-                                <li>Generate new key (starts with <code>sk_</code>)</li>
-                        </ul>
-                    </div>
-
-                        <div>
-                            <h3>2️⃣ Create OAuth Apps</h3>
-                            <ul>
-                                <li>Visit platform developer portals</li>
-                                <li>Create OAuth applications</li>
-                                <li>Use the callback URL above</li>
+                                <li>Generate your API key</li>
                             </ul>
-                    </div>
-
+                        </div>
                         <div>
-                            <h3>3️⃣ Add Credentials</h3>
+                            <h3>2️⃣ Setup OAuth Apps</h3>
                             <ul>
-                                <li>Go to <a href="/apps">App Credentials</a></li>
-                                <li>Add Client ID & Secret</li>
-                                <li>Configure scopes</li>
+                                <li>Create apps on platform developer portals</li>
+                                <li>Set redirect URI: <code>https://oauth-hub.com</code></li>
+                                <li>Add credentials to <a href="/apps">OAuth Hub</a></li>
                             </ul>
+                        </div>
+                        <div>
+                            <h3>3️⃣ Start Using</h3>
+                            <ul>
+                                <li>Generate consent URLs</li>
+                                <li>Users grant permissions</li>
+                                <li>Retrieve access tokens</li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
 
-                    <h3>🔗 Platform Developer Portals</h3>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-3); margin: var(--space-4) 0;">
-                        ${getAllPlatforms().map(platformKey => {
-                            const platform = PLATFORMS[platformKey];
-                            return `
-                                <a href="${platform.docsUrl}" target="_blank" class="platform-card" style="text-decoration: none; color: inherit;">
-                                    <div style="font-size: 1.5rem; margin-bottom: var(--space-2);">${platform.icon}</div>
-                                    <h4>${platform.displayName}</h4>
-                                    <p style="margin: 0; font-size: 0.875rem; color: var(--gray-600);">${platform.description}</p>
-                                </a>
-                            `;
-                        }).join('')}
-                    </div>
+                <!-- 3. CORE API ENDPOINTS -->
+                <div class="card">
+                    <h2>🔗 Core API Endpoints</h2>
+                    
+                    <div class="endpoint">
+                        <h4><span class="method get">GET</span>/consent/{platform}/{apiKey}</h4>
+                        <p><strong>Generate OAuth consent URL</strong> - Returns authorization URL for user to grant permissions</p>
+                        ${createCodeBlock(`// Example: Generate Google consent URL
+GET /consent/google/sk_your_api_key
+
+Response:
+{
+  "consentUrl": "https://accounts.google.com/o/oauth2/v2/auth?client_id=...",
+  "platform": "google",
+  "state": "google_sk_your_api_key_1234567890",
+  "scopes": ["openid", "email", "profile"],
+  "redirectUri": "https://oauth-hub.com"
+}`, 'json')}
                     </div>
 
-                <!-- API Usage -->
+                    <div class="endpoint">
+                        <h4><span class="method get">GET</span>/token/{platformUserId}/{apiKey}</h4>
+                        <p><strong>Retrieve access tokens</strong> - Get valid access token (auto-refreshes if expired)</p>
+                        ${createCodeBlock(`// Example: Get user's Google access token
+GET /token/113672837219382787216/sk_your_api_key
+
+Response:
+{
+  "success": true,
+  "platform": "google",
+  "platformUserId": "113672837219382787216",
+  "accessToken": "ya29.a0AfH6SMC...",
+  "tokenType": "bearer",
+  "expiresIn": 3600,
+  "refreshed": false
+}`, 'json')}
+                    </div>
+
+                    <div class="info-box">
+                        <h4>🔄 Automatic OAuth Callback Processing</h4>
+                        <p>When users complete OAuth consent, they're redirected to <code>https://oauth-hub.com</code> with authorization code. OAuth Hub automatically:</p>
+                        <ul>
+                            <li>✅ Exchanges authorization code for access tokens</li>
+                            <li>✅ Fetches user info and platform user ID</li>
+                            <li>✅ Stores all data securely in Cloudflare KV</li>
+                            <li>✅ Returns platform name and user ID to your app</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- 4. IMPLEMENTATION -->
                 <div class="card">
                     <h2>💻 Implementation</h2>
                     
-                    <div class="success-box">
-                        <h4>🎯 Simple Popup Flow</h4>
-                        <p>Get platform user ID and tokens instantly - no webhooks or polling needed!</p>
-                    </div>
-                    
-                    <h3>📋 Copy & Paste Solution</h3>
+                    <h3>📋 Copy-Paste Integration</h3>
                     ${createCodeBlock(`// Add this helper function to your app
 async function connectSocial(platform, apiKey) {
-  // 1. Get OAuth URL
-  const response = await fetch(\`${CONFIG.BASE_URL}/consent/\${platform}/\${apiKey}\`);
-  const { consentUrl } = await response.json();
-  
-  // 2. Open popup and wait for completion
-  return new Promise((resolve, reject) => {
-    const popup = window.open(consentUrl, 'oauth', 'width=500,height=600');
+  try {
+    // 1. Get consent URL
+    const consentResponse = await fetch(\`https://oauth-hub.com/consent/\${platform}/\${apiKey}\`);
+    const { consentUrl, state } = await consentResponse.json();
     
-    const messageHandler = (event) => {
-      if (event.data.type === 'oauth_complete') {
-        cleanup();
-        resolve({
-          platform: event.data.platform,
-          platformUserId: event.data.platformUserId,
-          tokens: event.data.tokens
-        });
-      } else if (event.data.type === 'oauth_error') {
-        cleanup();
-        reject(new Error(event.data.error));
-      }
-    };
+    // 2. Open consent popup
+    const popup = window.open(consentUrl, 'oauth-consent', 'width=500,height=600');
     
-    const cleanup = () => {
-      window.removeEventListener('message', messageHandler);
-      popup.close();
-    };
-    
-    window.addEventListener('message', messageHandler);
-    
-    // Handle manual popup close
-    const checkClosed = setInterval(() => {
-      if (popup.closed) {
+    // 3. Wait for OAuth completion
+    return new Promise((resolve, reject) => {
+      const checkClosed = setInterval(() => {
+        if (popup.closed) {
+          clearInterval(checkClosed);
+          // Check if OAuth was successful by looking for stored tokens
+          // Implementation depends on your app's needs
+          resolve({ success: true });
+        }
+      }, 1000);
+      
+      // Timeout after 5 minutes
+      setTimeout(() => {
         clearInterval(checkClosed);
-        cleanup();
-        reject(new Error('User cancelled'));
-      }
-    }, 1000);
-  });
+        popup.close();
+        reject(new Error('OAuth timeout'));
+      }, 300000);
+    });
+  } catch (error) {
+    console.error('OAuth error:', error);
+    throw error;
+  }
 }
 
-// Usage - it's that simple!
-const result = await connectSocial('facebook', 'sk_your_api_key');
-console.log('User ID:', result.platformUserId);
-console.log('Token:', result.tokens.accessToken);`, 'javascript', 'Complete implementation - just copy and paste!')}
+// Usage examples
+await connectSocial('google', 'sk_your_api_key');
+await connectSocial('facebook', 'sk_your_api_key');
+await connectSocial('twitter', 'sk_your_api_key');`, 'javascript')}
 
                     <h3>🔧 Framework Examples</h3>
                     
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--space-4); max-width: 100%;">
-                        <div style="min-width: 0;">
-                            <h4>⚛️ React</h4>
-                            ${createCodeBlock(`const [user, setUser] = useState({});
-  const [loading, setLoading] = useState(false);
+                    <div class="grid-2">
+                        <div>
+                            <h4>React/Next.js</h4>
+                            ${createCodeBlock(`import { useState } from 'react';
+
+function SocialConnect({ platform, apiKey }) {
+  const [connecting, setConnecting] = useState(false);
   
-const handleConnect = async (platform) => {
-    setLoading(true);
-  try {
-    const result = await connectSocial(platform, 'sk_your_key');
-    setUser(prev => ({
-        ...prev,
-      [\`\${platform}Id\`]: result.platformUserId,
-      [\`\${platform}Connected\`]: true
-    }));
+  const handleConnect = async () => {
+    setConnecting(true);
+    try {
+      await connectSocial(platform, apiKey);
+      alert(\`Connected to \${platform}!\`);
     } catch (error) {
-    alert('Connection failed: ' + error.message);
+      alert('Connection failed');
     } finally {
-      setLoading(false);
+      setConnecting(false);
     }
-};`, 'javascript')}
-                        </div>
-                        
-                        <div style="min-width: 0;">
-                            <h4>🟢 Vue.js</h4>
-                            ${createCodeBlock(`const user = ref({});
-const loading = ref(false);
-
-const handleConnect = async (platform) => {
-  loading.value = true;
-  try {
-    const result = await connectSocial(platform, 'sk_your_key');
-    user.value[\`\${platform}Id\`] = result.platformUserId;
-    user.value[\`\${platform}Connected\`] = true;
-  } catch (error) {
-    alert('Connection failed: ' + error.message);
-  } finally {
-    loading.value = false;
-  }
-};`, 'javascript')}
-                    </div>
-                </div>
-
-                    <h3>🔗 API Endpoints</h3>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: var(--space-4); margin: var(--space-4) 0; max-width: 100%;">
-                        <div class="endpoint" style="min-width: 0;">
-                            <div style="display: flex; align-items: center; margin-bottom: var(--space-2); flex-wrap: wrap; gap: var(--space-2);">
-                                <span class="method get">GET</span>
-                                <code style="word-break: break-all;">/consent/{platform}/{apiKey}</code>
-                        </div>
-                            <p>Get OAuth authorization URL</p>
-                    </div>
-
-                        <div class="endpoint" style="min-width: 0;">
-                            <div style="display: flex; align-items: center; margin-bottom: var(--space-2); flex-wrap: wrap; gap: var(--space-2);">
-                                <span class="method get">GET</span>
-                                <code style="word-break: break-all;">/tokens/{userId}/{apiKey}</code>
-                            </div>
-                            <p>Get fresh access tokens</p>
-                        </div>
-                    </div>
-
-                    <h3>🌐 Supported Platforms</h3>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: var(--space-2); margin: var(--space-4) 0; text-align: center; max-width: 100%;">
-                        <div><div style="font-size: 1.5rem;">📘</div><code>facebook</code></div>
-                        <div><div style="font-size: 1.5rem;">🎬</div><code>google</code></div>
-                        <div><div style="font-size: 1.5rem;">📸</div><code>instagram</code></div>
-                        <div><div style="font-size: 1.5rem;">🐦</div><code>twitter</code></div>
-                        <div><div style="font-size: 1.5rem;">💼</div><code>linkedin</code></div>
-                        <div><div style="font-size: 1.5rem;">🎵</div><code>tiktok</code></div>
-                        <div><div style="font-size: 1.5rem;">🎮</div><code>discord</code></div>
-                        <div><div style="font-size: 1.5rem;">📌</div><code>pinterest</code></div>
-                        <div><div style="font-size: 1.5rem;">📝</div><code>wordpress</code></div>
-                        <div><div style="font-size: 1.5rem;">🔴</div><code>reddit</code></div>
-                        <div><div style="font-size: 1.5rem;">🐙</div><code>github</code></div>
-                        <div><div style="font-size: 1.5rem;">🎵</div><code>spotify</code></div>
-                        <div><div style="font-size: 1.5rem;">🎮</div><code>twitch</code></div>
-                        <div><div style="font-size: 1.5rem;">💬</div><code>slack</code></div>
-                        <div><div style="font-size: 1.5rem;">🏢</div><code>microsoft</code></div>
-                        </div>
-                    </div>
-
-                <!-- WordPress.com Specific -->
-                <div class="card">
-                    <h2>📝 WordPress.com Integration</h2>
-                    
-                    <div class="success-box">
-                        <h4>✨ WordPress.com OAuth2</h4>
-                        <p>WordPress.com uses OAuth2 for secure authentication with fine-grained scope control. <a href="https://developer.wordpress.com/docs/api/oauth2/" target="_blank">Learn more about WordPress.com OAuth2</a>.</p>
-                    </div>
-                    
-                    <h3>🔧 WordPress App Setup</h3>
-                    <ol>
-                        <li><strong>Register your application</strong> at <a href="https://developer.wordpress.com/apps/" target="_blank">WordPress.com Applications Manager</a></li>
-                        <li><strong>Get your credentials:</strong>
-                            <ul>
-                                <li>Client ID (identifies your application)</li>
-                                <li>Client Secret (authenticates your application - keep secure)</li>
-                            </ul>
-                        </li>
-                        <li><strong>Set redirect URI:</strong> <code>${CONFIG.WWW_CALLBACK_URL}</code></li>
-                        <li><strong>Configure scopes</strong> based on your needs (posts, media, sites, etc.)</li>
-                    </ol>
-                    
-                    <h3>📋 WordPress Scopes</h3>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: var(--space-3); margin: var(--space-4) 0;">
-                        <div>
-                            <h4>Content Management</h4>
-                            <ul style="font-size: 0.875rem;">
-                                <li><code>posts</code> - Manage posts</li>
-                                <li><code>media</code> - Upload media</li>
-                                <li><code>pages</code> - Manage pages</li>
-                                <li><code>comments</code> - Manage comments</li>
-                            </ul>
+  };
+  
+  return (
+    <button onClick={handleConnect} disabled={connecting}>
+      {connecting ? 'Connecting...' : \`Connect \${platform}\`}
+    </button>
+  );
+}`, 'jsx')}
                         </div>
                         <div>
-                            <h4>Site Management</h4>
-                            <ul style="font-size: 0.875rem;">
-                                <li><code>sites</code> - Site information</li>
-                                <li><code>themes</code> - Manage themes</li>
-                                <li><code>plugins</code> - Manage plugins</li>
-                                <li><code>users</code> - Manage users</li>
-                            </ul>
-                        </div>
-                        <div>
-                            <h4>Analytics & Global</h4>
-                            <ul style="font-size: 0.875rem;">
-                                <li><code>stats</code> - Site statistics</li>
-                                <li><code>follows</code> - Followers</li>
-                                <li><code>global</code> - All user sites</li>
-                            </ul>
-                        </div>
-                    </div>
+                            <h4>Vue.js</h4>
+                            ${createCodeBlock(`<template>
+  <button @click="handleConnect" :disabled="connecting">
+    {{ connecting ? 'Connecting...' : \`Connect \${platform}\` }}
+  </button>
+</template>
 
-                    <h3>🔗 WordPress API Usage</h3>
-                    ${createCodeBlock(`// Connect to WordPress.com
-const result = await connectSocial('wordpress', 'sk_your_api_key');
-
-// Use the token with WordPress.com REST API
-const token = result.tokens.accessToken;
-
-// Get user sites
-const sitesResponse = await fetch('https://public-api.wordpress.com/rest/v1/me/sites', {
-  headers: { 'Authorization': \`Bearer \${token}\` }
-});
-const sites = await sitesResponse.json();
-
-// Create a new post
-const postData = {
-  title: 'Hello from OAuth Hub!',
-  content: 'This post was created using OAuth Hub integration.',
-  status: 'publish'
-};
-
-const postResponse = await fetch(\`https://public-api.wordpress.com/rest/v1/sites/\${siteId}/posts/new\`, {
-  method: 'POST',
-  headers: {
-    'Authorization': \`Bearer \${token}\`,
-    'Content-Type': 'application/json'
+<script>
+export default {
+  props: ['platform', 'apiKey'],
+  data() {
+    return { connecting: false };
   },
-  body: JSON.stringify(postData)
-});`, 'javascript', 'WordPress.com API integration example')}
-                        </div>
-                
-                <!-- Platform Showcase -->
-                <div class="card">
-                    <h2>🌟 Platform Showcase</h2>
-                    
-                    <div class="success-box">
-                        <h4>✨ 15 Major Platforms Supported</h4>
-                        <p>OAuth Hub now supports all major social media, developer, music, streaming, workplace, and enterprise platforms with comprehensive scope management.</p>
-                    </div>
-
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--space-4); margin: var(--space-4) 0; max-width: 100%;">
-                        <div style="min-width: 0;">
-                            <h4>🌐 Social & Media</h4>
-                            <ul style="font-size: 0.875rem;">
-                                <li><strong>📘 Facebook</strong> - Pages, ads, Instagram integration</li>
-                                <li><strong>📸 Instagram</strong> - Content, stories, business features</li>
-                                <li><strong>🐦 X (Twitter)</strong> - Tweets, follows, engagement</li>
-                                <li><strong>💼 LinkedIn</strong> - Professional profiles, content</li>
-                                <li><strong>🎵 TikTok</strong> - Videos, user info, analytics</li>
-                                <li><strong>🔴 Reddit</strong> - Posts, comments, moderation</li>
-                            </ul>
-                        </div>
-                        <div style="min-width: 0;">
-                            <h4>🎮 Gaming & Streaming</h4>
-                            <ul style="font-size: 0.875rem;">
-                                <li><strong>🎮 Discord</strong> - Servers, bots, rich presence</li>
-                                <li><strong>🎮 Twitch</strong> - Streams, chat, channel management</li>
-                                <li><strong>🎵 Spotify</strong> - Music, playlists, playback control</li>
-                            </ul>
-                            
-                            <h4>💼 Developer & Enterprise</h4>
-                            <ul style="font-size: 0.875rem;">
-                                <li><strong>🐙 GitHub</strong> - Repositories, organizations, packages</li>
-                                <li><strong>💬 Slack</strong> - Workspaces, channels, messaging</li>
-                                <li><strong>🏢 Microsoft</strong> - Office 365, Azure, Teams</li>
-                            </ul>
-                        </div>
-                        <div style="min-width: 0;">
-                            <h4>🎬 Content & Cloud</h4>
-                            <ul style="font-size: 0.875rem;">
-                                <li><strong>🎬 Google</strong> - YouTube, Drive, Gmail, Cloud</li>
-                                <li><strong>📝 WordPress.com</strong> - Sites, posts, media</li>
-                                <li><strong>📌 Pinterest</strong> - Boards, pins, business features</li>
-                            </ul>
-                            
-                            <h4>🔗 Quick Integration</h4>
-                            ${createCodeBlock(`// Connect to any platform
-const platforms = [
-  'facebook', 'google', 'instagram', 'twitter',
-  'linkedin', 'tiktok', 'discord', 'pinterest',
-  'wordpress', 'reddit', 'github', 'spotify',
-  'twitch', 'slack', 'microsoft'
-];
-
-// Universal connection
-const result = await connectSocial(platform, apiKey);`, 'javascript', 'Universal platform support')}
+  methods: {
+    async handleConnect() {
+      this.connecting = true;
+      try {
+        await connectSocial(this.platform, this.apiKey);
+        this.$emit('connected', this.platform);
+      } catch (error) {
+        this.$emit('error', error);
+      } finally {
+        this.connecting = false;
+      }
+    }
+  }
+};
+</script>`, 'vue')}
                         </div>
                     </div>
                 </div>
 
-                <!-- Backend Usage -->
+                <!-- 5. SUPPORTED PLATFORMS -->
                 <div class="card">
-                    <h2>🔧 Backend Integration</h2>
+                    <h2>🌐 Supported Platforms</h2>
+                    <p>OAuth Hub supports 15+ major social platforms with unified API endpoints:</p>
                     
-                    <div class="warning-box">
-                        <h4>🔑 Important</h4>
-                        <p>Save the <strong>platformUserId</strong> from the popup result - you need it to retrieve tokens later!</p>
-                        </div>
+                    <div class="grid-4">
+                        ${getAllPlatforms().map(platformKey => {
+                            const platform = PLATFORMS[platformKey];
+                            return `
+                            <div class="platform-card">
+                                <div style="font-size: 2rem; margin-bottom: var(--space-2);">${platform.icon}</div>
+                                <h4>${platform.displayName}</h4>
+                                <code>${platformKey}</code>
+                                <p style="font-size: 0.875rem; color: var(--gray-600); margin-top: var(--space-2);">${platform.description}</p>
+                            </div>
+                            `;
+                        }).join('')}
+                    </div>
 
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--space-4); max-width: 100%;">
-                        <div style="min-width: 0;">
-                            <h4>🟨 Node.js</h4>
-                            ${createCodeBlock(`// Get fresh tokens
-async function getTokens(platformUserId, apiKey) {
-  const url = \`${CONFIG.BASE_URL}/tokens/\${platformUserId}/\${apiKey}\`;
-  const response = await fetch(url);
-  const data = await response.json();
-  return data.accessToken;
+                    <div class="info-box">
+                        <h4>🔧 Platform Developer Portals</h4>
+                        <p>Create OAuth applications on these developer portals:</p>
+                        <div class="grid-3" style="margin-top: var(--space-3);">
+                            ${getAllPlatforms().slice(0, 6).map(platformKey => {
+                                const platform = PLATFORMS[platformKey];
+                                return `
+                                <a href="${platform.docsUrl}" target="_blank" style="text-decoration: none; color: var(--primary-600); font-weight: 500;">
+                                    ${platform.icon} ${platform.displayName} Developer Portal →
+                                </a>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 6. SECURITY & BEST PRACTICES -->
+                <div class="card">
+                    <h2>🔐 Security & Best Practices</h2>
+                    
+                    <div class="grid-2">
+                        <div>
+                            <h4>🛡️ Security Features</h4>
+                            <ul>
+                                <li>✅ API key authentication for all requests</li>
+                                <li>✅ Secure token storage in Cloudflare KV</li>
+                                <li>✅ Automatic token refresh handling</li>
+                                <li>✅ State parameter validation</li>
+                                <li>✅ HTTPS-only communication</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4>💡 Best Practices</h4>
+                            <ul>
+                                <li>🔑 Keep API keys secure and rotate regularly</li>
+                                <li>🔄 Handle token refresh gracefully</li>
+                                <li>⏰ Implement proper timeout handling</li>
+                                <li>🚫 Never expose tokens in client-side code</li>
+                                <li>📝 Log OAuth events for debugging</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="warning-box">
+                        <h4>⚠️ Important Notes</h4>
+                        <ul>
+                            <li><strong>API Keys:</strong> Treat API keys like passwords. Never commit them to version control.</li>
+                            <li><strong>Redirect URI:</strong> Must be exactly <code>https://oauth-hub.com</code> in all OAuth apps.</li>
+                            <li><strong>HTTPS Only:</strong> OAuth Hub only works over HTTPS for security.</li>
+                            <li><strong>Rate Limits:</strong> Respect platform rate limits when making API calls.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- 7. TROUBLESHOOTING -->
+                <div class="card">
+                    <h2>🔧 Troubleshooting</h2>
+                    
+                    <div class="grid-2">
+                        <div>
+                            <h4>Common Issues</h4>
+                            <ul>
+                                <li><strong>Invalid API Key:</strong> Check API key format (starts with <code>sk_</code>)</li>
+                                <li><strong>No OAuth App:</strong> Add platform credentials in <a href="/apps">App Credentials</a></li>
+                                <li><strong>Redirect URI Mismatch:</strong> Ensure <code>https://oauth-hub.com</code> is registered</li>
+                                <li><strong>Expired Tokens:</strong> Tokens auto-refresh, check for refresh token</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4>Error Responses</h4>
+                            ${createCodeBlock(`// Common error format
+{
+  "error": "Invalid API key",
+  "message": "API key not found or invalid",
+  "apiKey": "sk_abc123..."
 }
 
-// Use with platform APIs
-const token = await getTokens('123456789', 'sk_your_key');
-const profile = await fetch('https://graph.facebook.com/me', {
-  headers: { 'Authorization': \`Bearer \${token}\` }
-});`, 'javascript')}
-                    </div>
-
-                        <div style="min-width: 0;">
-                            <h4>🐍 Python</h4>
-                            ${createCodeBlock(`import requests
-
-def get_tokens(platform_user_id, api_key):
-    url = f"${CONFIG.BASE_URL}/tokens/{platform_user_id}/{api_key}"
-    response = requests.get(url)
-    return response.json()['accessToken']
-
-# Use with platform APIs
-token = get_tokens('123456789', 'sk_your_key')
-profile = requests.get('https://graph.facebook.com/me', 
-    headers={'Authorization': f'Bearer {token}'})`, 'python')}
+// OAuth app not found
+{
+  "error": "No OAuth app configured for this platform",
+  "platform": "google",
+  "userEmail": "user@example.com"
+}`, 'json')}
                         </div>
                     </div>
                 </div>
-
-                <!-- Security & Tips -->
-                <div class="card">
-                    <h2>🔐 Security & Tips</h2>
-                    
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: var(--space-4); max-width: 100%;">
-                        <div style="min-width: 0;">
-                            <h4>✅ Best Practices</h4>
-                            <ul>
-                                <li>Keep API keys secret (backend only)</li>
-                                <li>Store platform user IDs securely</li>
-                                <li>Use HTTPS for all requests</li>
-                                <li>Tokens auto-refresh when needed</li>
-                    </ul>
-                </div>
-
-                        <div style="min-width: 0;">
-                            <h4>📋 Common Status Codes</h4>
-                            <ul>
-                                <li><code>200</code> - Success</li>
-                                <li><code>401</code> - Invalid API key</li>
-                                <li><code>404</code> - No tokens found</li>
-                                <li><code>500</code> - Server error</li>
-                    </ul>
-                    </div>
-                </div>
-                </div>
-                
             </div>
         </main>
     </div>
-    
-    ${getSharedScript()}
-    <script>
-        // Copy code to clipboard functionality
-        async function copyToClipboard(button) {
-            const code = button.getAttribute('data-code').replace(/\\n/g, '\n').replace(/&quot;/g, '"');
 
-            try {
-                await navigator.clipboard.writeText(code);
+    ${getSharedScript()}
+    
+    <script>
+        // Copy to clipboard functionality
+        function copyToClipboard(button) {
+            const code = button.getAttribute('data-code').replace(/\\n/g, '\\n');
+            navigator.clipboard.writeText(code).then(() => {
+                const originalText = button.textContent;
                 button.textContent = '✅ Copied!';
                 button.classList.add('copied');
-
-                // Reset button after 2 seconds
                 setTimeout(() => {
-                    button.textContent = '📋 Copy';
+                    button.textContent = originalText;
                     button.classList.remove('copied');
                 }, 2000);
-            } catch (err) {
-                console.error('Failed to copy: ', err);
-                // Fallback for older browsers
-                const textArea = document.createElement('textarea');
-                textArea.value = code;
-                document.body.appendChild(textArea);
-                textArea.focus();
-                textArea.select();
-
-                try {
-                    document.execCommand('copy');
-                    button.textContent = '✅ Copied!';
-                    button.classList.add('copied');
-
-                    setTimeout(() => {
-                        button.textContent = '📋 Copy';
-                        button.classList.remove('copied');
-                    }, 2000);
-                } catch (fallbackErr) {
-                    console.error('Fallback copy failed: ', fallbackErr);
-                    button.textContent = '❌ Copy failed';
-                    setTimeout(() => {
-                        button.textContent = '📋 Copy';
-                    }, 2000);
-                }
-
-                document.body.removeChild(textArea);
-            }
-        }
-
-        // Smooth scrolling for internal links
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
             });
-        });
+        }
     </script>
 </body>
 </html>`;

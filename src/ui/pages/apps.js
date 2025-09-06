@@ -251,18 +251,14 @@ export function getAppsPage(UNIFIED_CSS) {
 
                 // Add event listeners after rendering
                 const scopeDisplay = container.querySelector('.scope-display');
-                console.log('Found scope display element:', !!scopeDisplay);
                 if (scopeDisplay) {
                     // Remove any existing listeners first
                     scopeDisplay.replaceWith(scopeDisplay.cloneNode(true));
                     const newScopeDisplay = container.querySelector('.scope-display');
                     
                     newScopeDisplay.addEventListener('click', function(e) {
-                        console.log('Scope display clicked!');
                         toggleScopeDropdownFn();
                     });
-                    
-                    console.log('Event listener attached to scope display');
                 }
 
                 // Add event listeners for scope options (with delay to ensure DOM is ready)
@@ -272,13 +268,11 @@ export function getAppsPage(UNIFIED_CSS) {
                             e.preventDefault();
                             e.stopPropagation();
                             const scopeName = this.dataset.scope;
-                            console.log('Scope option clicked:', scopeName);
                             if (scopeName) {
                                 toggleScopeFn(scopeName);
                             }
                         });
                     });
-                    console.log('Event listeners attached to', container.querySelectorAll('.scope-option').length, 'scope options');
                 }, 10);
 
                 // Add event listener for search
@@ -334,13 +328,10 @@ export function getAppsPage(UNIFIED_CSS) {
 
             // Create unique function names for this instance
             const toggleScopeDropdownFn = function() {
-                console.log('toggleScopeDropdownFn called, currentPlatform:', currentPlatform);
                 if (!PLATFORM_SCOPES[currentPlatform]) {
-                    console.log('No platform scopes found for:', currentPlatform);
                     return;
                 }
                 isOpen = !isOpen;
-                console.log('Dropdown isOpen set to:', isOpen);
                 
                 // Instead of full re-render, just toggle the dropdown class
                 const dropdown = container.querySelector('.scope-dropdown');
@@ -350,14 +341,11 @@ export function getAppsPage(UNIFIED_CSS) {
                     if (isOpen) {
                         dropdown.classList.add('open');
                         arrow.classList.add('open');
-                        console.log('Dropdown opened via class toggle');
                     } else {
                         dropdown.classList.remove('open');
                         arrow.classList.remove('open');
-                        console.log('Dropdown closed via class toggle');
                     }
                 } else {
-                    console.log('Full re-render needed');
                     render();
                 }
             };
@@ -465,11 +453,9 @@ export function getAppsPage(UNIFIED_CSS) {
                     if (!scopeSelector) {
                         scopeSelector = createScopeSelector('scopeSelector');
                         window.scopeSelector = scopeSelector; // Make it globally accessible
-                        console.log('Scope selector created');
                     }
                     if (scopeSelector && typeof scopeSelector.setPlatform === 'function') {
                         scopeSelector.setPlatform(platform);
-                        console.log('Platform set to:', platform);
                     }
                 }, 150);
             } else {
@@ -523,7 +509,6 @@ export function getAppsPage(UNIFIED_CSS) {
                 if (container && !scopeSelector) {
                     scopeSelector = createScopeSelector('scopeSelector');
                     window.scopeSelector = scopeSelector; // Make it globally accessible
-                    console.log('Scope selector created on modal open');
                 }
                 
                 updateScopeSelector(); // Initialize/update scope selector
@@ -532,7 +517,6 @@ export function getAppsPage(UNIFIED_CSS) {
                 const platform = document.getElementById('platform').value;
                 if (platform && scopeSelector) {
                     scopeSelector.setPlatform(platform);
-                    console.log('Platform set to:', platform);
                 }
             }, 200); // Increased delay to ensure DOM is ready
         }
@@ -724,7 +708,6 @@ export function getAppsPage(UNIFIED_CSS) {
                 setTimeout(() => {
                     if (scopeSelector) {
                         scopeSelector.setScopes(optionalScopes);
-                        console.log('Setting scopes for edit:', optionalScopes);
                     }
                 }, 500);
             }

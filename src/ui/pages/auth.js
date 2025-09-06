@@ -119,6 +119,7 @@ export function getAuthPage(UNIFIED_CSS) {
                     headers: {
                         'Content-Type': 'application/json'
                     },
+                    credentials: 'include',
                     body: JSON.stringify(data)
                 });
                 

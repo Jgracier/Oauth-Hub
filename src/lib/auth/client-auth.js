@@ -4,29 +4,50 @@
 
 /**
  * Client-side authentication check for protected pages
- * Uses localStorage to verify user authentication state
+ * Uses server session validation instead of localStorage
  */
 export function getClientAuthScript() {
   return `
     <script>
-      (function() {
-        // Check if user is authenticated
-        const userEmail = localStorage.getItem('userEmail');
-        const userName = localStorage.getItem('userName');
-        const apiKey = localStorage.getItem('defaultApiKey') || localStorage.getItem('apiKey');
-        
-        // Redirect to auth if not authenticated and not already on auth page
-        if ((!userEmail || !userName || !apiKey) && 
-            window.location.pathname !== '/auth' && 
-            window.location.pathname !== '/') {
-          window.location.href = '/auth';
-          return;
-        }
-        
-        // Display user info if available
-        const userEmailElement = document.getElementById('user-email');
-        if (userEmailElement && userEmail) {
-          userEmailElement.textContent = userEmail;
+      (async function() {
+        // Check server session instead of localStorage
+        try {
+          const response = await fetch('/check-session', {
+            method: 'GET',
+            credentials: 'include'
+          });
+          
+          if (response.ok) {
+            const sessionData = await response.json();
+            
+            if (sessionData.authenticated) {
+              // User is authenticated, update localStorage and display info
+              localStorage.setItem('userEmail', sessionData.user.email);
+              localStorage.setItem('userName', sessionData.user.name);
+              
+              // Display user info
+              const userEmailElement = document.getElementById('user-email');
+              if (userEmailElement) {
+                userEmailElement.textContent = sessionData.user.email;
+              }
+              return; // Stay on current page
+            }
+          }
+          
+          // Not authenticated - redirect to auth page if not already there
+          if (window.location.pathname !== '/auth' && 
+              window.location.pathname !== '/') {
+            window.location.href = '/auth';
+            return;
+          }
+          
+        } catch (error) {
+          console.error('Session check failed:', error);
+          // On error, redirect to auth page if not already there
+          if (window.location.pathname !== '/auth' && 
+              window.location.pathname !== '/') {
+            window.location.href = '/auth';
+          }
         }
       })();
     </script>

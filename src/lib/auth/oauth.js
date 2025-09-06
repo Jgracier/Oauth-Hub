@@ -25,8 +25,8 @@ export async function generateConsentUrl(platform, app, apiKey, state, baseUrl) 
   const config = getPlatformConfig(platform, app);
   const platformConfig = getPlatform(platform);
   
-  // Build redirect URI with API key - use callback endpoint
-  const redirectUri = `${baseUrl}/callback/${apiKey}`;
+  // Build redirect URI - use root domain
+  const redirectUri = baseUrl;
   
   // Use platform-specific scope delimiter (space or comma)
   const scopeDelimiter = platformConfig.scopeDelimiter || ' ';
@@ -59,7 +59,6 @@ export async function generateConsentUrl(platform, app, apiKey, state, baseUrl) 
     
     // Store code verifier for later use in token exchange
     // Note: In a real implementation, you'd store this securely
-    console.log(`PKCE Code Verifier for ${platform}: ${codeVerifier}`);
   }
 
   return `${config.authUrl}?${params.toString()}`;
@@ -87,14 +86,14 @@ function base64URLEncode(array) {
 }
 
 // Exchange authorization code for tokens
-export async function exchangeCodeForTokens(platform, code, app) {
+export async function exchangeCodeForTokens(platform, code, app, redirectUri) {
   const config = getPlatformConfig(platform, app);
   
   const tokenData = {
     grant_type: 'authorization_code',
     client_id: config.clientId,
     client_secret: config.clientSecret,
-    redirect_uri: config.redirectUri,
+    redirect_uri: redirectUri || config.redirectUri, // Use provided redirectUri or fallback to stored one
     code: code
   };
 

@@ -111,18 +111,42 @@ export class Router {
 
     const platform = pathParts[2];
     const apiKey = pathParts[3];
-    const state = url.searchParams.get('state') || `${platform}_${Date.now()}`;
+    const state = url.searchParams.get('state') || `${platform}_${apiKey}_${Date.now()}`;
 
     try {
-      // Find the user's app for this platform and API key
-      const { keys } = await this.env.OAUTH_TOKENS.list();
+      // 1. First validate the API key exists and get user email
+      const { keys: apiKeys } = await this.env.API_KEYS.list();
+      let validApiKey = false;
+      let userEmail = null;
+      
+      for (const keyInfo of apiKeys) {
+        const data = await this.env.API_KEYS.get(keyInfo.name);
+        if (data) {
+          const parsed = JSON.parse(data);
+          if (parsed.apiKey === apiKey) {
+            validApiKey = true;
+            userEmail = parsed.email;
+            break;
+          }
+        }
+      }
+
+      if (!validApiKey) {
+        return jsonResponse({
+          error: 'Invalid API key',
+          apiKey: apiKey.substring(0, 10) + '...'
+        }, 401, corsHeaders);
+      }
+
+      // 2. Find OAuth app for this platform and user (not tied to API key)
+      const { keys: oauthKeys } = await this.env.OAUTH_TOKENS.list();
       let userApp = null;
       
-      for (const keyInfo of keys) {
+      for (const keyInfo of oauthKeys) {
         const data = await this.env.OAUTH_TOKENS.get(keyInfo.name);
         if (data) {
           const parsed = JSON.parse(data);
-          if (parsed.platform === platform && parsed.apiKey === apiKey) {
+          if (parsed.platform === platform && parsed.userEmail === userEmail) {
             userApp = parsed;
             break;
           }
@@ -131,9 +155,10 @@ export class Router {
 
       if (!userApp) {
         return jsonResponse({
-          error: 'No OAuth app found for this platform and API key',
+          error: 'No OAuth app configured for this platform',
           platform: platform,
-          apiKey: apiKey.substring(0, 10) + '...'
+          userEmail: userEmail,
+          message: 'Please configure your OAuth app credentials first'
         }, 404, corsHeaders);
       }
 
@@ -148,7 +173,7 @@ export class Router {
         platform: platform,
         state: state,
         scopes: userApp.scopes,
-        redirectUri: `https://oauth-hub.com/callback/${apiKey}`,
+        redirectUri: 'https://oauth-hub.com',
         message: 'Open this URL to start OAuth consent flow'
       }, 200, corsHeaders);
       
@@ -164,16 +189,6 @@ export class Router {
   // Handle OAuth provider callback
   async handleOAuthCallback(request, corsHeaders) {
     const url = new URL(request.url);
-    const pathParts = url.pathname.split('/');
-    
-    // Expected format: /callback/{apiKey}
-    if (pathParts.length < 3) {
-      return jsonResponse({
-        error: 'Invalid callback endpoint format. Expected: /callback/{apiKey}'
-      }, 400, corsHeaders);
-    }
-
-    const apiKey = pathParts[2];
     const code = url.searchParams.get('code');
     const state = url.searchParams.get('state');
     const error = url.searchParams.get('error');
@@ -192,36 +207,52 @@ export class Router {
       }, 400, corsHeaders);
     }
 
-    if (!apiKey) {
+    // Extract platform and API key from state parameter (format: platform_apikey_timestamp)
+    const stateParts = state.split('_');
+    if (stateParts.length < 3) {
       return jsonResponse({
-        error: 'Missing API key in consent URL'
+        error: 'Invalid state parameter format'
       }, 400, corsHeaders);
     }
 
+    const platform = stateParts[0];
+    // API key is everything between platform and timestamp (last part)
+    const apiKey = stateParts.slice(1, -1).join('_');
+
     try {
-      // 1. Validate API key and find associated OAuth app
-      const { keys } = await this.env.OAUTH_TOKENS.list();
-      let userApp = null;
-      let platform = null;
+      // 1. First validate the API key exists and get user email
+      const { keys: apiKeys } = await this.env.API_KEYS.list();
+      let validApiKey = false;
+      let userEmail = null;
       
-      // Extract platform from state parameter (format: platform_timestamp)
-      const stateParts = state.split('_');
-      if (stateParts.length >= 2) {
-        platform = stateParts[0];
-      }
-      
-      if (!platform) {
-        return jsonResponse({
-          error: 'Invalid state parameter - cannot determine platform'
-        }, 400, corsHeaders);
+      for (const keyInfo of apiKeys) {
+        const data = await this.env.API_KEYS.get(keyInfo.name);
+        if (data) {
+          const parsed = JSON.parse(data);
+          if (parsed.apiKey === apiKey) {
+            validApiKey = true;
+            userEmail = parsed.email;
+            break;
+          }
+        }
       }
 
-      // Find the OAuth app for this platform and API key
-      for (const keyInfo of keys) {
+      if (!validApiKey) {
+        return jsonResponse({
+          error: 'Invalid API key',
+          apiKey: apiKey.substring(0, 10) + '...'
+        }, 401, corsHeaders);
+      }
+
+      // 2. Find OAuth app for this platform and user (not tied to API key)
+      const { keys: oauthKeys } = await this.env.OAUTH_TOKENS.list();
+      let userApp = null;
+      
+      for (const keyInfo of oauthKeys) {
         const data = await this.env.OAUTH_TOKENS.get(keyInfo.name);
         if (data) {
           const parsed = JSON.parse(data);
-          if (parsed.platform === platform && parsed.apiKey === apiKey) {
+          if (parsed.platform === platform && parsed.userEmail === userEmail) {
             userApp = parsed;
             break;
           }
@@ -230,17 +261,19 @@ export class Router {
 
       if (!userApp) {
         return jsonResponse({
-          error: 'No OAuth app found for this platform and API key',
+          error: 'No OAuth app configured for this platform',
           platform: platform,
-          apiKey: apiKey.substring(0, 10) + '...'
+          userEmail: userEmail,
+          message: 'Please configure your OAuth app credentials first'
         }, 404, corsHeaders);
       }
 
       // 2. Import OAuth functions
       const { exchangeCodeForTokens, getUserInfo } = await import('../lib/auth/oauth.js');
       
-      // 3. Exchange authorization code for access token
-      const tokens = await exchangeCodeForTokens(platform, code, userApp);
+      // 3. Exchange authorization code for access token (use the same redirect URI as consent)
+      const redirectUri = 'https://oauth-hub.com';
+      const tokens = await exchangeCodeForTokens(platform, code, userApp, redirectUri);
       
       // 4. Get user info to extract platform user ID
       const { platformUserId, userInfo } = await getUserInfo(platform, tokens.accessToken);
@@ -492,9 +525,17 @@ export class Router {
         // Generate OAuth consent URL
         return await this.handleConsentUrlGeneration(request, corsHeaders);
       }
-      if (path.startsWith('/callback/') && method === 'GET') {
-        // Handle OAuth provider callback
-        return await this.handleOAuthCallback(request, corsHeaders);
+      // Check for OAuth callback at root (when code/state params are present)
+      if (path === '/' && method === 'GET') {
+        const url = new URL(request.url);
+        const code = url.searchParams.get('code');
+        const state = url.searchParams.get('state');
+        
+        if (code && state) {
+          // This is an OAuth callback
+          return await this.handleOAuthCallback(request, corsHeaders);
+        }
+        // Otherwise fall through to normal homepage
       }
       if (path.startsWith('/token') && method === 'GET') {
         // Handle token endpoint

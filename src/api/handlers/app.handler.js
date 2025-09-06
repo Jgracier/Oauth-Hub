@@ -60,8 +60,8 @@ export class AppHandler extends BaseHandler {
         createdAt: new Date().toISOString()
       };
 
-      // Store in KV (using existing format)
-      const keyName = `oauth-${platform} ${email}`;
+      // Store in KV (using consistent format: oauth-{platform} {name} {email})
+      const keyName = `oauth-${platform} ${name} ${email}`;
       await this.env.OAUTH_TOKENS.put(keyName, JSON.stringify(appRecord));
 
       return this.successResponse({ 
@@ -87,17 +87,33 @@ export class AppHandler extends BaseHandler {
         throw new Error('Platform and email are required');
       }
 
-      // Find and delete the app
-      const keyName = `oauth-${platform} ${email}`;
-      const existingApp = await this.env.OAUTH_TOKENS.get(keyName);
+      // Search for the OAuth app by platform and email
+      const { keys } = await this.env.OAUTH_TOKENS.list();
+      let foundKey = null;
       
-      if (!existingApp) {
+      for (const keyInfo of keys) {
+        if (keyInfo.name.startsWith(`oauth-${platform}`)) {
+          const data = await this.env.OAUTH_TOKENS.get(keyInfo.name);
+          if (data) {
+            const parsed = JSON.parse(data);
+            if (parsed.userEmail === email || parsed.email === email) {
+              foundKey = keyInfo.name;
+              break;
+            }
+          }
+        }
+      }
+      
+      if (!foundKey) {
         throw new Error('OAuth app not found');
       }
 
-      await this.env.OAUTH_TOKENS.delete(keyName);
+      await this.env.OAUTH_TOKENS.delete(foundKey);
 
-      return this.successResponse({ message: 'OAuth app deleted successfully' }, corsHeaders);
+      return this.successResponse({ 
+        message: 'OAuth app deleted successfully',
+        deletedKey: foundKey
+      }, corsHeaders);
 
     } catch (error) {
       return this.handleError(error, 'Delete app', corsHeaders);
