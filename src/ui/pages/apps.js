@@ -136,25 +136,37 @@ export function getAppsPage(UNIFIED_CSS) {
     
     ${getSharedScript()}
     <script>
+        // Embed platform data for client-side use
+        const PLATFORMS = ${JSON.stringify(PLATFORMS)};
+        const PLATFORM_SCOPES = {};
+        
+        // Build PLATFORM_SCOPES from PLATFORMS data
+        Object.keys(PLATFORMS).forEach(platform => {
+            const config = PLATFORMS[platform];
+            PLATFORM_SCOPES[platform] = {
+                name: config.displayName,
+                emoji: config.icon,
+                categories: {
+                    'Available Scopes': config.availableScopes || []
+                }
+            };
+        });
         
         let userApps = [];
         let scopeSelector = null;
         
-        // Import OAuth scopes from the shared module
-        // Note: In a real implementation, this would be imported at the top
-        // For now, we'll fetch it from the shared module
-        
-        // Get required scopes from centralized platform configuration
+        // Get required scopes from platform configuration
         function getRequiredScopes(platform) {
           try {
-            return getPlatformScopes(platform).required;
+            const platformConfig = PLATFORMS[platform];
+            return platformConfig ? platformConfig.requiredScopes || [] : [];
           } catch (error) {
             console.warn('Platform not found:', platform);
             return [];
           }
         }
         
-        // Get platform scopes from centralized configuration
+        // Get platform scopes from configuration
         function getPlatformScopesForUI(platform) {
           try {
             const platformConfig = PLATFORMS[platform];
@@ -171,13 +183,6 @@ export function getAppsPage(UNIFIED_CSS) {
             return null;
           }
         }
-        
-        // Legacy PLATFORM_SCOPES object for backward compatibility
-        const PLATFORM_SCOPES = new Proxy({}, {
-          get(target, platform) {
-            return getPlatformScopesForUI(platform);
-          }
-        });
 
         
         // Scope selector implementation
@@ -712,7 +717,7 @@ export function getAppsPage(UNIFIED_CSS) {
                 updateScopeSelector();
                 
                 // Filter out required scopes since they're automatically included
-                const requiredScopes = REQUIRED_SCOPES[app.platform] || [];
+                const requiredScopes = getRequiredScopes(app.platform);
                 const optionalScopes = app.scopes.filter(scope => !requiredScopes.includes(scope));
                 
                 // Set scopes after a delay to ensure platform-specific scopes have loaded
