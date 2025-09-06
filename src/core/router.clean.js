@@ -22,14 +22,6 @@ export class Router {
     this.authHandler = new AuthHandler(env);
   }
 
-  // Helper method to get session from request
-  getSessionFromRequest(request) {
-    const cookieHeader = request.headers.get('Cookie');
-    if (!cookieHeader) return null;
-    const match = cookieHeader.match(/session=([^;]+)/);
-    return match ? match[1] : null;
-  }
-
   async handleRequest(request) {
     const url = new URL(request.url);
     const path = url.pathname;

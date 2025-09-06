@@ -135,9 +135,8 @@ export function getAuthPage(UNIFIED_CSS) {
                     
                     showMessage('Success! Redirecting to dashboard...', false);
                     
-                    setTimeout(() => {
-                        window.location.href = '/dashboard';
-                    }, 1000);
+                    // Immediate redirect to avoid session cookie timing issues
+                    window.location.href = '/dashboard';
                 } else {
                     showMessage(result.error || 'Authentication failed', true);
                 }
@@ -146,14 +145,7 @@ export function getAuthPage(UNIFIED_CSS) {
             }
         });
         
-        // Check if already logged in via session
-        fetch('/check-session')
-            .then(res => res.json())
-            .then(data => {
-                if (data.authenticated) {
-                    window.location.href = '/dashboard';
-                }
-            });
+        // Authentication page ready
     </script>
 </body>
 </html>`;

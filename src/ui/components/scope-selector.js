@@ -2,7 +2,7 @@
 // 🔍 SCOPE SELECTOR COMPONENT - Searchable Multi-Select OAuth Scopes
 // =============================================================================
 
-import { PLATFORM_SCOPES, searchScopes } from '../shared/scopes.js';
+import { PLATFORM_SCOPES, searchScopes } from '../../lib/scopes.js';
 
 export function createScopeSelector(containerId, initialPlatform = '', initialScopes = []) {
   const container = document.getElementById(containerId);

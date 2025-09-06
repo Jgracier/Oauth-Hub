@@ -1,5 +1,5 @@
 // =============================================================================
-// ⚡ OAUTH PLATFORM - CLEAN ENTRY POINT
+// ⚡ OAUTH PLATFORM - CLEAN MODULAR ENTRY POINT
 // =============================================================================
 
 import { Router } from './core/router.js';

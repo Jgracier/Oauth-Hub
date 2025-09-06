@@ -67,7 +67,7 @@ export function createSessionToken() {
 
 // Create session cookie
 export function createSessionCookie(token) {
-  return `session=${token}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=86400`;
+  return `session=${token}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=86400`;
 }
 
 // Get session from request

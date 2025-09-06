@@ -28,32 +28,8 @@ export function getNavigation(activePage = '') {
   `;
 }
 
+import { getClientAuthScript, getLogoutScript } from '../lib/auth/client-auth.js';
+
 export function getSharedScript() {
-  return `
-    <script>
-        // Check authentication for all pages
-        const apiKey = localStorage.getItem('apiKey');
-        const userEmail = localStorage.getItem('userEmail');
-        
-        if (!apiKey && window.location.pathname !== '/auth' && window.location.pathname !== '/') {
-            window.location.href = '/auth';
-        }
-        
-        // Display user info if available
-        if (userEmail) {
-            document.getElementById('user-email').textContent = userEmail;
-        }
-        
-        // Global logout function
-        function logout() {
-            localStorage.removeItem('apiKey');
-            localStorage.removeItem('userEmail');
-            localStorage.removeItem('userName');
-            window.location.href = '/auth';
-        }
-        
-        // Make logout function globally accessible
-        window.logout = logout;
-    </script>
-  `;
+  return getClientAuthScript() + getLogoutScript();
 }
