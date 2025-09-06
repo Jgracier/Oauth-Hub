@@ -101,24 +101,30 @@ export function getDashboardPage(UNIFIED_CSS) {
             try {
                 const email = localStorage.getItem('userEmail');
                 if (!email) return;
-                
-                // Load API keys count
-                const keysResponse = await fetch(\`/user-keys?email=\${email}\`);
-                if (keysResponse.ok) {
+
+                // Load data in parallel
+                const [keysResponse, appsResponse] = await Promise.all([
+                    fetch(\`/user-keys?email=\${encodeURIComponent(email)}\`).catch(() => null),
+                    fetch(\`/user-apps?email=\${encodeURIComponent(email)}\`).catch(() => null)
+                ]);
+
+                let apiKeysCount = 0;
+                let appsCount = 0;
+
+                if (keysResponse && keysResponse.ok) {
                     const keysData = await keysResponse.json();
-                    document.getElementById('api-keys-count').textContent = keysData.keys ? keysData.keys.length : 0;
+                    apiKeysCount = keysData.keys ? keysData.keys.length : 0;
                 }
-                
-                // Load apps count  
-                const appsResponse = await fetch(\`/user-apps?email=\${email}\`);
-                if (appsResponse.ok) {
+
+                if (appsResponse && appsResponse.ok) {
                     const appsData = await appsResponse.json();
-                    document.getElementById('apps-count').textContent = appsData.apps ? appsData.apps.length : 0;
+                    appsCount = appsData.apps ? appsData.apps.length : 0;
                 }
                 
-                // Load tokens count (placeholder for now)
+                document.getElementById('api-keys-count').textContent = apiKeysCount;
+                document.getElementById('apps-count').textContent = appsCount;
                 document.getElementById('tokens-count').textContent = '0';
-                
+
             } catch (error) {
                 console.error('Error loading dashboard data:', error);
             }

@@ -15,11 +15,15 @@ import { getAnalyticsPage } from '../ui/pages/analytics.js';
 
 // Import handlers
 import { AuthHandler } from '../api/handlers/auth.handler.js';
+import { ApiKeyHandler } from '../api/handlers/apikey.handler.js';
+import { AppHandler } from '../api/handlers/app.handler.js';
 
 export class Router {
   constructor(env) {
     this.env = env;
     this.authHandler = new AuthHandler(env);
+    this.apiKeyHandler = new ApiKeyHandler(env);
+    this.appHandler = new AppHandler(env);
   }
 
   // Helper method to get session from request
@@ -57,6 +61,28 @@ export class Router {
       
       if (path === '/check-session' && method === 'GET') {
         return await this.authHandler.checkSession(request, corsHeaders);
+      }
+
+      // API Keys endpoints
+      if (path === '/user-keys' && method === 'GET') {
+        return await this.apiKeyHandler.getUserKeys(request, corsHeaders);
+      }
+      if (path === '/generate-key' && method === 'POST') {
+        return await this.apiKeyHandler.generateKey(request, corsHeaders);
+      }
+      if (path.startsWith('/delete-key/') && method === 'DELETE') {
+        return await this.apiKeyHandler.deleteKey(request, corsHeaders);
+      }
+
+      // OAuth Apps endpoints
+      if (path === '/user-apps' && method === 'GET') {
+        return await this.appHandler.getUserApps(request, corsHeaders);
+      }
+      if (path === '/save-app' && method === 'POST') {
+        return await this.appHandler.saveApp(request, corsHeaders);
+      }
+      if (path.startsWith('/delete-app/') && method === 'DELETE') {
+        return await this.appHandler.deleteApp(request, corsHeaders);
       }
 
       // Health check endpoint

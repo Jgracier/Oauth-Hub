@@ -140,20 +140,14 @@ export function getApiKeysPage(UNIFIED_CSS) {
         // Load existing API keys from server
         async function loadApiKeys() {
             try {
-                console.log('Loading API keys for email:', localStorage.getItem('userEmail'));
-                const response = await fetch(\`/user-keys?email=\${encodeURIComponent(localStorage.getItem('userEmail'))}\`);
-                console.log('Response status:', response.status);
+                const email = localStorage.getItem('userEmail');
+                if (!email) return;
                 
+                const response = await fetch(\`/user-keys?email=\${encodeURIComponent(email)}\`);
                 if (response.ok) {
                     const data = await response.json();
-                    console.log('Received API keys data:', data);
                     apiKeys = data.keys || [];
-                    console.log('Updated apiKeys array:', apiKeys);
                     updateKeysList();
-                } else {
-                    console.error('Failed to load API keys', response.status);
-                    const errorText = await response.text();
-                    console.error('Error response:', errorText);
                 }
             } catch (error) {
                 console.error('Error loading API keys:', error);
@@ -273,16 +267,16 @@ export function getApiKeysPage(UNIFIED_CSS) {
                 <div style="padding: var(--space-4); border: 1px solid var(--border-color); border-radius: var(--radius-md); margin-bottom: var(--space-3);">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <div>
-                            <h4 style="margin: 0 0 var(--space-2) 0; color: var(--gray-800);">\${key.name}</h4>
+                            <h4 style="margin: 0 0 var(--space-2) 0; color: var(--gray-800);">\${key.keyName}</h4>
                             <code style="font-family: var(--font-mono); color: var(--gray-500); font-size: 0.9em;">
-                                \${key.key.substring(0, 10)}...
+                                \${key.apiKey.substring(0, 10)}...
                             </code>
                             <div style="font-size: 0.85em; color: var(--gray-400); margin-top: var(--space-2);">
                                 Created: \${new Date(key.createdAt).toLocaleDateString()}
                             </div>
                         </div>
                         <div style="display: flex; gap: var(--space-2);">
-                            <button onclick="copyKey('\${key.key}')" class="btn btn-secondary">
+                            <button onclick="copyKey('\${key.apiKey}')" class="btn btn-secondary">
                                 Copy
                             </button>
                             <button onclick="deleteKey(\${index})" class="btn btn-secondary" style="color: var(--danger-500);">
@@ -316,8 +310,8 @@ export function getApiKeysPage(UNIFIED_CSS) {
                 const keyToDelete = apiKeys[index];
                 
                 try {
-                    // Call backend to delete the key
-                    const response = await fetch('/delete-key/' + keyToDelete.id + '?email=' + encodeURIComponent(localStorage.getItem('userEmail')), {
+                    // Call backend to delete the key (use keyId instead of id)
+                    const response = await fetch('/delete-key/' + keyToDelete.keyId + '?email=' + encodeURIComponent(localStorage.getItem('userEmail')), {
                         method: 'DELETE'
                     });
                     

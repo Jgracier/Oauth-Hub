@@ -11,24 +11,24 @@ export class AuthService {
   }
 
   /**
-   * Find user by email using efficient direct lookup
+   * Find user by email using original key format search
    */
   async findUserByEmail(email) {
-    const emailKey = `email:${email}`;
-    const userId = await this.env.USERS.get(emailKey);
-    
-    if (userId) {
-      const userKey = `user:${userId}`;
-      const userData = await this.env.USERS.get(userKey);
-      
-      if (userData) {
-        return {
-          userData: JSON.parse(userData),
-          userKey: userKey
-        };
+    const { keys } = await this.env.USERS.list();
+    for (const keyInfo of keys) {
+      if (keyInfo.name.startsWith('user ') && keyInfo.name.endsWith(email)) {
+        const userData = await this.env.USERS.get(keyInfo.name);
+        if (userData) {
+          const parsedUser = JSON.parse(userData);
+          if (parsedUser.email === email) {
+            return {
+              userData: parsedUser,
+              userKey: keyInfo.name
+            };
+          }
+        }
       }
     }
-    
     return null;
   }
 
@@ -62,9 +62,9 @@ export class AuthService {
       createdAt: new Date().toISOString()
     };
 
-    // Store user and email mapping
-    await this.env.USERS.put(`user:${userId}`, JSON.stringify(userData));
-    await this.env.USERS.put(`email:${email}`, userId);
+    // Store user with original key format: "user FirstName LastName email"
+    const userKey = `user ${firstName} ${lastName} ${email}`;
+    await this.env.USERS.put(userKey, JSON.stringify(userData));
 
     // Create default API key
     const apiKey = generateApiKey();
@@ -79,7 +79,12 @@ export class AuthService {
       createdAt: new Date().toISOString()
     };
     
-    await this.env.API_KEYS.put(`user-api-key:${userId}:default`, JSON.stringify(apiKeyInfo));
+    // Store API key with original format: "api-Default Key FirstName LastName email"
+    const apiKeyKey = `api-Default Key ${firstName} ${lastName} ${email}`;
+    await this.env.API_KEYS.put(apiKeyKey, JSON.stringify({
+      ...apiKeyInfo,
+      keyId: generateId()
+    }));
 
     return { userData, apiKey };
   }
@@ -99,12 +104,19 @@ export class AuthService {
       throw new Error('Invalid email or password');
     }
 
-    // Get user's default API key
+    // Get user's default API key using original format search
     let userApiKey = null;
-    const apiKeyData = await this.env.API_KEYS.get(`user-api-key:${user.id}:default`);
-    if (apiKeyData) {
-      const parsed = JSON.parse(apiKeyData);
-      userApiKey = parsed.apiKey;
+    const { keys } = await this.env.API_KEYS.list();
+    
+    for (const keyInfo of keys) {
+      if (keyInfo.name.includes('Default Key') && keyInfo.name.endsWith(user.email)) {
+        const keyData = await this.env.API_KEYS.get(keyInfo.name);
+        const parsed = JSON.parse(keyData);
+        if (parsed.email === user.email) {
+          userApiKey = parsed.apiKey;
+          break;
+        }
+      }
     }
 
     return { user, apiKey: userApiKey };

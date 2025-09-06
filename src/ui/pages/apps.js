@@ -552,7 +552,10 @@ export function getAppsPage(UNIFIED_CSS) {
         // Load user's apps
         async function loadApps() {
             try {
-                const response = await fetch(\`/user-apps?email=\${encodeURIComponent(localStorage.getItem('userEmail'))}\`);
+                const email = localStorage.getItem('userEmail');
+                if (!email) return;
+                
+                const response = await fetch(\`/user-apps?email=\${encodeURIComponent(email)}\`);
                 if (response.ok) {
                     const data = await response.json();
                     userApps = data.apps || [];
@@ -585,7 +588,7 @@ export function getAppsPage(UNIFIED_CSS) {
                             <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-3);">
                                 <div style="font-size: 1.5rem;">\${getPlatformEmoji(app.platform)}</div>
                                 <div>
-                                    <h4 style="margin: 0; color: var(--gray-800); text-transform: capitalize;">\${app.platform} App</h4>
+                                    <h4 style="margin: 0; color: var(--gray-800); text-transform: capitalize;">\${app.appName || app.platform} App</h4>
                                     <div style="color: var(--gray-600); font-size: 0.875rem;">OAuth Application</div>
                                 </div>
                             </div>
@@ -598,14 +601,14 @@ export function getAppsPage(UNIFIED_CSS) {
                                     </code>
                                 </div>
                                 <div>
-                                    <div style="font-size: 0.75rem; color: var(--gray-500); margin-bottom: var(--space-1);">SCOPES</div>
-                                    <div style="font-size: 0.875rem; color: var(--gray-600);">\${app.scopes.join(', ')}</div>
+                                    <div style="font-size: 0.75rem; color: var(--gray-500); margin-bottom: var(--space-1);">CREATED</div>
+                                    <div style="font-size: 0.875rem; color: var(--gray-600);">\${new Date(app.createdAt).toLocaleDateString()}</div>
                                 </div>
                             </div>
                             
                             <div>
-                                <div style="font-size: 0.75rem; color: var(--gray-500); margin-bottom: var(--space-1);">REDIRECT URI</div>
-                                <div style="font-size: 0.875rem; color: var(--gray-600); word-break: break-all;">\${app.redirectUri}</div>
+                                <div style="font-size: 0.75rem; color: var(--gray-500); margin-bottom: var(--space-1);">PLATFORM</div>
+                                <div style="font-size: 0.875rem; color: var(--gray-600); text-transform: capitalize;">\${app.platform}</div>
                             </div>
                         </div>
                         
