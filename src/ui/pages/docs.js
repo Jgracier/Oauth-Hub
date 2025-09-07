@@ -36,13 +36,14 @@ export function getModernDocsPage() {
           </svg>
           Redirect URI
         </a>
-        <a href="#authentication" class="nav-pill">
+        <a href="#api-reference" class="nav-pill">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-            <circle cx="12" cy="16" r="1"/>
-            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
           </svg>
-          Authentication
+          API Reference
         </a>
         <a href="#consent-flow" class="nav-pill">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -56,15 +57,6 @@ export function getModernDocsPage() {
             <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
           </svg>
           Tokens
-        </a>
-        <a href="#api-reference" class="nav-pill">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-            <polyline points="14 2 14 8 20 8"/>
-            <line x1="16" y1="13" x2="8" y2="13"/>
-            <line x1="16" y1="17" x2="8" y2="17"/>
-          </svg>
-          API Reference
         </a>
         <a href="#supported-platforms" class="nav-pill">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -187,25 +179,88 @@ export function getModernDocsPage() {
           </ul>
         </section>
 
-        <!-- Authentication -->
-        <section id="authentication" class="card">
-          <h2 class="text-2xl font-bold mb-4">Authentication</h2>
+        <!-- API Reference -->
+        <section id="api-reference" class="card">
+          <h2 class="text-2xl font-bold mb-4">API Reference</h2>
           <p class="text-secondary mb-4">
             All API requests must include your API key in the URL path. Keep your API keys secure and never expose them in client-side code.
           </p>
           
-          <div class="alert alert-info mb-4">
+          <div class="alert alert-info mb-6">
             <span style="width: 20px; height: 20px;">${MODERN_ICONS.info}</span>
             <span>API keys should be kept confidential and stored securely in your backend.</span>
           </div>
           
-          <div class="code-block-container">
-            <button class="copy-button" onclick="copyToClipboard(this, \`GET https://oauth-hub.com/consent/{platform}/{your_api_key}
-GET https://oauth-hub.com/token/{platform_user_id}/{your_api_key}\`)">
-              ${MODERN_ICONS.copy}
-            </button>
-            <pre class="code-block"><code>GET https://oauth-hub.com/consent/{platform}/{your_api_key}
-GET https://oauth-hub.com/token/{platform_user_id}/{your_api_key}</code></pre>
+          <div class="space-y-6">
+            <!-- Consent Endpoint -->
+            <div class="border rounded-lg p-4">
+              <div class="flex items-center gap-3 mb-3">
+                <span class="badge badge-primary">GET</span>
+                <code class="text-sm">/consent/{platform}/{api_key}</code>
+                <button class="copy-button-small" onclick="copyToClipboard(this, '/consent/{platform}/{api_key}')">
+                  ${MODERN_ICONS.copy}
+                </button>
+              </div>
+              <p class="text-secondary mb-3">Generate an OAuth consent URL for user authorization.</p>
+              
+              <h4 class="font-semibold mb-2">Parameters</h4>
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>platform</code></td>
+                    <td>string</td>
+                    <td>Platform identifier (google, facebook, etc.)</td>
+                  </tr>
+                  <tr>
+                    <td><code>api_key</code></td>
+                    <td>string</td>
+                    <td>Your OAuth Hub API key</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            
+            <!-- Token Endpoint -->
+            <div class="border rounded-lg p-4">
+              <div class="flex items-center gap-3 mb-3">
+                <span class="badge badge-primary">GET</span>
+                <code class="text-sm">/token/{platform_user_id}/{api_key}</code>
+                <button class="copy-button-small" onclick="copyToClipboard(this, '/token/{platform_user_id}/{api_key}')">
+                  ${MODERN_ICONS.copy}
+                </button>
+              </div>
+              <p class="text-secondary mb-3">Retrieve a valid access token for the platform user.</p>
+              
+              <h4 class="font-semibold mb-2">Parameters</h4>
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>platform_user_id</code></td>
+                    <td>string</td>
+                    <td>Platform-specific user identifier</td>
+                  </tr>
+                  <tr>
+                    <td><code>api_key</code></td>
+                    <td>string</td>
+                    <td>Your OAuth Hub API key</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </section>
         
@@ -458,82 +513,6 @@ curl "https://oauth-hub.com/token/user_12345/your_api_key"</code></pre>
           </div>
         </section>
         
-        <!-- API Reference -->
-        <section id="api-reference" class="card">
-          <h2 class="text-2xl font-bold mb-4">API Reference</h2>
-          
-          <div class="space-y-6">
-            <!-- Consent Endpoint -->
-            <div class="border rounded-lg p-4">
-              <div class="flex items-center gap-3 mb-3">
-                <span class="badge badge-primary">GET</span>
-                <code class="text-sm">/consent/{platform}/{api_key}</code>
-                <button class="copy-button-small" onclick="copyToClipboard(this, '/consent/{platform}/{api_key}')">
-                  ${MODERN_ICONS.copy}
-                </button>
-              </div>
-              <p class="text-secondary mb-3">Generate an OAuth consent URL for user authorization.</p>
-              
-              <h4 class="font-semibold mb-2">Parameters</h4>
-              <table class="table">
-                <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>Type</th>
-                    <th>Description</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td><code>platform</code></td>
-                    <td>string</td>
-                    <td>Platform identifier (google, facebook, etc.)</td>
-                  </tr>
-                  <tr>
-                    <td><code>api_key</code></td>
-                    <td>string</td>
-                    <td>Your OAuth Hub API key</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            
-            <!-- Token Endpoint -->
-            <div class="border rounded-lg p-4">
-              <div class="flex items-center gap-3 mb-3">
-                <span class="badge badge-primary">GET</span>
-                <code class="text-sm">/token/{platform_user_id}/{api_key}</code>
-                <button class="copy-button-small" onclick="copyToClipboard(this, '/token/{platform_user_id}/{api_key}')">
-                  ${MODERN_ICONS.copy}
-                </button>
-              </div>
-              <p class="text-secondary mb-3">Retrieve a valid access token for the platform user.</p>
-              
-              <h4 class="font-semibold mb-2">Parameters</h4>
-              <table class="table">
-                <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>Type</th>
-                    <th>Description</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td><code>platform_user_id</code></td>
-                    <td>string</td>
-                    <td>Platform-specific user identifier</td>
-                  </tr>
-                  <tr>
-                    <td><code>api_key</code></td>
-                    <td>string</td>
-                    <td>Your OAuth Hub API key</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </section>
         
         <!-- Supported Platforms -->
         <section id="supported-platforms" class="card">
