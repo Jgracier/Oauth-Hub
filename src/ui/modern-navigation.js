@@ -58,7 +58,7 @@ export function getModernSidebar(activePage = '', userEmail = '', userName = '')
       
       <div class="sidebar-footer">
         <div class="profile-menu" id="profile-menu">
-          <div class="profile-avatar">${initials}</div>
+          <div class="profile-avatar" id="profile-avatar">${initials}</div>
           <div class="profile-info">
             <div class="profile-name">${userName || 'User'}</div>
             <div class="profile-email">${userEmail || 'Loading...'}</div>
@@ -139,6 +139,46 @@ export function getModernLayout(activePage, pageTitle, content, userEmail = '', 
 export function getModernScripts() {
   return `
     <script>
+      // Profile Picture Management
+      async function loadProfilePicture() {
+        try {
+          const userEmail = localStorage.getItem('userEmail');
+          if (!userEmail) return;
+          
+          // Get user profile data from server
+          const response = await fetch('/check-session', {
+            method: 'GET',
+            credentials: 'include'
+          });
+          
+          if (response.ok) {
+            const sessionData = await response.json();
+            if (sessionData.authenticated && sessionData.user) {
+              const user = sessionData.user;
+              
+              // Check for OAuth profile pictures
+              let profilePicture = null;
+              
+              // Priority: Google > GitHub > initials
+              if (user.googleProfile?.picture) {
+                profilePicture = user.googleProfile.picture;
+              } else if (user.githubProfile?.avatar_url) {
+                profilePicture = user.githubProfile.avatar_url;
+              }
+              
+              if (profilePicture) {
+                const avatarElements = document.querySelectorAll('.profile-avatar');
+                avatarElements.forEach(el => {
+                  el.innerHTML = \`<img src="\${profilePicture}" alt="Profile" style="width: 100%; height: 100%; border-radius: inherit; object-fit: cover;">\`;
+                });
+              }
+            }
+          }
+        } catch (error) {
+          console.log('Could not load profile picture:', error);
+        }
+      }
+      
       // Theme Management
       function initTheme() {
         const savedTheme = localStorage.getItem('theme') || 'light';
@@ -222,6 +262,7 @@ export function getModernScripts() {
       document.addEventListener('DOMContentLoaded', () => {
         initTheme();
         initSidebar();
+        loadProfilePicture();
       });
       
       // Logout function

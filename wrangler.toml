@@ -18,6 +18,10 @@ preview_id = "739dbeb63f964999b4d45d981874bb1a"
 binding = "USERS"
 id = "e523c4d4f3ea4bb79cacae28f85a0221"
 
+[[kv_namespaces]]
+binding = "USER_SESSIONS"
+id = "59c85e2e54ad45209bf735b06354f219"
+
 # Production Environment
 [env.production]
 name = "oauth-handler-prod"
@@ -35,6 +39,10 @@ preview_id = "739dbeb63f964999b4d45d981874bb1a"
 [[env.production.kv_namespaces]]
 binding = "USERS"
 id = "e523c4d4f3ea4bb79cacae28f85a0221"
+
+[[env.production.kv_namespaces]]
+binding = "USER_SESSIONS"
+id = "59c85e2e54ad45209bf735b06354f219"
 
 # Staging Environment  
 [env.staging]

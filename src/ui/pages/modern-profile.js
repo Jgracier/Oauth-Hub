@@ -254,12 +254,32 @@ export function getModernProfilePage() {
         document.getElementById('profile-name').textContent = \`\${userData.firstName} \${userData.lastName}\`.trim() || 'User';
         
         const initials = \`\${userData.firstName[0] || ''}\${userData.lastName[0] || ''}\`.toUpperCase() || 'U';
-        document.getElementById('profile-initials').textContent = initials;
         
-        // Update navigation
+        // Handle profile picture from OAuth data
+        let profilePicture = null;
+        if (userData.googleProfile?.picture) {
+          profilePicture = userData.googleProfile.picture;
+        } else if (userData.githubProfile?.avatar_url) {
+          profilePicture = userData.githubProfile.avatar_url;
+        }
+        
+        if (profilePicture) {
+          document.getElementById('profile-initials').innerHTML = \`<img src="\${profilePicture}" alt="Profile" style="width: 100%; height: 100%; border-radius: inherit; object-fit: cover;">\`;
+        } else {
+          document.getElementById('profile-initials').textContent = initials;
+        }
+        
+        // Update navigation with profile picture
         document.querySelectorAll('.profile-email').forEach(el => el.textContent = userData.email);
         document.querySelectorAll('.profile-name').forEach(el => el.textContent = \`\${userData.firstName} \${userData.lastName}\`.trim());
-        document.querySelectorAll('.profile-avatar').forEach(el => el.textContent = initials);
+        
+        if (profilePicture) {
+          document.querySelectorAll('.profile-avatar').forEach(el => {
+            el.innerHTML = \`<img src="\${profilePicture}" alt="Profile" style="width: 100%; height: 100%; border-radius: inherit; object-fit: cover;">\`;
+          });
+        } else {
+          document.querySelectorAll('.profile-avatar').forEach(el => el.textContent = initials);
+        }
         
         // Update form
         document.getElementById('firstName').value = userData.firstName;

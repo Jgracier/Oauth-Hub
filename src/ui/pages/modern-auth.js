@@ -868,7 +868,14 @@ export function getModernAuthPage() {
       
       // Handle GitHub auth
       function handleGitHubAuth() {
-        showError('GitHub authentication coming soon!');
+        hideMessages();
+        
+        try {
+          // Redirect to GitHub OAuth
+          window.location.href = '/auth/github';
+        } catch (error) {
+          showError('Failed to initialize GitHub authentication');
+        }
       }
       
       // Handle forgot password

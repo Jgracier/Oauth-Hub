@@ -134,7 +134,7 @@ export class AuthService {
       createdAt: Date.now()
     };
 
-    await this.env.USERS.put(`session:${sessionToken}`, JSON.stringify(sessionData), {
+    await this.env.USER_SESSIONS.put(`session:${sessionToken}`, JSON.stringify(sessionData), {
       expirationTtl: 86400 // 24 hours
     });
 
@@ -142,7 +142,7 @@ export class AuthService {
   }
 
   /**
-   * Validate session
+   * Validate session and return user data with OAuth profiles
    */
   async validateSession(request) {
     const sessionToken = getSessionFromRequest(request);
@@ -150,12 +150,20 @@ export class AuthService {
       return null;
     }
 
-    const sessionData = await this.env.USERS.get(`session:${sessionToken}`);
+    const sessionData = await this.env.USER_SESSIONS.get(`session:${sessionToken}`);
     if (!sessionData) {
       return null;
     }
 
-    return JSON.parse(sessionData);
+    const session = JSON.parse(sessionData);
+    
+    // Get full user data including OAuth profiles
+    const userResult = await this.findUserByEmail(session.email);
+    if (userResult) {
+      session.user = userResult.userData; // Include full user data with OAuth profiles
+    }
+
+    return session;
   }
 
   /**
@@ -164,7 +172,7 @@ export class AuthService {
   async destroySession(request) {
     const sessionToken = getSessionFromRequest(request);
     if (sessionToken) {
-      await this.env.USERS.delete(`session:${sessionToken}`);
+      await this.env.USER_SESSIONS.delete(`session:${sessionToken}`);
     }
   }
 }

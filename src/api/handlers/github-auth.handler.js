@@ -1,69 +1,64 @@
 // =============================================================================
-// 🔐 GOOGLE OAUTH HANDLER - Authentication with Google
+// 🐙 GITHUB OAUTH HANDLER - Authentication with GitHub
 // =============================================================================
 
 import { BaseHandler } from './base.handler.js';
-import { generateRandomString, hashPassword, generateApiKey, generateId, sanitizeInput } from '../../lib/utils/helpers.js';
+import { generateRandomString, generateApiKey, generateId, sanitizeInput } from '../../lib/utils/helpers.js';
 import { AuthService } from '../../lib/services/auth.service.js';
+import { createSessionCookie } from '../../lib/auth/session.js';
 
-export class GoogleAuthHandler extends BaseHandler {
+export class GitHubAuthHandler extends BaseHandler {
   
   constructor(env) {
     super(env);
     this.authService = new AuthService(env);
   }
   
-  async handleGoogleAuth(request) {
+  async handleGitHubAuth(request) {
     try {
       const url = new URL(request.url);
       const path = url.pathname;
       
-      if (path === '/auth/google') {
-        return this.initiateGoogleAuth(request);
-      } else if (path === '/auth/google/callback') {
-        return this.handleGoogleCallback(request);
+      if (path === '/auth/github') {
+        return this.initiateGitHubAuth(request);
+      } else if (path === '/auth/github/callback') {
+        return this.handleGitHubCallback(request);
       }
       
-      return this.jsonResponse({ error: 'Invalid Google auth endpoint' }, 404);
+      return this.jsonResponse({ error: 'Invalid GitHub auth endpoint' }, 404);
     } catch (error) {
-      console.error('Google auth error:', error);
+      console.error('GitHub auth error:', error);
       return this.jsonResponse({ error: 'Authentication failed' }, 500);
     }
   }
   
-  async initiateGoogleAuth(request) {
+  async initiateGitHubAuth(request) {
     try {
       // Generate state parameter for security
       const state = generateRandomString(32);
       
-      // Store state in a short-lived way (you could use KV with TTL)
-      // For now, we'll include it in the redirect and verify it in callback
-      
-      const googleClientId = this.env.GOOGLE_CLIENT_ID;
-      if (!googleClientId) {
-        return this.jsonResponse({ error: 'Google OAuth not configured' }, 500);
+      const githubClientId = this.env.GITHUB_CLIENT_ID;
+      if (!githubClientId) {
+        return this.jsonResponse({ error: 'GitHub OAuth not configured' }, 500);
       }
       
-      // Build Google OAuth URL
-      const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
-      authUrl.searchParams.set('client_id', googleClientId);
-      authUrl.searchParams.set('redirect_uri', 'https://oauth-hub.com/auth/google/callback');
-      authUrl.searchParams.set('response_type', 'code');
-      authUrl.searchParams.set('scope', 'openid email profile');
-      authUrl.searchParams.set('access_type', 'offline');
-      authUrl.searchParams.set('prompt', 'consent');
+      // Build GitHub OAuth URL
+      const authUrl = new URL('https://github.com/login/oauth/authorize');
+      authUrl.searchParams.set('client_id', githubClientId);
+      authUrl.searchParams.set('redirect_uri', 'https://oauth-hub.com/auth/github/callback');
+      authUrl.searchParams.set('scope', 'user:email');
       authUrl.searchParams.set('state', state);
       
-      // Redirect to Google
+      // Redirect to GitHub
       return Response.redirect(authUrl.toString(), 302);
       
     } catch (error) {
-      console.error('Error initiating Google auth:', error);
-      return this.jsonResponse({ error: 'Failed to initiate Google authentication' }, 500);
+      console.error('Error initiating GitHub auth:', error);
+      return this.jsonResponse({ error: 'Failed to initiate GitHub authentication' }, 500);
     }
   }
   
-  async handleGoogleCallback(request) {
+  async handleGitHubCallback(request) {
     try {
       const url = new URL(request.url);
       const code = url.searchParams.get('code');
@@ -75,7 +70,7 @@ export class GoogleAuthHandler extends BaseHandler {
           <html>
             <body>
               <script>
-                alert('Google authentication was cancelled or failed.');
+                alert('GitHub authentication was cancelled or failed.');
                 window.location.href = '/auth';
               </script>
             </body>
@@ -88,7 +83,7 @@ export class GoogleAuthHandler extends BaseHandler {
           <html>
             <body>
               <script>
-                alert('No authorization code received from Google.');
+                alert('No authorization code received from GitHub.');
                 window.location.href = '/auth';
               </script>
             </body>
@@ -97,7 +92,7 @@ export class GoogleAuthHandler extends BaseHandler {
       }
       
       // Exchange code for tokens
-      const tokens = await this.exchangeGoogleCodeForTokens(code);
+      const tokens = await this.exchangeGitHubCodeForTokens(code);
       
       if (!tokens) {
         return this.htmlResponse(`
@@ -112,15 +107,15 @@ export class GoogleAuthHandler extends BaseHandler {
         `);
       }
       
-      // Get user info from Google
-      const userInfo = await this.getGoogleUserInfo(tokens.access_token);
+      // Get user info from GitHub
+      const userInfo = await this.getGitHubUserInfo(tokens.access_token);
       
       if (!userInfo) {
         return this.htmlResponse(`
           <html>
             <body>
               <script>
-                alert('Failed to get user information from Google.');
+                alert('Failed to get user information from GitHub.');
                 window.location.href = '/auth';
               </script>
             </body>
@@ -129,7 +124,7 @@ export class GoogleAuthHandler extends BaseHandler {
       }
       
       // Create or login user using existing auth service
-      const { user, apiKey } = await this.createOrLoginGoogleUser(userInfo);
+      const { user, apiKey } = await this.createOrLoginGitHubUser(userInfo);
       
       if (!user) {
         return this.htmlResponse(`
@@ -147,8 +142,8 @@ export class GoogleAuthHandler extends BaseHandler {
       // Create session using existing auth service
       const sessionToken = await this.authService.createSession(user);
       
-      // Return success page that sets cookie and redirects (using auth service cookie format)
-      const sessionCookie = await import('../../lib/auth/session.js').then(m => m.createSessionCookie(sessionToken));
+      // Return success page that sets cookie and redirects
+      const sessionCookie = createSessionCookie(sessionToken);
       
       return new Response(`
         <html>
@@ -173,7 +168,7 @@ export class GoogleAuthHandler extends BaseHandler {
       });
       
     } catch (error) {
-      console.error('Error handling Google callback:', error);
+      console.error('Error handling GitHub callback:', error);
       return this.htmlResponse(`
         <html>
           <body>
@@ -187,24 +182,23 @@ export class GoogleAuthHandler extends BaseHandler {
     }
   }
   
-  async exchangeGoogleCodeForTokens(code) {
+  async exchangeGitHubCodeForTokens(code) {
     try {
-      const response = await fetch('https://oauth2.googleapis.com/token', {
+      const response = await fetch('https://github.com/login/oauth/access_token', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
         },
-        body: new URLSearchParams({
-          client_id: this.env.GOOGLE_CLIENT_ID,
-          client_secret: this.env.GOOGLE_CLIENT_SECRET,
-          code: code,
-          grant_type: 'authorization_code',
-          redirect_uri: 'https://oauth-hub.com/auth/google/callback'
+        body: JSON.stringify({
+          client_id: this.env.GITHUB_CLIENT_ID,
+          client_secret: this.env.GITHUB_CLIENT_SECRET,
+          code: code
         })
       });
       
       if (!response.ok) {
-        console.error('Token exchange failed:', await response.text());
+        console.error('GitHub token exchange failed:', await response.text());
         return null;
       }
       
@@ -215,33 +209,58 @@ export class GoogleAuthHandler extends BaseHandler {
     }
   }
   
-  async getGoogleUserInfo(accessToken) {
+  async getGitHubUserInfo(accessToken) {
     try {
-      const response = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+      // Get basic user info
+      const userResponse = await fetch('https://api.github.com/user', {
         headers: {
-          'Authorization': `Bearer ${accessToken}`
+          'Authorization': `Bearer ${accessToken}`,
+          'User-Agent': 'OAuth-Hub'
         }
       });
       
-      if (!response.ok) {
-        console.error('Failed to get user info:', await response.text());
+      if (!userResponse.ok) {
+        console.error('Failed to get GitHub user info:', await userResponse.text());
         return null;
       }
       
-      return await response.json();
+      const userInfo = await userResponse.json();
+      
+      // Get user email (might be private)
+      const emailResponse = await fetch('https://api.github.com/user/emails', {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'User-Agent': 'OAuth-Hub'
+        }
+      });
+      
+      if (emailResponse.ok) {
+        const emails = await emailResponse.json();
+        const primaryEmail = emails.find(email => email.primary);
+        if (primaryEmail) {
+          userInfo.email = primaryEmail.email;
+        }
+      }
+      
+      return userInfo;
     } catch (error) {
-      console.error('Error getting user info:', error);
+      console.error('Error getting GitHub user info:', error);
       return null;
     }
   }
   
-  async createOrLoginGoogleUser(googleUserInfo) {
+  async createOrLoginGitHubUser(githubUserInfo) {
     try {
-      const email = googleUserInfo.email;
-      const name = googleUserInfo.name;
-      const googleId = googleUserInfo.id;
+      const email = githubUserInfo.email;
+      const name = githubUserInfo.name || githubUserInfo.login; // Use login if name not set
+      const githubId = githubUserInfo.id;
       
-      console.log(`Google OAuth: Processing user ${email} (${name})`);
+      console.log(`GitHub OAuth: Processing user ${email} (${name})`);
+      
+      if (!email) {
+        console.error('No email available from GitHub user info');
+        return null;
+      }
       
       // Debug: List all user keys to see what exists
       const { keys } = await this.env.USERS.list();
@@ -254,36 +273,44 @@ export class GoogleAuthHandler extends BaseHandler {
       if (existingUser) {
         console.log(`Found existing user: ${existingUser.userKey}`);
         
-        // Update existing user with Google data
+        // Update existing user with GitHub data
         const userData = existingUser.userData;
         let needsUpdate = false;
         
-        if (!userData.googleId) {
-          userData.googleId = googleId;
+        if (!userData.githubId) {
+          userData.githubId = githubId;
           needsUpdate = true;
-          console.log(`Adding Google ID to existing user: ${userData.email}`);
+          console.log(`Adding GitHub ID to existing user: ${userData.email}`);
         }
         
-        // Store additional Google profile data
-        if (!userData.googleProfile) {
-          userData.googleProfile = {
-            id: googleUserInfo.id,
-            email: googleUserInfo.email,
-            verified_email: googleUserInfo.verified_email,
-            name: googleUserInfo.name,
-            given_name: googleUserInfo.given_name,
-            family_name: googleUserInfo.family_name,
-            picture: googleUserInfo.picture,
-            locale: googleUserInfo.locale,
+        // Store additional GitHub profile data
+        if (!userData.githubProfile) {
+          userData.githubProfile = {
+            id: githubUserInfo.id,
+            login: githubUserInfo.login,
+            name: githubUserInfo.name,
+            email: githubUserInfo.email,
+            avatar_url: githubUserInfo.avatar_url,
+            bio: githubUserInfo.bio,
+            company: githubUserInfo.company,
+            location: githubUserInfo.location,
+            blog: githubUserInfo.blog,
+            twitter_username: githubUserInfo.twitter_username,
+            public_repos: githubUserInfo.public_repos,
+            public_gists: githubUserInfo.public_gists,
+            followers: githubUserInfo.followers,
+            following: githubUserInfo.following,
+            created_at: githubUserInfo.created_at,
+            updated_at: githubUserInfo.updated_at,
             lastUpdated: new Date().toISOString()
           };
           needsUpdate = true;
-          console.log(`Storing Google profile data for user: ${userData.email}`);
+          console.log(`Storing GitHub profile data for user: ${userData.email}`);
         }
         
-        // Always update last login time and Google login time
+        // Always update last login time and GitHub login time
         userData.lastLogin = Date.now();
-        userData.lastGoogleLogin = new Date().toISOString();
+        userData.lastGitHubLogin = new Date().toISOString();
         needsUpdate = true;
         
         if (needsUpdate) {
@@ -292,10 +319,10 @@ export class GoogleAuthHandler extends BaseHandler {
         }
         
         // Get user's API key using the same method as regular auth
-        const { keys } = await this.env.API_KEYS.list();
+        const { keys: apiKeys } = await this.env.API_KEYS.list();
         let userApiKey = null;
         
-        for (const keyInfo of keys) {
+        for (const keyInfo of apiKeys) {
           if (keyInfo.name.includes('Default Key') && keyInfo.name.endsWith(userData.email)) {
             const keyData = await this.env.API_KEYS.get(keyInfo.name);
             if (keyData) {
@@ -334,8 +361,8 @@ export class GoogleAuthHandler extends BaseHandler {
           console.log(`Manual check found user that findUserByEmail missed: ${manualCheck.userKey}`);
           // Use the manually found user instead of creating new one
           const userData = manualCheck.userData;
-          userData.googleId = googleId;
-          userData.lastGoogleLogin = new Date().toISOString();
+          userData.githubId = githubId;
+          userData.lastGitHubLogin = new Date().toISOString();
           userData.lastLogin = Date.now();
           
           await this.env.USERS.put(manualCheck.userKey, JSON.stringify(userData));
@@ -359,33 +386,41 @@ export class GoogleAuthHandler extends BaseHandler {
           return { user: userData, apiKey: userApiKey };
         }
         
-        console.log(`Truly creating new user for Google OAuth: ${email}`);
+        console.log(`Truly creating new user for GitHub OAuth: ${email}`);
         
         // Create new user using AuthService to ensure same format
         const nameParts = name.split(' ');
         const firstName = nameParts[0] || '';
         const lastName = nameParts.slice(1).join(' ') || '';
         
-        // Use a temporary password since this is Google OAuth
+        // Use a temporary password since this is GitHub OAuth
         const tempPassword = generateRandomString(32);
         
         // Create user through AuthService to ensure same storage format
         const { userData, apiKey } = await this.authService.createUser(email, tempPassword, name);
         
-        // Update the created user with Google-specific info
-        userData.googleId = googleId;
-        userData.authMethod = 'google';
-        userData.lastGoogleLogin = new Date().toISOString();
+        // Update the created user with GitHub-specific info
+        userData.githubId = githubId;
+        userData.authMethod = 'github';
+        userData.lastGitHubLogin = new Date().toISOString();
         userData.hasPassword = false; // Mark that this user doesn't have a password set
-        userData.googleProfile = {
-          id: googleUserInfo.id,
-          email: googleUserInfo.email,
-          verified_email: googleUserInfo.verified_email,
-          name: googleUserInfo.name,
-          given_name: googleUserInfo.given_name,
-          family_name: googleUserInfo.family_name,
-          picture: googleUserInfo.picture,
-          locale: googleUserInfo.locale,
+        userData.githubProfile = {
+          id: githubUserInfo.id,
+          login: githubUserInfo.login,
+          name: githubUserInfo.name,
+          email: githubUserInfo.email,
+          avatar_url: githubUserInfo.avatar_url,
+          bio: githubUserInfo.bio,
+          company: githubUserInfo.company,
+          location: githubUserInfo.location,
+          blog: githubUserInfo.blog,
+          twitter_username: githubUserInfo.twitter_username,
+          public_repos: githubUserInfo.public_repos,
+          public_gists: githubUserInfo.public_gists,
+          followers: githubUserInfo.followers,
+          following: githubUserInfo.following,
+          created_at: githubUserInfo.created_at,
+          updated_at: githubUserInfo.updated_at,
           lastUpdated: new Date().toISOString()
         };
         
@@ -393,13 +428,13 @@ export class GoogleAuthHandler extends BaseHandler {
         const userResult = await this.authService.findUserByEmail(email);
         if (userResult) {
           await this.env.USERS.put(userResult.userKey, JSON.stringify(userData));
-          console.log(`Created and updated Google user: ${userResult.userKey}`);
+          console.log(`Created and updated GitHub user: ${userResult.userKey}`);
         }
         
         return { user: userData, apiKey };
       }
     } catch (error) {
-      console.error('Error creating/logging in Google user:', error);
+      console.error('Error creating/logging in GitHub user:', error);
       return null;
     }
   }

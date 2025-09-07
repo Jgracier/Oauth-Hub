@@ -20,6 +20,7 @@ import { AuthHandler } from '../api/handlers/auth.handler.js';
 import { ApiKeyHandler } from '../api/handlers/apikey.handler.js';
 import { AppHandler } from '../api/handlers/app.handler.js';
 import { GoogleAuthHandler } from '../api/handlers/google-auth.handler.js';
+import { GitHubAuthHandler } from '../api/handlers/github-auth.handler.js';
 
 export class Router {
   constructor(env) {
@@ -28,6 +29,7 @@ export class Router {
     this.apiKeyHandler = new ApiKeyHandler(env);
     this.appHandler = new AppHandler(env);
     this.googleAuthHandler = new GoogleAuthHandler(env);
+    this.githubAuthHandler = new GitHubAuthHandler(env);
   }
 
   // Helper method to get session from request
@@ -501,6 +503,15 @@ export class Router {
       
       if (path === '/auth/google/callback' && method === 'GET') {
         return await this.googleAuthHandler.handleGoogleAuth(request);
+      }
+      
+      // GitHub OAuth endpoints
+      if (path === '/auth/github' && method === 'GET') {
+        return await this.githubAuthHandler.handleGitHubAuth(request);
+      }
+      
+      if (path === '/auth/github/callback' && method === 'GET') {
+        return await this.githubAuthHandler.handleGitHubAuth(request);
       }
       
       if (path === '/check-session' && method === 'GET') {
