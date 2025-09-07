@@ -182,12 +182,8 @@ export class Router {
       const authUrl = await generateConsentUrl(platform, userApp, apiKey, state, 'https://oauth-hub.com');
       
       return jsonResponse({
-        consentUrl: authUrl,
-        platform: platform,
-        state: state,
-        scopes: userApp.scopes,
-        redirectUri: 'https://oauth-hub.com',
-        message: 'Open this URL to start OAuth consent flow'
+        consentURL: authUrl,
+        Platform: platform
       }, 200, corsHeaders);
       
     } catch (error) {

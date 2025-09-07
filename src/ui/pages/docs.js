@@ -186,6 +186,16 @@ export function getModernDocsPage() {
             All API requests must include your API key in the URL path. Keep your API keys secure and never expose them in client-side code.
           </p>
           
+          <div class="mb-6">
+            <h3 class="font-semibold mb-3">Base URL</h3>
+            <div class="code-block-container">
+              <button class="copy-button" onclick="copyToClipboard(this, 'https://oauth-hub.com')">
+                ${MODERN_ICONS.copy}
+              </button>
+              <pre class="code-block"><code>https://oauth-hub.com</code></pre>
+            </div>
+          </div>
+          
           <div class="alert alert-info mb-6">
             <span style="width: 20px; height: 20px;">${MODERN_ICONS.info}</span>
             <span>API keys should be kept confidential and stored securely in your backend.</span>
@@ -279,8 +289,8 @@ export function getModernDocsPage() {
 
 Response:
 {
-  \"consentUrl\": \"https://accounts.google.com/o/oauth2/v2/auth?...\",
-  \"state\": \"google_sk_abc123_1234567890\"
+  \"consentURL\": \"https://accounts.google.com/o/oauth2/v2/auth?...\",
+  \"Platform\": \"facebook\"
 }\`)">
               ${MODERN_ICONS.copy}
             </button>
@@ -288,8 +298,8 @@ Response:
 
 Response:
 {
-  "consentUrl": "https://accounts.google.com/o/oauth2/v2/auth?...",
-  "state": "google_sk_abc123_1234567890"
+  "consentURL": "https://accounts.google.com/o/oauth2/v2/auth?...",
+  "Platform": "facebook"
 }</code></pre>
           </div>
           
@@ -644,7 +654,7 @@ class OAuthHubClient {
   async generateConsentUrl(platform) {
     const response = await fetch(\`\${this.baseUrl}/consent/\${platform}/\${this.apiKey}\`);
     const data = await response.json();
-    return data.consentUrl;
+    return data.consentURL;
   }
 
   // Step 2: Open consent popup and handle callback
@@ -727,7 +737,7 @@ class OAuthHubClient:
         """Step 1: Generate consent URL"""
         response = requests.get(f'{self.base_url}/consent/{platform}/{self.api_key}')
         data = response.json()
-        return data['consentUrl']
+        return data['consentURL']
     
     def initiate_oauth(self, platform):
         """Step 2: Open browser and handle callback"""
@@ -793,7 +803,7 @@ class OAuthHubClient {
         $url = "{$this->baseUrl}/consent/{$platform}/{$this->apiKey}";
         $response = file_get_contents($url);
         $data = json_decode($response, true);
-        return $data['consentUrl'];
+        return $data['consentURL'];
     }
     
     // Step 2: Redirect to consent URL
@@ -872,7 +882,7 @@ class OAuthHubClient
     uri = URI("#{@base_url}/consent/#{platform}/#{@api_key}")
     response = Net::HTTP.get_response(uri)
     data = JSON.parse(response.body)
-    data['consentUrl']
+    data['consentURL']
   end
   
   # Step 2: Open browser and handle callback
@@ -957,8 +967,8 @@ type OAuthHubClient struct {
 }
 
 type ConsentResponse struct {
-    ConsentURL string \`json:"consentUrl"\`
-    State      string \`json:"state"\`
+    ConsentURL string \`json:"consentURL"\`
+    Platform   string \`json:"Platform"\`
 }
 
 type TokenResponse struct {
@@ -1096,7 +1106,7 @@ public class OAuthHubClient {
             
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
         JsonObject jsonResponse = gson.fromJson(response.body(), JsonObject.class);
-        return jsonResponse.get("consentUrl").getAsString();
+        return jsonResponse.get("consentURL").getAsString();
     }
     
     // Step 2: Open browser
@@ -1167,7 +1177,7 @@ public class OAuthHubClient
         var url = $"{baseUrl}/consent/{platform}/{apiKey}";
         var response = await client.GetStringAsync(url);
         var json = JObject.Parse(response);
-        return json["consentUrl"].ToString();
+        return json["consentURL"].ToString();
     }
     
     // Step 2: Open browser
