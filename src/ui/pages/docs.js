@@ -523,98 +523,6 @@ curl "https://oauth-hub.com/token/user_12345/your_api_key"</code></pre>
           </div>
         </section>
         
-        
-        <!-- Supported Platforms -->
-        <section id="supported-platforms" class="card">
-          <h2 class="text-2xl font-bold mb-4">Supported Platforms</h2>
-          <p class="text-secondary mb-4">
-            OAuth Hub supports 37+ major platforms with comprehensive scope management.
-          </p>
-          
-          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            <div class="platform-card">Google</div>
-            <div class="platform-card">Facebook</div>
-            <div class="platform-card">GitHub</div>
-            <div class="platform-card">Twitter/X</div>
-            <div class="platform-card">LinkedIn</div>
-            <div class="platform-card">TikTok</div>
-            <div class="platform-card">Discord</div>
-            <div class="platform-card">Pinterest</div>
-            <div class="platform-card">WordPress</div>
-            <div class="platform-card">Reddit</div>
-            <div class="platform-card">Spotify</div>
-            <div class="platform-card">Twitch</div>
-            <div class="platform-card">Slack</div>
-            <div class="platform-card">Microsoft</div>
-            <div class="platform-card">Apple</div>
-            <div class="platform-card">Amazon</div>
-            <div class="platform-card">Shopify</div>
-            <div class="platform-card">Stripe</div>
-            <div class="platform-card">PayPal</div>
-            <div class="platform-card">Salesforce</div>
-            <div class="platform-card">HubSpot</div>
-            <div class="platform-card">Mailchimp</div>
-            <div class="platform-card">Zoom</div>
-            <div class="platform-card">Trello</div>
-            <div class="platform-card">Asana</div>
-            <div class="platform-card">Notion</div>
-            <div class="platform-card">Adobe</div>
-            <div class="platform-card">Figma</div>
-            <div class="platform-card">Canva</div>
-            <div class="platform-card">Dribbble</div>
-            <div class="platform-card">Unsplash</div>
-            <div class="platform-card">Dropbox</div>
-            <div class="platform-card">Box</div>
-            <div class="platform-card">Netflix</div>
-            <div class="platform-card">Steam</div>
-            <div class="platform-card">Coinbase</div>
-            <div class="platform-card">+ More</div>
-          </div>
-        </section>
-        
-        <!-- Error Handling -->
-        <section id="error-handling" class="card">
-          <h2 class="text-2xl font-bold mb-4">Error Handling</h2>
-          <p class="text-secondary mb-4">
-            OAuth Hub uses standard HTTP response codes to indicate success or failure.
-          </p>
-          
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Status Code</th>
-                <th>Description</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><code>200 OK</code></td>
-                <td>Request succeeded</td>
-              </tr>
-              <tr>
-                <td><code>400 Bad Request</code></td>
-                <td>Invalid request parameters</td>
-              </tr>
-              <tr>
-                <td><code>401 Unauthorized</code></td>
-                <td>Invalid or missing API key</td>
-              </tr>
-              <tr>
-                <td><code>404 Not Found</code></td>
-                <td>Resource not found</td>
-              </tr>
-              <tr>
-                <td><code>429 Too Many Requests</code></td>
-                <td>Rate limit exceeded</td>
-              </tr>
-              <tr>
-                <td><code>500 Internal Server Error</code></td>
-                <td>Server error</td>
-              </tr>
-            </tbody>
-          </table>
-        </section>
-        
         <!-- Complete Examples -->
         <section id="examples" class="card">
           <h2 class="text-2xl font-bold mb-4">Complete Integration Examples</h2>
@@ -1228,6 +1136,97 @@ public class OAuthHubClient
               </div>
             </div>
           </div>
+        </section>
+        
+        <!-- Supported Platforms -->
+        <section id="supported-platforms" class="card">
+          <h2 class="text-2xl font-bold mb-4">Supported Platforms</h2>
+          <p class="text-secondary mb-4">
+            OAuth Hub supports 37+ major platforms with comprehensive scope management.
+          </p>
+          
+          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div class="platform-card">Google</div>
+            <div class="platform-card">Facebook</div>
+            <div class="platform-card">GitHub</div>
+            <div class="platform-card">Twitter/X</div>
+            <div class="platform-card">LinkedIn</div>
+            <div class="platform-card">TikTok</div>
+            <div class="platform-card">Discord</div>
+            <div class="platform-card">Pinterest</div>
+            <div class="platform-card">WordPress</div>
+            <div class="platform-card">Reddit</div>
+            <div class="platform-card">Spotify</div>
+            <div class="platform-card">Twitch</div>
+            <div class="platform-card">Slack</div>
+            <div class="platform-card">Microsoft</div>
+            <div class="platform-card">Apple</div>
+            <div class="platform-card">Amazon</div>
+            <div class="platform-card">Shopify</div>
+            <div class="platform-card">Stripe</div>
+            <div class="platform-card">PayPal</div>
+            <div class="platform-card">Salesforce</div>
+            <div class="platform-card">HubSpot</div>
+            <div class="platform-card">Mailchimp</div>
+            <div class="platform-card">Zoom</div>
+            <div class="platform-card">Trello</div>
+            <div class="platform-card">Asana</div>
+            <div class="platform-card">Notion</div>
+            <div class="platform-card">Adobe</div>
+            <div class="platform-card">Figma</div>
+            <div class="platform-card">Canva</div>
+            <div class="platform-card">Dribbble</div>
+            <div class="platform-card">Unsplash</div>
+            <div class="platform-card">Dropbox</div>
+            <div class="platform-card">Box</div>
+            <div class="platform-card">Netflix</div>
+            <div class="platform-card">Steam</div>
+            <div class="platform-card">Coinbase</div>
+            <div class="platform-card">+ More</div>
+          </div>
+        </section>
+        
+        <!-- Error Handling -->
+        <section id="error-handling" class="card">
+          <h2 class="text-2xl font-bold mb-4">Error Handling</h2>
+          <p class="text-secondary mb-4">
+            OAuth Hub uses standard HTTP response codes to indicate success or failure.
+          </p>
+          
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Status Code</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>200 OK</code></td>
+                <td>Request succeeded</td>
+              </tr>
+              <tr>
+                <td><code>400 Bad Request</code></td>
+                <td>Invalid request parameters</td>
+              </tr>
+              <tr>
+                <td><code>401 Unauthorized</code></td>
+                <td>Invalid or missing API key</td>
+              </tr>
+              <tr>
+                <td><code>404 Not Found</code></td>
+                <td>Resource not found</td>
+              </tr>
+              <tr>
+                <td><code>429 Too Many Requests</code></td>
+                <td>Rate limit exceeded</td>
+              </tr>
+              <tr>
+                <td><code>500 Internal Server Error</code></td>
+                <td>Server error</td>
+              </tr>
+            </tbody>
+          </table>
         </section>
       </div>
   `;
