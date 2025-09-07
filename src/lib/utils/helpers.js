@@ -29,9 +29,28 @@ export function generateApiKey() {
   return 'sk_' + crypto.randomUUID().replace(/-/g, '');
 }
 
+// Generate Random String
+export function generateRandomString(length = 32) {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
+
 // Generate Random ID
 export function generateId() {
   return crypto.randomUUID();
+}
+
+// Hash Password
+export async function hashPassword(password) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
 // Simplified error response

@@ -2,7 +2,7 @@
 // 🏗️ BASE HANDLER - Common functionality for all handlers
 // =============================================================================
 
-import { jsonResponse } from '../../lib/utils/helpers.js';
+import { jsonResponse, htmlResponse } from '../../lib/utils/helpers.js';
 
 export class BaseHandler {
   constructor(env) {
@@ -71,5 +71,19 @@ export class BaseHandler {
       success: true,
       ...data
     }, 200, corsHeaders);
+  }
+
+  /**
+   * JSON response helper
+   */
+  jsonResponse(data, status = 200, headers = {}) {
+    return jsonResponse(data, status, headers);
+  }
+
+  /**
+   * HTML response helper
+   */
+  htmlResponse(html, status = 200, headers = {}) {
+    return htmlResponse(html, status, headers);
   }
 }

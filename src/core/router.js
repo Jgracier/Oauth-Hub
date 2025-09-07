@@ -19,6 +19,7 @@ import { getModernProfilePage } from '../ui/pages/modern-profile.js';
 import { AuthHandler } from '../api/handlers/auth.handler.js';
 import { ApiKeyHandler } from '../api/handlers/apikey.handler.js';
 import { AppHandler } from '../api/handlers/app.handler.js';
+import { GoogleAuthHandler } from '../api/handlers/google-auth.handler.js';
 
 export class Router {
   constructor(env) {
@@ -26,6 +27,7 @@ export class Router {
     this.authHandler = new AuthHandler(env);
     this.apiKeyHandler = new ApiKeyHandler(env);
     this.appHandler = new AppHandler(env);
+    this.googleAuthHandler = new GoogleAuthHandler(env);
   }
 
   // Helper method to get session from request
@@ -490,6 +492,15 @@ export class Router {
       
       if (path === '/logout' && method === 'POST') {
         return await this.authHandler.handleLogout(request, corsHeaders);
+      }
+      
+      // Google OAuth endpoints
+      if (path === '/auth/google' && method === 'GET') {
+        return await this.googleAuthHandler.handleGoogleAuth(request);
+      }
+      
+      if (path === '/auth/google/callback' && method === 'GET') {
+        return await this.googleAuthHandler.handleGoogleAuth(request);
       }
       
       if (path === '/check-session' && method === 'GET') {

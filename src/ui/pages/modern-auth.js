@@ -856,7 +856,14 @@ export function getModernAuthPage() {
       
       // Handle Google auth
       function handleGoogleAuth() {
-        showError('Google authentication coming soon!');
+        hideMessages();
+        
+        try {
+          // Redirect to Google OAuth
+          window.location.href = '/auth/google';
+        } catch (error) {
+          showError('Failed to initialize Google authentication');
+        }
       }
       
       // Handle GitHub auth
