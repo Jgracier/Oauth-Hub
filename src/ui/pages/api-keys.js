@@ -346,16 +346,16 @@ export function getModernApiKeysPage() {
         const email = localStorage.getItem('userEmail');
         
         try {
-          const response = await fetch('/user-keys', {
+          const response = await fetch('/generate-key', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ keyName, email })
+            body: JSON.stringify({ name: keyName, email })
           });
           
           if (response.ok) {
             const data = await response.json();
             hideCreateKeyModal();
-            showKeyCreatedModal(data.apiKey);
+            showKeyCreatedModal(data.key.key);
             loadApiKeys();
           } else {
             const error = await response.json();

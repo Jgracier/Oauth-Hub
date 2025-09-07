@@ -13,6 +13,7 @@ import { getModernDocsPage } from '../ui/pages/docs.js';
 import { getModernAnalyticsPage } from '../ui/pages/analytics.js';
 import { getModernSettingsPage } from '../ui/pages/settings.js';
 import { getModernProfilePage } from '../ui/pages/profile.js';
+import { getModernSubscriptionPage } from '../ui/pages/subscription.js';
 
 // Import handlers
 import { AuthHandler } from '../api/handlers/auth.handler.js';
@@ -20,6 +21,7 @@ import { ApiKeyHandler } from '../api/handlers/apikey.handler.js';
 import { AppHandler } from '../api/handlers/app.handler.js';
 import { GoogleAuthHandler } from '../api/handlers/google-auth.handler.js';
 import { GitHubAuthHandler } from '../api/handlers/github-auth.handler.js';
+import { SubscriptionHandler } from '../api/handlers/subscription.handler.js';
 
 export class Router {
   constructor(env) {
@@ -29,6 +31,7 @@ export class Router {
     this.appHandler = new AppHandler(env);
     this.googleAuthHandler = new GoogleAuthHandler(env);
     this.githubAuthHandler = new GitHubAuthHandler(env);
+    this.subscriptionHandler = new SubscriptionHandler(env);
   }
 
   // Helper method to get session from request
@@ -37,6 +40,20 @@ export class Router {
     if (!cookieHeader) return null;
     const match = cookieHeader.match(/session=([^;]+)/);
     return match ? match[1] : null;
+  }
+
+  // Helper method to validate API key efficiently - SCALABLE VERSION
+  async validateApiKey(apiKey) {
+    // Direct lookup using API key as index - O(1) operation
+    const lookupKey = `lookup-${apiKey}`;
+    const lookupData = await this.env.API_KEYS.get(lookupKey);
+    
+    if (lookupData) {
+      const parsed = JSON.parse(lookupData);
+      return { validApiKey: true, userEmail: parsed.email };
+    }
+    
+    return { validApiKey: false, userEmail: null };
   }
 
   // Generate OAuth authorization URL
@@ -80,7 +97,7 @@ export class Router {
       }
 
       // Import OAuth functions
-      const { generateConsentUrl } = await import('../lib/auth/oauth.js');
+      const { generateConsentUrl } = await import('./platforms.js');
       
       // Generate the authorization URL
       const authUrl = await generateConsentUrl(platform, userApp, apiKey, state);
@@ -95,10 +112,7 @@ export class Router {
       
     } catch (error) {
       console.error('OAuth authorize failed:', error.message);
-      return jsonResponse({
-        error: 'Failed to generate authorization URL',
-        message: error.message
-      }, 500, corsHeaders);
+      return jsonResponse({ error: 'Failed to generate authorization URL' }, 500, corsHeaders);
     }
   }
 
@@ -116,7 +130,7 @@ export class Router {
 
     const platform = pathParts[2];
     const apiKey = pathParts[3];
-    const state = url.searchParams.get('state') || `${platform}_${apiKey}_${Date.now()}`;
+    const state = url.searchParams.get('state') || `${platform}_${apiKey}_${Date.now()}_${crypto.randomUUID()}`;
 
     try {
       // 1. First validate the API key exists and get user email
@@ -143,19 +157,13 @@ export class Router {
         }, 401, corsHeaders);
       }
 
-      // 2. Find OAuth app for this platform and user (not tied to API key)
-      const { keys: oauthKeys } = await this.env.OAUTH_TOKENS.list();
+      // 2. Find OAuth app for this platform and user using efficient key lookup
+      const appKey = `app-${platform}-${userEmail}`;
+      const appData = await this.env.OAUTH_TOKENS.get(appKey);
       let userApp = null;
       
-      for (const keyInfo of oauthKeys) {
-        const data = await this.env.OAUTH_TOKENS.get(keyInfo.name);
-        if (data) {
-          const parsed = JSON.parse(data);
-          if (parsed.platform === platform && parsed.userEmail === userEmail) {
-            userApp = parsed;
-            break;
-          }
-        }
+      if (appData) {
+        userApp = JSON.parse(appData);
       }
 
       if (!userApp) {
@@ -168,7 +176,7 @@ export class Router {
       }
 
       // Import OAuth functions
-      const { generateConsentUrl } = await import('../lib/auth/oauth.js');
+      const { generateConsentUrl } = await import('./platforms.js');
       
       // Generate the authorization URL with callback pointing to our callback endpoint
       const authUrl = await generateConsentUrl(platform, userApp, apiKey, state, 'https://oauth-hub.com');
@@ -184,10 +192,7 @@ export class Router {
       
     } catch (error) {
       console.error('Consent URL generation failed:', error.message);
-      return jsonResponse({
-        error: 'Failed to generate consent URL',
-        message: error.message
-      }, 500, corsHeaders);
+      return jsonResponse({ error: 'Failed to generate consent URL' }, 500, corsHeaders);
     }
   }
 
@@ -212,17 +217,17 @@ export class Router {
       }, 400, corsHeaders);
     }
 
-    // Extract platform and API key from state parameter (format: platform_apikey_timestamp)
+    // Extract platform and API key from state parameter (format: platform_apikey_timestamp_uuid)
     const stateParts = state.split('_');
-    if (stateParts.length < 3) {
+    if (stateParts.length < 4) {
       return jsonResponse({
         error: 'Invalid state parameter format'
       }, 400, corsHeaders);
     }
 
     const platform = stateParts[0];
-    // API key is everything between platform and timestamp (last part)
-    const apiKey = stateParts.slice(1, -1).join('_');
+    // API key is everything between platform and timestamp+uuid (last 2 parts)
+    const apiKey = stateParts.slice(1, -2).join('_');
 
     try {
       // 1. First validate the API key exists and get user email
@@ -249,19 +254,13 @@ export class Router {
         }, 401, corsHeaders);
       }
 
-      // 2. Find OAuth app for this platform and user (not tied to API key)
-      const { keys: oauthKeys } = await this.env.OAUTH_TOKENS.list();
+      // 2. Find OAuth app for this platform and user using efficient key lookup
+      const appKey = `app-${platform}-${userEmail}`;
+      const appData = await this.env.OAUTH_TOKENS.get(appKey);
       let userApp = null;
       
-      for (const keyInfo of oauthKeys) {
-        const data = await this.env.OAUTH_TOKENS.get(keyInfo.name);
-        if (data) {
-          const parsed = JSON.parse(data);
-          if (parsed.platform === platform && parsed.userEmail === userEmail) {
-            userApp = parsed;
-            break;
-          }
-        }
+      if (appData) {
+        userApp = JSON.parse(appData);
       }
 
       if (!userApp) {
@@ -274,17 +273,16 @@ export class Router {
       }
 
       // 2. Import OAuth functions
-      const { exchangeCodeForTokens, getUserInfo } = await import('../lib/auth/oauth.js');
+      const { exchangeCodeForToken, getUserInfo } = await import('./platforms.js');
       
       // 3. Exchange authorization code for access token (use the same redirect URI as consent)
-      const redirectUri = 'https://oauth-hub.com';
-      const tokens = await exchangeCodeForTokens(platform, code, userApp, redirectUri);
+      const tokens = await exchangeCodeForToken(platform, code, userApp);
       
       // 4. Get user info to extract platform user ID
       const { platformUserId, userInfo } = await getUserInfo(platform, tokens.accessToken);
       
-      // 5. Store tokens in KV with platform user ID as key
-      const tokenKey = `token-${platform}-${platformUserId}-${apiKey}`;
+      // 5. SCALABLE TOKEN STORAGE: Use consistent key format
+      const tokenKey = `token-${platformUserId}-${apiKey}`;
       const tokenData = {
         platform: platform,
         platformUserId: platformUserId,
@@ -305,26 +303,52 @@ export class Router {
         expirationTtl: 86400 * 365 // 1 year
       });
 
-      // 6. Return success response with platform user ID
-      return jsonResponse({
-        success: true,
-        message: 'OAuth authorization completed successfully',
-        platform: platform,
-        platformUserId: platformUserId,
-        apiKey: apiKey.substring(0, 10) + '...',
-        tokenStored: true,
-        userInfo: {
-          id: platformUserId,
-          platform: platform
-        }
-      }, 200, corsHeaders);
+      // 6. Return HTML that communicates with parent window
+      const callbackHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>OAuth Complete</title>
+        </head>
+        <body>
+          <script>
+            // Send data to parent window
+            if (window.opener) {
+              window.opener.postMessage({
+                type: 'oauth_complete',
+                platform: '${platform}',
+                platformUserId: '${platformUserId}',
+                tokens: {
+                  access_token: 'stored_securely',
+                  platform: '${platform}',
+                  platformUserId: '${platformUserId}'
+                }
+              }, '*');
+              window.close();
+            } else if (window.parent !== window) {
+              window.parent.postMessage({
+                type: 'oauth_complete',
+                platform: '${platform}',
+                platformUserId: '${platformUserId}',
+                tokens: {
+                  access_token: 'stored_securely',
+                  platform: '${platform}',
+                  platformUserId: '${platformUserId}'
+                }
+              }, '*');
+            } else {
+              document.body.innerHTML = '<h2>OAuth Complete!</h2><p>Platform: ${platform}</p><p>User ID: ${platformUserId}</p><p>You can close this window.</p>';
+            }
+          </script>
+        </body>
+        </html>
+      `;
+      
+      return htmlResponse(callbackHtml, 200, corsHeaders);
       
     } catch (error) {
       console.error('OAuth consent processing failed:', error.message);
-      return jsonResponse({
-        error: 'Failed to process OAuth consent',
-        message: error.message
-      }, 500, corsHeaders);
+      return jsonResponse({ error: 'Failed to process OAuth consent' }, 500, corsHeaders);
     }
   }
 
@@ -344,41 +368,13 @@ export class Router {
     const apiKey = pathParts[3];
 
     try {
-      // 1. Find the stored token by searching for matching records
-      const { keys } = await this.env.OAUTH_TOKENS.list();
+      // 1. SCALABLE TOKEN LOOKUP: Direct key access - O(1) operation
+      const tokenKey = `token-${platformUserId}-${apiKey}`;
+      const tokenDataRaw = await this.env.OAUTH_TOKENS.get(tokenKey);
       let tokenData = null;
-      let tokenKey = null;
       
-      // First try to find by exact key pattern
-      for (const keyInfo of keys) {
-        if (keyInfo.name.startsWith('token-') && keyInfo.name.includes(platformUserId) && keyInfo.name.endsWith(apiKey)) {
-          const data = await this.env.OAUTH_TOKENS.get(keyInfo.name);
-          if (data) {
-            const parsed = JSON.parse(data);
-            if (parsed.platformUserId === platformUserId && parsed.apiKey === apiKey) {
-              tokenData = parsed;
-              tokenKey = keyInfo.name;
-              break;
-            }
-          }
-        }
-      }
-      
-      // If not found, try broader search
-      if (!tokenData) {
-        for (const keyInfo of keys) {
-          if (keyInfo.name.startsWith('token-')) {
-            const data = await this.env.OAUTH_TOKENS.get(keyInfo.name);
-            if (data) {
-              const parsed = JSON.parse(data);
-              if (parsed.platformUserId === platformUserId && parsed.apiKey === apiKey) {
-                tokenData = parsed;
-                tokenKey = keyInfo.name;
-                break;
-              }
-            }
-          }
-        }
+      if (tokenDataRaw) {
+        tokenData = JSON.parse(tokenDataRaw);
       }
 
       if (!tokenData) {
@@ -400,19 +396,22 @@ export class Router {
       if (needsRefresh && tokenData.refreshToken) {
         try {
           // 3. Import OAuth functions and refresh token
-          const { refreshAccessToken } = await import('../lib/auth/oauth.js');
+          const { refreshAccessToken } = await import('./platforms.js');
           
-          // Find the OAuth app configuration for refresh
+          // Find the OAuth app configuration for refresh using efficient lookup
+          const { validApiKey, userEmail } = await this.validateApiKey(apiKey);
+          if (!validApiKey) {
+            return jsonResponse({
+              error: 'Invalid API key for token refresh'
+            }, 401, corsHeaders);
+          }
+          
+          const appKey = `app-${tokenData.platform}-${userEmail}`;
+          const appData = await this.env.OAUTH_TOKENS.get(appKey);
           let userApp = null;
-          for (const keyInfo of keys) {
-            const data = await this.env.OAUTH_TOKENS.get(keyInfo.name);
-            if (data) {
-              const parsed = JSON.parse(data);
-              if (parsed.platform === tokenData.platform && parsed.apiKey === apiKey && parsed.clientId) {
-                userApp = parsed;
-                break;
-              }
-            }
+          
+          if (appData) {
+            userApp = JSON.parse(appData);
           }
 
           if (!userApp) {
@@ -463,10 +462,7 @@ export class Router {
       
     } catch (error) {
       console.error('Token endpoint failed:', error.message);
-      return jsonResponse({
-        error: 'Failed to retrieve tokens',
-        message: error.message
-      }, 500, corsHeaders);
+      return jsonResponse({ error: 'Failed to retrieve tokens' }, 500, corsHeaders);
     }
   }
 
@@ -565,6 +561,68 @@ export class Router {
         return await this.handleTokenEndpoint(request, corsHeaders);
       }
 
+      // =============================================================================
+      // SUBSCRIPTION ENDPOINTS
+      // =============================================================================
+      
+      // Get subscription plans
+      if (path === '/subscription/plans' && method === 'GET') {
+        return await this.subscriptionHandler.getPlans();
+      }
+      
+      // Create Stripe checkout session
+      if (path === '/subscription/checkout' && method === 'POST') {
+        const body = await request.json();
+        const { email, priceId } = body;
+        const successUrl = `${url.origin}/subscription/success`;
+        const cancelUrl = `${url.origin}/subscription/cancel`;
+        
+        try {
+          const session = await this.subscriptionHandler.createCheckoutSession(
+            email, priceId, successUrl, cancelUrl
+          );
+          return jsonResponse({ success: true, checkoutUrl: session.url }, 200, corsHeaders);
+        } catch (error) {
+          return jsonResponse({ error: error.message }, 400, corsHeaders);
+        }
+      }
+      
+      // Get subscription status
+      if (path === '/subscription/status' && method === 'GET') {
+        const email = url.searchParams.get('email');
+        if (!email) {
+          return jsonResponse({ error: 'Email parameter required' }, 400, corsHeaders);
+        }
+        return await this.subscriptionHandler.getSubscriptionStatus(email);
+      }
+      
+      // Apply promo code
+      if (path === '/subscription/promo' && method === 'POST') {
+        const body = await request.json();
+        const { email, promoCode } = body;
+        return await this.subscriptionHandler.applyPromoCode(email, promoCode);
+      }
+      
+      // Cancel subscription
+      if (path === '/subscription/cancel' && method === 'POST') {
+        const body = await request.json();
+        const { email } = body;
+        return await this.subscriptionHandler.cancelSubscription(email);
+      }
+      
+      // Stripe webhook endpoint
+      if (path === '/webhook/stripe' && method === 'POST') {
+        return await this.subscriptionHandler.handleWebhook(request);
+      }
+      
+      // Grant Austyn full access (admin endpoint)
+      if (path === '/admin/grant-austyn-access' && method === 'POST') {
+        const { SubscriptionService } = await import('../lib/services/subscription.service.js');
+        const subscriptionService = new SubscriptionService(this.env);
+        const result = await subscriptionService.giveAustynFullAccess();
+        return jsonResponse(result, result.success ? 200 : 400, corsHeaders);
+      }
+
       // Health check endpoint
       if (path === '/health') {
         return jsonResponse({
@@ -607,6 +665,11 @@ export class Router {
       // Profile page
       if (path === '/profile') {
         return htmlResponse(getModernProfilePage());
+      }
+
+      // Subscription page
+      if (path === '/subscription') {
+        return htmlResponse(getModernSubscriptionPage());
       }
 
       // Documentation page

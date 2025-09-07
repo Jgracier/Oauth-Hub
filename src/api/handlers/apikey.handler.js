@@ -12,12 +12,20 @@ export class ApiKeyHandler extends BaseHandler {
     try {
       const email = this.validateEmailParam(request);
       
-      // Search for API keys belonging to this user (exclude analytics events)
-      const userRecords = await this.searchUserRecords(
-        this.env.API_KEYS,
-        (keyName, email) => keyName.startsWith('api-') && !keyName.startsWith('analytics:') && keyName.endsWith(email),
-        email
-      );
+      // SCALABLE LOOKUP: Use user index instead of full scan
+      const userIndexKey = `user-keys-${email}`;
+      const userIndex = await this.env.API_KEYS.get(userIndexKey);
+      
+      let userRecords = [];
+      if (userIndex) {
+        const keyNames = JSON.parse(userIndex);
+        const keyPromises = keyNames.map(keyName => this.env.API_KEYS.get(keyName));
+        const keyData = await Promise.all(keyPromises);
+        
+        userRecords = keyData
+          .filter(data => data !== null)
+          .map(data => JSON.parse(data));
+      }
 
       // Transform records to expected format
       const userKeys = userRecords.map(record => ({
@@ -58,9 +66,21 @@ export class ApiKeyHandler extends BaseHandler {
         keyId: keyId
       };
 
-      // Store in KV (using similar format to existing keys)
-      const keyName = `api-${name} ${email}`;
-      await this.env.API_KEYS.put(keyName, JSON.stringify(keyRecord));
+      // SCALABLE STORAGE: Store main record, lookup index, and user index
+      const keyName = `api-${name}-${email}`;
+      const lookupKey = `lookup-${apiKey}`;
+      const userIndexKey = `user-keys-${email}`;
+      
+      // Get existing user index and add new key
+      const existingIndex = await this.env.API_KEYS.get(userIndexKey);
+      const userKeys = existingIndex ? JSON.parse(existingIndex) : [];
+      userKeys.push(keyName);
+      
+      await Promise.all([
+        this.env.API_KEYS.put(keyName, JSON.stringify(keyRecord)),
+        this.env.API_KEYS.put(lookupKey, JSON.stringify({ email, keyName })),
+        this.env.API_KEYS.put(userIndexKey, JSON.stringify(userKeys))
+      ]);
 
       return this.successResponse({ 
         key: { key: apiKey, name: name, id: keyId }

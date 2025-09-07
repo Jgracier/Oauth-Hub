@@ -44,6 +44,11 @@ export function getModernSidebar(activePage = '', userEmail = '', userName = '')
             <span class="nav-item-text">Analytics</span>
           </a>
           
+          <a href="/subscription" class="nav-item ${activePage === 'subscription' ? 'active' : ''}" data-tooltip="Subscription">
+            <span class="nav-item-icon">${MODERN_ICONS.creditCard}</span>
+            <span class="nav-item-text">Subscription</span>
+          </a>
+          
           <a href="/docs" class="nav-item ${activePage === 'docs' ? 'active' : ''}" data-tooltip="Documentation">
             <span class="nav-item-icon">${MODERN_ICONS.docs}</span>
             <span class="nav-item-text">Documentation</span>

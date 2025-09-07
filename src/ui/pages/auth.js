@@ -603,7 +603,7 @@ export function getModernAuthPage() {
             required
             autocomplete="email"
           />
-        </div>
+            </div>
         
         <div class="form-group">
           <label class="form-label" for="signin-password">Password</label>
@@ -627,11 +627,11 @@ export function getModernAuthPage() {
             <div class="remember-me">
               <input type="checkbox" id="remember" />
               <label for="remember">Remember me</label>
-            </div>
+                </div>
             <a href="#" class="forgot-link" onclick="handleForgotPassword()">Forgot Password?</a>
-          </div>
-        </div>
-        
+                        </div>
+                    </div>
+                    
         <button type="submit" class="submit-btn">
           Log in
         </button>
@@ -639,7 +639,7 @@ export function getModernAuthPage() {
       
       <!-- Sign Up Form -->
       <form id="signup-form" class="auth-form" onsubmit="handleSignUp(event)">
-        <div class="form-group">
+                        <div class="form-group">
           <label class="form-label" for="signup-name">Full name</label>
           <input 
             type="text" 
@@ -649,9 +649,9 @@ export function getModernAuthPage() {
             required
             autocomplete="name"
           />
-        </div>
-        
-        <div class="form-group">
+                        </div>
+                        
+                        <div class="form-group">
           <label class="form-label" for="signup-email">Work Email</label>
           <input 
             type="email" 
@@ -661,9 +661,9 @@ export function getModernAuthPage() {
             required
             autocomplete="email"
           />
-        </div>
-        
-        <div class="form-group">
+                        </div>
+                        
+                            <div class="form-group">
           <label class="form-label" for="signup-password">Password</label>
           <div class="password-wrapper">
             <input 
@@ -681,20 +681,20 @@ export function getModernAuthPage() {
                 <circle cx="12" cy="12" r="3"></circle>
               </svg>
             </button>
-          </div>
-        </div>
-        
+                            </div>
+                        </div>
+                        
         <button type="submit" class="submit-btn">
           Sign up
-        </button>
-      </form>
-      
+                        </button>
+                    </form>
+                    
       <!-- Footer -->
       <div class="auth-footer">
         This site is protected by reCAPTCHA and the Google 
         <a href="/privacy">Privacy Policy</a> and 
         <a href="/terms">Terms of Service</a> apply.
-      </div>
+            </div>
     </div>
     
     <script>
@@ -726,7 +726,7 @@ export function getModernAuthPage() {
           signupForm.classList.remove('active');
           authTitle.textContent = 'Welcome back!';
           authSubtitle.textContent = 'Sign in to your account';
-        } else {
+            } else {
           tabs[1].classList.add('active');
           signupForm.classList.add('active');
           signinForm.classList.remove('active');
@@ -823,30 +823,30 @@ export function getModernAuthPage() {
         
         button.disabled = true;
         button.innerHTML = '<span class="loading"></span> Creating account...';
-        
-        try {
-          const response = await fetch('/auth', {
-            method: 'POST',
+            
+            try {
+                const response = await fetch('/auth', {
+                    method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
             body: JSON.stringify({ mode: 'signup', email, password, fullName: name })
-          });
-          
-          const result = await response.json();
-          
-          if (response.ok) {
-            localStorage.setItem('userEmail', result.email);
-            localStorage.setItem('userName', result.name);
-            if (result.apiKey) {
-              localStorage.setItem('defaultApiKey', result.apiKey);
-            }
-            
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    localStorage.setItem('userEmail', result.email);
+                    localStorage.setItem('userName', result.name);
+                    if (result.apiKey) {
+                        localStorage.setItem('defaultApiKey', result.apiKey);
+                    }
+                    
             showSuccess('Account created! Redirecting...');
             setTimeout(() => window.location.href = '/dashboard', 1000);
-          } else {
+                } else {
             showError(result.error || 'Failed to create account');
-          }
-        } catch (error) {
+                }
+            } catch (error) {
           showError('Network error. Please try again.');
         } finally {
           button.disabled = false;
@@ -886,8 +886,8 @@ export function getModernAuthPage() {
       
       // Check if already logged in
       if (localStorage.getItem('userEmail')) {
-        window.location.href = '/dashboard';
-      }
+                    window.location.href = '/dashboard';
+                }
     </script>
 </body>
 </html>`;

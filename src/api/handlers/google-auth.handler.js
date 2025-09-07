@@ -3,7 +3,7 @@
 // =============================================================================
 
 import { BaseHandler } from './base.handler.js';
-import { generateRandomString, hashPassword, generateApiKey, generateId, sanitizeInput } from '../../lib/utils/helpers.js';
+import { generateRandomString, generateApiKey, generateId, sanitizeInput } from '../../lib/utils/helpers.js';
 import { AuthService } from '../../lib/services/auth.service.js';
 
 export class GoogleAuthHandler extends BaseHandler {

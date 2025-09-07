@@ -3,6 +3,14 @@ main = "src/index.js"
 compatibility_date = "2024-08-23"
 compatibility_flags = ["nodejs_compat"]
 
+# Environment Variables
+[vars]
+STRIPE_PUBLISHABLE_KEY = "pk_live_51NPur2LQrmO12AFIDqn7Nd1Yvw4RwX4U8CCYHtgPlLeUjnH0ockLX9..."
+
+# Secrets (set via wrangler secret put)
+# STRIPE_API_KEY - Set via: wrangler secret put STRIPE_API_KEY
+# STRIPE_WEBHOOK_SECRET - Set via: wrangler secret put STRIPE_WEBHOOK_SECRET
+
 # Default Environment KV Namespaces
 [[kv_namespaces]]
 binding = "OAUTH_TOKENS"
