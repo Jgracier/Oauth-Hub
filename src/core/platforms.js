@@ -131,7 +131,8 @@ export const PLATFORMS = {
     requiredScopes: ['public_profile', 'email'],
     scopeDelimiter: ',', // Comma-delimited
     additionalParams: {
-      response_type: 'code'
+      response_type: 'code',
+      access_type: 'offline' // For refresh tokens
     },
     scopes: {
       'Basic': {
@@ -546,7 +547,10 @@ export const PLATFORMS = {
     description: 'Access GitHub API for repositories and user data',
     requiredScopes: ['user:email'],
     scopeDelimiter: ' ',
-    additionalParams: { response_type: 'code' },
+    additionalParams: { 
+      response_type: 'code',
+      access_type: 'offline'
+    },
     scopes: {
       'User': {
         'user': { name: 'User Profile', description: 'Grants read/write access to profile info only' },
@@ -1778,6 +1782,7 @@ export async function generateConsentUrl(platform, userApp, apiKey, state, baseU
   const params = new URLSearchParams({
     client_id: userApp.clientId,
     redirect_uri: `${baseUrl}/callback`,
+    response_type: 'code', // Standard OAuth parameter
     scope: scopeString,
     state: state,
     ...platformConfig.additionalParams
