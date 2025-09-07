@@ -98,42 +98,61 @@ export function getModernDocsPage() {
         <!-- Getting Started -->
         <section id="getting-started" class="card">
           <h2 class="text-2xl font-bold mb-4">Getting Started</h2>
-          <p class="text-secondary mb-4">
+          <p class="text-secondary mb-6">
             OAuth Hub provides a simple, unified API for managing OAuth integrations across multiple platforms. 
             Follow these steps to get started:
           </p>
           
-          <div class="space-y-4">
-            <div>
-              <h3 class="font-semibold mb-2">1. Create an Account</h3>
-              <p class="text-secondary mb-3">Sign up for an OAuth Hub account to get started.</p>
-              <div class="code-block-container">
-                <button class="copy-button" onclick="copyToClipboard(this, 'https://oauth-hub.com/auth')">
-                  ${MODERN_ICONS.copy}
-                </button>
-                <pre class="code-block"><code>https://oauth-hub.com/auth</code></pre>
+          <div class="space-y-6">
+            <div class="flex items-start gap-4">
+              <div class="flex-shrink-0 w-8 h-8 bg-brand-accent text-white rounded-full flex items-center justify-center font-semibold text-sm">
+                1
+              </div>
+              <div>
+                <h3 class="font-semibold mb-2">Create an Account</h3>
+                <p class="text-secondary mb-3">
+                  Sign up for an OAuth Hub account at <a href="/auth" class="text-brand-accent hover:underline">oauth-hub.com/auth</a> 
+                  to access the dashboard and start managing your OAuth integrations.
+                </p>
               </div>
             </div>
             
-            <div>
-              <h3 class="font-semibold mb-2">2. Generate an API Key</h3>
-              <p class="text-secondary mb-3">Create an API key from your dashboard to authenticate your requests.</p>
-              <div class="code-block-container">
-                <button class="copy-button" onclick="copyToClipboard(this, 'Dashboard → API Keys → Create New Key')">
-                  ${MODERN_ICONS.copy}
-                </button>
-                <pre class="code-block"><code>Dashboard → API Keys → Create New Key</code></pre>
+            <div class="flex items-start gap-4">
+              <div class="flex-shrink-0 w-8 h-8 bg-brand-accent text-white rounded-full flex items-center justify-center font-semibold text-sm">
+                2
+              </div>
+              <div>
+                <h3 class="font-semibold mb-2">Generate an API Key</h3>
+                <p class="text-secondary mb-3">
+                  Navigate to <strong>Dashboard → API Keys → Create New Key</strong> to generate your authentication key. 
+                  This key will be used to authenticate all your API requests.
+                </p>
               </div>
             </div>
             
-            <div>
-              <h3 class="font-semibold mb-2">3. Add OAuth Apps</h3>
-              <p class="text-secondary mb-3">Configure your OAuth applications for each platform you want to integrate.</p>
-              <div class="code-block-container">
-                <button class="copy-button" onclick="copyToClipboard(this, 'Dashboard → OAuth Apps → Add OAuth App')">
-                  ${MODERN_ICONS.copy}
-                </button>
-                <pre class="code-block"><code>Dashboard → OAuth Apps → Add OAuth App</code></pre>
+            <div class="flex items-start gap-4">
+              <div class="flex-shrink-0 w-8 h-8 bg-brand-accent text-white rounded-full flex items-center justify-center font-semibold text-sm">
+                3
+              </div>
+              <div>
+                <h3 class="font-semibold mb-2">Add OAuth Apps</h3>
+                <p class="text-secondary mb-3">
+                  Go to <strong>Dashboard → OAuth Apps → Add OAuth App</strong> to configure your OAuth applications 
+                  for each platform you want to integrate (Google, Facebook, GitHub, etc.).
+                </p>
+              </div>
+            </div>
+            
+            <div class="flex items-start gap-4">
+              <div class="flex-shrink-0 w-8 h-8 bg-brand-accent text-white rounded-full flex items-center justify-center font-semibold text-sm">
+                4
+              </div>
+              <div>
+                <h3 class="font-semibold mb-2">Start Integrating</h3>
+                <p class="text-secondary mb-3">
+                  You're ready to start using the OAuth Hub API! Check out the examples below to see how to 
+                  implement the OAuth flow in your application.
+                </p>
               </div>
             </div>
           </div>
