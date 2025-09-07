@@ -3,17 +3,16 @@
 // =============================================================================
 
 import { htmlResponse, jsonResponse, getCorsHeaders } from '../lib/utils/helpers.js';
-import { UNIFIED_CSS } from '../ui/styles.js';
 
-// Import UI pages - All using modern versions
-import { getModernAuthPage } from '../ui/pages/modern-auth.js';
-import { getModernDashboardPage } from '../ui/pages/modern-dashboard.js';
-import { getModernApiKeysPage } from '../ui/pages/modern-api-keys.js';
-import { getModernAppsPage } from '../ui/pages/modern-apps.js';
-import { getModernDocsPage } from '../ui/pages/modern-docs.js';
-import { getModernAnalyticsPage } from '../ui/pages/modern-analytics.js';
-import { getModernSettingsPage } from '../ui/pages/modern-settings.js';
-import { getModernProfilePage } from '../ui/pages/modern-profile.js';
+// Import UI pages
+import { getModernAuthPage } from '../ui/pages/auth.js';
+import { getModernDashboardPage } from '../ui/pages/dashboard.js';
+import { getModernApiKeysPage } from '../ui/pages/api-keys.js';
+import { getModernAppsPage } from '../ui/pages/apps.js';
+import { getModernDocsPage } from '../ui/pages/docs.js';
+import { getModernAnalyticsPage } from '../ui/pages/analytics.js';
+import { getModernSettingsPage } from '../ui/pages/settings.js';
+import { getModernProfilePage } from '../ui/pages/profile.js';
 
 // Import handlers
 import { AuthHandler } from '../api/handlers/auth.handler.js';

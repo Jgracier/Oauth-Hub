@@ -100,7 +100,7 @@ export class AuthHandler {
       
       return jsonResponse({
         authenticated: true,
-        user: {
+        user: session.user || {
           email: session.email,
           name: session.name
         }

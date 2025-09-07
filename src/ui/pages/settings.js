@@ -2,8 +2,8 @@
 // ⚙️ MODERN SETTINGS PAGE - User preferences and configuration
 // =============================================================================
 
-import { MODERN_CSS, MODERN_ICONS } from '../modern-styles.js';
-import { getModernLayout, getModernScripts } from '../modern-navigation.js';
+import { MODERN_CSS, MODERN_ICONS } from '../styles.js';
+import { getModernLayout, getModernScripts } from '../navigation.js';
 import { getClientAuthScript } from '../../lib/auth/client-auth.js';
 
 export function getModernSettingsPage() {
@@ -106,20 +106,6 @@ export function getModernSettingsPage() {
           <h3 class="card-title">API Configuration</h3>
         </div>
         <div class="space-y-4">
-          <div>
-            <h4 class="font-semibold mb-2">Webhook URL</h4>
-            <p class="text-secondary text-small mb-3">Receive real-time notifications for OAuth events</p>
-            <div class="flex gap-2">
-              <input 
-                type="url" 
-                class="form-input" 
-                placeholder="https://your-app.com/webhook"
-                id="webhook-url"
-              >
-              <button class="btn btn-primary" onclick="saveWebhook()">Save</button>
-            </div>
-          </div>
-          
           <div>
             <h4 class="font-semibold mb-2">Rate Limits</h4>
             <p class="text-secondary text-small">Current API usage and limits</p>
@@ -385,18 +371,6 @@ export function getModernSettingsPage() {
         hideDeleteAccountModal();
       }
       
-      // Save webhook
-      async function saveWebhook() {
-        const webhookUrl = document.getElementById('webhook-url').value;
-        
-        if (webhookUrl && !webhookUrl.startsWith('https://')) {
-          alert('Webhook URL must use HTTPS');
-          return;
-        }
-        
-        // TODO: Implement webhook save API
-        showNotification('Webhook URL saved');
-      }
       
       // Initialize
       document.addEventListener('DOMContentLoaded', () => {

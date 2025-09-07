@@ -1,10 +1,154 @@
 // =============================================================================
-// 📝 API KEYS PAGE - Simple and Working
+// 🔑 MODERN API KEYS PAGE - Sleek key management
 // =============================================================================
 
-import { getNavigation, getSharedScript } from '../navigation.js';
+import { MODERN_CSS, MODERN_ICONS } from '../styles.js';
+import { getModernLayout, getModernScripts } from '../navigation.js';
+import { getClientAuthScript } from '../../lib/auth/client-auth.js';
 
-export function getApiKeysPage(UNIFIED_CSS) {
+export function getModernApiKeysPage() {
+  const content = `
+    <!-- Page Header -->
+    <div class="flex justify-between items-center mb-6">
+      <div>
+        <p class="text-secondary">Manage your API keys for OAuth Hub authentication</p>
+      </div>
+      <button class="btn btn-primary" onclick="showCreateKeyModal()">
+        ${MODERN_ICONS.plus}
+        Create New Key
+      </button>
+    </div>
+    
+    <!-- API Keys List -->
+    <div class="card">
+      <div class="table-container">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Key</th>
+              <th>Created</th>
+              <th>Last Used</th>
+              <th>Status</th>
+              <th width="100">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="keys-list">
+            <!-- Keys will be loaded here -->
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- Empty State -->
+      <div id="empty-state" class="text-center py-12" style="display: none;">
+        <div style="width: 80px; height: 80px; margin: 0 auto var(--space-5); background: var(--bg-tertiary); border-radius: var(--radius-full); display: flex; align-items: center; justify-content: center;">
+          ${MODERN_ICONS.keys}
+        </div>
+        <h3 class="mb-2">No API Keys Yet</h3>
+        <p class="text-secondary mb-5">Create your first API key to start using OAuth Hub</p>
+        <button class="btn btn-primary" onclick="showCreateKeyModal()">
+          ${MODERN_ICONS.plus}
+          Create Your First Key
+        </button>
+      </div>
+    </div>
+    
+    <!-- Usage Instructions -->
+    <div class="card mt-6">
+      <div class="card-header">
+        <h3 class="card-title">How to Use Your API Key</h3>
+      </div>
+      <div class="space-y-4">
+        <div>
+          <h4 class="font-semibold mb-2">1. Generate Consent URL</h4>
+          <div class="code-block">
+            <pre><code>GET https://oauth-hub.com/consent/{platform}/{your_api_key}</code></pre>
+          </div>
+        </div>
+        
+        <div>
+          <h4 class="font-semibold mb-2">2. Get Access Token</h4>
+          <div class="code-block">
+            <pre><code>GET https://oauth-hub.com/token/{platform_user_id}/{your_api_key}</code></pre>
+          </div>
+        </div>
+        
+        <div>
+          <p class="text-secondary text-small">
+            Keep your API keys secure. Never expose them in client-side code or public repositories.
+          </p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Create Key Modal -->
+    <div class="modal-backdrop" id="create-key-modal">
+      <div class="modal">
+        <div class="modal-header">
+          <h2 class="modal-title">Create New API Key</h2>
+          <button class="modal-close" onclick="hideCreateKeyModal()">
+            ${MODERN_ICONS.close}
+          </button>
+        </div>
+        <form onsubmit="handleCreateKey(event)">
+          <div class="modal-body">
+            <div class="form-group">
+              <label class="form-label" for="keyName">Key Name</label>
+              <input 
+                type="text" 
+                class="form-input" 
+                id="keyName" 
+                name="keyName"
+                placeholder="Production API Key" 
+                required
+              >
+              <p class="form-error text-small mt-2">Choose a descriptive name to identify this key</p>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="hideCreateKeyModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary">Create Key</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    
+    <!-- Key Created Modal -->
+    <div class="modal-backdrop" id="key-created-modal">
+      <div class="modal">
+        <div class="modal-header">
+          <h2 class="modal-title">API Key Created</h2>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-warning mb-4">
+            <span style="width: 20px; height: 20px;">${MODERN_ICONS.warning}</span>
+            <span>Make sure to copy your API key now. You won't be able to see it again!</span>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Your API Key</label>
+            <div class="flex gap-2">
+              <input 
+                type="text" 
+                class="form-input font-mono" 
+                id="newApiKey" 
+                readonly 
+                value=""
+              >
+              <button class="btn btn-secondary" onclick="copyApiKey()">
+                ${MODERN_ICONS.copy}
+                Copy
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-primary" onclick="hideKeyCreatedModal()">Done</button>
+        </div>
+      </div>
+    </div>
+  `;
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -12,322 +156,287 @@ export function getApiKeysPage(UNIFIED_CSS) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>API Keys - OAuth Hub</title>
     <style>
-        ${UNIFIED_CSS}
-        
-        .alert {
-            padding: var(--space-3);
-            border-radius: var(--radius-md);
-            border: 1px solid;
-        }
-        
-        .alert-success {
-            background: #f0f9ff;
-            border-color: #0ea5e9;
-            color: #0369a1;
-        }
+      ${MODERN_CSS}
+      
+      /* Code Block Styles */
+      .code-block {
+        background: var(--bg-tertiary);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-md);
+        padding: var(--space-3);
+        font-family: var(--font-mono);
+        font-size: 0.875rem;
+        overflow-x: auto;
+      }
+      
+      .code-block pre {
+        margin: 0;
+      }
+      
+      .code-block code {
+        color: var(--text-primary);
+      }
+      
+      /* Key Display */
+      .key-display {
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        background: var(--bg-tertiary);
+        padding: var(--space-2) var(--space-3);
+        border-radius: var(--radius-sm);
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-2);
+        max-width: 200px;
+      }
+      
+      .key-value {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      
+      .key-hidden {
+        filter: blur(4px);
+        user-select: none;
+      }
+      
+      .alert-warning {
+        background: rgba(255, 149, 0, 0.1);
+        border: 1px solid rgba(255, 149, 0, 0.2);
+        color: var(--text-primary);
+        padding: var(--space-3);
+        border-radius: var(--radius-md);
+        display: flex;
+        align-items: flex-start;
+        gap: var(--space-3);
+      }
+      
+      .space-y-4 > * + * {
+        margin-top: var(--space-4);
+      }
+      
+      .font-mono {
+        font-family: var(--font-mono);
+      }
     </style>
 </head>
 <body>
-    <div class="app-layout">
-        ${getNavigation('api-keys')}
-        
-        <main class="main">
-            <div class="container">
-                <div class="page-header">
-                    <h1 class="page-title">API Keys</h1>
-                    <p class="page-description">
-                        Generate and manage API keys for accessing OAuth Hub services
-                    </p>
-                </div>
-                
-                <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title">Generate New API Key</h2>
-                        <button onclick="showAddKeyModal()" class="btn btn-primary">
-                            <span>🔑</span>
-                            Generate API Key
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title">Your API Keys</h2>
-                    </div>
-                    
-                    <div id="keysList">
-                        <div class="text-center" style="padding: var(--space-8);">
-                            <div style="font-size: 3rem; margin-bottom: var(--space-4); opacity: 0.3;">🔑</div>
-                            <h3 style="color: var(--gray-500);">No API Keys Yet</h3>
-                            <p style="color: var(--gray-400);">Generate your first API key to get started</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </main>
-    </div>
+    ${getModernLayout('api-keys', 'API Keys', content)}
     
-    <!-- Add API Key Modal -->
-    <div id="addKeyModal" class="modal-overlay">
-        <div class="modal">
-            <div class="modal-header">
-                <h2 class="modal-title">Generate New API Key</h2>
-                <button onclick="hideAddKeyModal()" class="modal-close">&times;</button>
-            </div>
-            
-            <form id="key-form">
-                <div class="form-group">
-                    <label class="form-label">API Key Name</label>
-                    <input type="text" id="keyName" class="form-input" placeholder="e.g., My Application, Production Server" required>
-                    <div style="font-size: 0.875rem; color: var(--gray-600); margin-top: var(--space-1);">
-                        Give your API key a descriptive name to help identify it later
-                    </div>
-                </div>
-                
-                <div class="flex gap-4" style="margin-top: var(--space-6);">
-                    <button type="submit" class="btn btn-primary">
-                        <span>🔑</span>
-                        Generate API Key
-                    </button>
-                    <button type="button" onclick="hideAddKeyModal()" class="btn btn-secondary">
-                        Cancel
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Success Modal -->
-    <div id="successModal" class="modal-overlay">
-        <div class="modal">
-            <div class="modal-header">
-                <h2 class="modal-title">API Key Generated Successfully!</h2>
-                <button onclick="hideSuccessModal()" class="modal-close">&times;</button>
-            </div>
-            
-            <div style="padding: var(--space-4) 0;">
-                <div class="alert alert-success" style="margin-bottom: var(--space-4);">
-                    <strong>⚠️ Important:</strong> Copy this key now - it won't be shown again for security reasons!
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">API Key Name</label>
-                    <div id="generatedKeyName" style="padding: var(--space-2); background: var(--gray-50); border-radius: var(--radius-md); font-weight: 500;"></div>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">API Key</label>
-                    <div style="display: flex; gap: var(--space-2);">
-                        <input type="text" id="generatedKey" class="form-input" readonly style="flex: 1; background: var(--gray-50); font-family: var(--font-mono);">
-                        <button type="button" onclick="copyGeneratedKey()" class="btn btn-secondary">Copy</button>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="flex justify-end" style="margin-top: var(--space-6);">
-                <button onclick="hideSuccessModal()" class="btn btn-primary">
-                    Done
-                </button>
-            </div>
-        </div>
-    </div>
+    ${getClientAuthScript()}
+    ${getModernScripts()}
     
-    ${getSharedScript()}
     <script>
-        // Store keys in memory for this session
-        let apiKeys = [];
+      let apiKeys = [];
+      
+      // Load API keys
+      async function loadApiKeys() {
+        try {
+          const email = localStorage.getItem('userEmail');
+          if (!email) return;
+          
+          const response = await fetch(\`/user-keys?email=\${encodeURIComponent(email)}\`);
+          if (response.ok) {
+            const data = await response.json();
+            apiKeys = data.keys || [];
+            renderKeys();
+          }
+        } catch (error) {
+          console.error('Error loading API keys:', error);
+        }
+      }
+      
+      // Render keys
+      function renderKeys() {
+        const tbody = document.getElementById('keys-list');
+        const emptyState = document.getElementById('empty-state');
+        const table = document.querySelector('.table-container');
         
-        // Load existing API keys from server
-        async function loadApiKeys() {
-            try {
-                const email = localStorage.getItem('userEmail');
-                if (!email) return;
-                
-                const response = await fetch(\`/user-keys?email=\${encodeURIComponent(email)}\`);
-                if (response.ok) {
-                    const data = await response.json();
-                    apiKeys = data.keys || [];
-                    updateKeysList();
-                }
-            } catch (error) {
-                console.error('Error loading API keys:', error);
-            }
+        if (apiKeys.length === 0) {
+          table.style.display = 'none';
+          emptyState.style.display = 'block';
+          return;
         }
         
-        // Load keys when page loads
-        loadApiKeys();
+        table.style.display = 'block';
+        emptyState.style.display = 'none';
         
-        // Modal functions
-        function showAddKeyModal() {
-            document.getElementById('addKeyModal').classList.add('show');
-            document.body.style.overflow = 'hidden';
-        }
-        
-        function hideAddKeyModal() {
-            document.getElementById('addKeyModal').classList.remove('show');
-            document.body.style.overflow = '';
-            document.getElementById('key-form').reset();
-        }
-        
-        function showSuccessModal(keyName, apiKey) {
-            document.getElementById('generatedKeyName').textContent = keyName;
-            document.getElementById('generatedKey').value = apiKey;
-            document.getElementById('successModal').classList.add('show');
-            document.body.style.overflow = 'hidden';
-        }
-        
-        function hideSuccessModal() {
-            document.getElementById('successModal').classList.remove('show');
-            document.body.style.overflow = '';
-        }
-        
-        function copyGeneratedKey() {
-            const keyField = document.getElementById('generatedKey');
-            keyField.select();
-            document.execCommand('copy');
-            
-            // Also try modern clipboard API
-            navigator.clipboard.writeText(keyField.value).catch(() => {});
-            
-            // Visual feedback
-            const btn = event.target;
-            const originalText = btn.textContent;
-            btn.textContent = 'Copied!';
-            btn.style.background = 'var(--success-500)';
-            btn.style.color = 'white';
-            
-            setTimeout(() => {
-                btn.textContent = originalText;
-                btn.style.background = '';
-                btn.style.color = '';
-            }, 2000);
-        }
-        
-        
-        // Make functions globally accessible
-        window.showAddKeyModal = showAddKeyModal;
-        window.hideAddKeyModal = hideAddKeyModal;
-        window.hideSuccessModal = hideSuccessModal;
-        window.copyGeneratedKey = copyGeneratedKey;
-        
-        // Form submission
-        document.getElementById('key-form').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const keyName = document.getElementById('keyName').value.trim();
-            if (!keyName) return;
-            
-            try {
-                // Call backend API to generate key
-                const response = await fetch('/generate-key', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        email: localStorage.getItem('userEmail'),
-                        name: keyName
-                    })
-                });
-                
-                if (response.ok) {
-                    const result = await response.json();
-                    
-                    // Reload keys from server to get the latest data
-                    await loadApiKeys();
-                    
-                    // Hide the form modal and show success modal
-                    hideAddKeyModal();
-                    showSuccessModal(keyName, result.key.key);
-                } else {
-                    const error = await response.json();
-                    alert('Error generating API key: ' + (error.error || 'Unknown error'));
-                }
-            } catch (error) {
-                alert('Network error. Please try again.');
-            }
-        });
-        
-        // Update keys list display
-        function updateKeysList() {
-            const container = document.getElementById('keysList');
-            
-            if (apiKeys.length === 0) {
-                container.innerHTML = \`
-                    <div class="text-center" style="padding: var(--space-8);">
-                        <div style="font-size: 3rem; margin-bottom: var(--space-4); opacity: 0.3;">🔑</div>
-                        <h3 style="color: var(--gray-500);">No API Keys Yet</h3>
-                        <p style="color: var(--gray-400);">Generate your first API key to get started</p>
-                    </div>
-                \`;
-                return;
-            }
-            
-            container.innerHTML = apiKeys.map((key, index) => \`
-                <div style="padding: var(--space-4); border: 1px solid var(--border-color); border-radius: var(--radius-md); margin-bottom: var(--space-3);">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            <h4 style="margin: 0 0 var(--space-2) 0; color: var(--gray-800);">\${key.keyName}</h4>
-                            <code style="font-family: var(--font-mono); color: var(--gray-500); font-size: 0.9em;">
-                                \${key.apiKey.substring(0, 10)}...
-                            </code>
-                            <div style="font-size: 0.85em; color: var(--gray-400); margin-top: var(--space-2);">
-                                Created: \${new Date(key.createdAt).toLocaleDateString()}
-                            </div>
-                        </div>
-                        <div style="display: flex; gap: var(--space-2);">
-                            <button onclick="copyKey('\${key.apiKey}')" class="btn btn-secondary">
-                                Copy
-                            </button>
-                            <button onclick="deleteKey(\${index})" class="btn btn-secondary" style="color: var(--danger-500);">
-                                Delete
-                            </button>
-                        </div>
-                    </div>
+        tbody.innerHTML = apiKeys.map(key => {
+          const createdDate = new Date(key.createdAt).toLocaleDateString();
+          const lastUsed = key.lastUsed ? new Date(key.lastUsed).toLocaleDateString() : 'Never';
+          const isActive = key.status === 'active';
+          
+          return \`
+            <tr>
+              <td>
+                <div class="font-semibold">\${key.keyName}</div>
+              </td>
+              <td>
+                <div class="key-display">
+                  <span class="key-value key-hidden" id="key-\${key.keyId}">\${key.apiKey}</span>
+                  <button class="btn btn-ghost btn-small" onclick="toggleKeyVisibility('\${key.keyId}')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                      <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                  </button>
+                  <button class="btn btn-ghost btn-small" onclick="copyKey('\${key.apiKey}')">
+                    ${MODERN_ICONS.copy}
+                  </button>
                 </div>
-            \`).join('');
+              </td>
+              <td>\${createdDate}</td>
+              <td>\${lastUsed}</td>
+              <td>
+                <span class="badge \${isActive ? 'badge-success' : 'badge-neutral'}">
+                  \${isActive ? 'Active' : 'Inactive'}
+                </span>
+              </td>
+              <td>
+                <button class="btn btn-ghost btn-small text-danger" onclick="deleteKey('\${key.keyId}', '\${key.keyName}')">
+                  ${MODERN_ICONS.trash}
+                </button>
+              </td>
+            </tr>
+          \`;
+        }).join('');
+      }
+      
+      // Toggle key visibility
+      function toggleKeyVisibility(keyId) {
+        const keyElement = document.getElementById(\`key-\${keyId}\`);
+        keyElement.classList.toggle('key-hidden');
+      }
+      
+      // Copy key
+      async function copyKey(apiKey) {
+        try {
+          await navigator.clipboard.writeText(apiKey);
+          // Show success feedback
+          const btn = event.currentTarget;
+          const originalHTML = btn.innerHTML;
+          btn.innerHTML = '${MODERN_ICONS.check}';
+          btn.style.color = 'var(--brand-success)';
+          setTimeout(() => {
+            btn.innerHTML = originalHTML;
+            btn.style.color = '';
+          }, 2000);
+        } catch (error) {
+          alert('Failed to copy API key');
+        }
+      }
+      
+      // Show create key modal
+      function showCreateKeyModal() {
+        document.getElementById('create-key-modal').classList.add('active');
+      }
+      
+      // Hide create key modal
+      function hideCreateKeyModal() {
+        document.getElementById('create-key-modal').classList.remove('active');
+        document.getElementById('keyName').value = '';
+      }
+      
+      // Handle create key
+      async function handleCreateKey(event) {
+        event.preventDefault();
+        
+        const keyName = document.getElementById('keyName').value;
+        const email = localStorage.getItem('userEmail');
+        
+        try {
+          const response = await fetch('/user-keys', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ keyName, email })
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            hideCreateKeyModal();
+            showKeyCreatedModal(data.apiKey);
+            loadApiKeys();
+          } else {
+            const error = await response.json();
+            alert(error.error || 'Failed to create API key');
+          }
+        } catch (error) {
+          alert('Network error. Please try again.');
+        }
+      }
+      
+      // Show key created modal
+      function showKeyCreatedModal(apiKey) {
+        document.getElementById('newApiKey').value = apiKey;
+        document.getElementById('key-created-modal').classList.add('active');
+      }
+      
+      // Hide key created modal
+      function hideKeyCreatedModal() {
+        document.getElementById('key-created-modal').classList.remove('active');
+      }
+      
+      // Copy new API key
+      async function copyApiKey() {
+        const apiKey = document.getElementById('newApiKey').value;
+        try {
+          await navigator.clipboard.writeText(apiKey);
+          const btn = event.currentTarget;
+          const originalText = btn.innerHTML;
+          btn.innerHTML = '${MODERN_ICONS.check} Copied!';
+          btn.classList.add('btn-success');
+          btn.classList.remove('btn-secondary');
+          
+          setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.classList.remove('btn-success');
+            btn.classList.add('btn-secondary');
+          }, 2000);
+        } catch (error) {
+          alert('Failed to copy API key');
+        }
+      }
+      
+      // Delete key
+      async function deleteKey(keyId, keyName) {
+        if (!confirm(\`Are you sure you want to delete "\${keyName}"?\`)) return;
+        
+        const email = localStorage.getItem('userEmail');
+        
+        try {
+          const response = await fetch('/user-keys', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ keyId, email })
+          });
+          
+          if (response.ok) {
+            loadApiKeys();
+          } else {
+            alert('Failed to delete API key');
+          }
+        } catch (error) {
+          alert('Network error. Please try again.');
+        }
+      }
+      
+      // Initialize
+      document.addEventListener('DOMContentLoaded', () => {
+        const userEmail = localStorage.getItem('userEmail');
+        const userName = localStorage.getItem('userName');
+        
+        // Update user info in navigation
+        if (userEmail && userName) {
+          document.querySelectorAll('.profile-email').forEach(el => el.textContent = userEmail);
+          document.querySelectorAll('.profile-name').forEach(el => el.textContent = userName);
+          
+          const initials = userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+          document.querySelectorAll('.profile-avatar').forEach(el => el.textContent = initials);
         }
         
-        // Copy key to clipboard
-        window.copyKey = function(key) {
-            navigator.clipboard.writeText(key).then(() => {
-                alert('API key copied to clipboard!');
-            }).catch(() => {
-                // Fallback for older browsers
-                const textarea = document.createElement('textarea');
-                textarea.value = key;
-                document.body.appendChild(textarea);
-                textarea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textarea);
-                alert('API key copied to clipboard!');
-            });
-        }
-        
-        // Delete key
-        window.deleteKey = async function(index) {
-            if (confirm('Are you sure you want to delete this API key?')) {
-                const keyToDelete = apiKeys[index];
-                
-                try {
-                    // Call backend to delete the key (use keyId instead of id)
-                    const response = await fetch('/delete-key/' + keyToDelete.keyId + '?email=' + encodeURIComponent(localStorage.getItem('userEmail')), {
-                        method: 'DELETE'
-                    });
-                    
-                    if (response.ok) {
-                        // Remove from local array and update UI
-                        apiKeys.splice(index, 1);
-                        updateKeysList();
-                    } else {
-                        const error = await response.json();
-                        alert('Error deleting API key: ' + (error.error || 'Unknown error'));
-                    }
-                } catch (error) {
-                    alert('Network error. Please try again.');
-                }
-            }
-        }
+        loadApiKeys();
+      });
     </script>
 </body>
 </html>`;
