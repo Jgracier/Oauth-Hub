@@ -143,6 +143,15 @@ export function getModernLayout(activePage, pageTitle, content, userEmail = '', 
 
 export function getModernScripts() {
   return `
+    <!-- IMMEDIATE THEME INITIALIZATION - Prevents flash -->
+    <script>
+      // Apply theme IMMEDIATELY before page renders to prevent flash
+      (function() {
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+      })();
+    </script>
+    
     <script>
       // Profile Picture Management
       async function loadProfilePicture() {

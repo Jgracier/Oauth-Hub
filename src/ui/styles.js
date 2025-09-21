@@ -2,6 +2,16 @@
 // 🎨 MODERN DESIGN SYSTEM - Tesla/Apple Inspired
 // =============================================================================
 
+// Global theme prevention script - prevents dark mode flash
+export const THEME_PREVENTION_SCRIPT = `
+<script>
+  // PREVENT DARK MODE FLASH - Apply theme IMMEDIATELY before any content renders
+  (function() {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  })();
+</script>`;
+
 export const MODERN_CSS = `
   /* Import modern fonts */
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');

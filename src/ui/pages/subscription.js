@@ -3,7 +3,7 @@
  * Modern UI for managing subscriptions, billing, and plan upgrades
  */
 
-import { MODERN_CSS, MODERN_ICONS } from '../styles.js';
+import { MODERN_CSS, MODERN_ICONS, THEME_PREVENTION_SCRIPT } from '../styles.js';
 import { getModernLayout, getModernScripts } from '../navigation.js';
 import { getClientAuthScript } from '../../lib/auth/client-auth.js';
 
@@ -15,6 +15,9 @@ export function getModernSubscriptionPage() {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Subscription - OAuth Hub</title>
+    
+    ${THEME_PREVENTION_SCRIPT}
+    
     <style>${MODERN_CSS}</style>
     <style>
         .subscription-container {

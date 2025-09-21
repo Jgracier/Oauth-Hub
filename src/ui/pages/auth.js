@@ -2,7 +2,7 @@
 // 🔐 ULTRA-MODERN AUTHENTICATION PAGE - ClickUp/Deepgram inspired
 // =============================================================================
 
-import { MODERN_CSS, MODERN_ICONS } from '../styles.js';
+import { MODERN_CSS, MODERN_ICONS, THEME_PREVENTION_SCRIPT } from '../styles.js';
 
 export function getModernAuthPage() {
   return `<!DOCTYPE html>
@@ -698,9 +698,11 @@ export function getModernAuthPage() {
     </div>
     
     <script>
-      // Initialize theme
-      const savedTheme = localStorage.getItem('theme') || 'light';
-      document.documentElement.setAttribute('data-theme', savedTheme);
+      // PREVENT DARK MODE FLASH - Apply theme IMMEDIATELY before any content renders
+      (function() {
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+      })();
       
       // Theme toggle
       function toggleTheme() {
