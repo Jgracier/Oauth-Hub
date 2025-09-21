@@ -42,22 +42,52 @@ export class AppHandler extends BaseHandler {
   async saveApp(request, corsHeaders) {
     try {
       const appData = await request.json();
-      const { userEmail, platform, name, clientId, clientSecret, scopes, redirectUri } = appData;
+      const { userEmail, platform, name, clientId, clientSecret, autoDetect = true, manualScopes, redirectUri } = appData;
       const email = userEmail; // For backward compatibility
       
       if (!email || !platform || !clientId || !clientSecret) {
         throw new Error('Email, platform, clientId, and clientSecret are required');
       }
 
+      let finalScopes = [];
+      let appName = name || `${platform.charAt(0).toUpperCase() + platform.slice(1)} App`;
+      let introspectionResult = null;
+
+      if (autoDetect) {
+        try {
+          // Import introspection service
+          const { introspectApp } = await import('../../core/platforms/oauth/app-introspection.js');
+          
+          // Automatically detect app configuration and scopes
+          introspectionResult = await introspectApp(platform, clientId, clientSecret);
+          
+          finalScopes = introspectionResult.finalScopes || [];
+          appName = introspectionResult.appName || appName;
+          
+        } catch (introspectionError) {
+          console.warn(`Auto-detection failed for ${platform}:`, introspectionError.message);
+          
+          // Fallback to platform defaults if auto-detection fails
+          const { PLATFORMS } = await import('../../core/platforms/index.js');
+          const platformConfig = PLATFORMS[platform.toLowerCase()];
+          finalScopes = platformConfig?.requiredScopes || [];
+        }
+      } else {
+        // Use manually provided scopes
+        finalScopes = manualScopes || [];
+      }
+
       // Create app record
       const appRecord = {
         userEmail: email,
         platform: platform,
-        name: name || platform.charAt(0).toUpperCase() + platform.slice(1),
+        name: appName,
         clientId: clientId,
         clientSecret: clientSecret,
-        scopes: scopes || [],
+        scopes: finalScopes,
         redirectUri: redirectUri,
+        autoDetected: autoDetect,
+        introspectionData: introspectionResult,
         createdAt: new Date().toISOString()
       };
 
@@ -66,12 +96,53 @@ export class AppHandler extends BaseHandler {
       await this.env.OAUTH_TOKENS.put(keyName, JSON.stringify(appRecord));
 
       return this.successResponse({ 
-        message: 'OAuth app saved successfully',
-        app: appRecord
+        message: 'OAuth app connected successfully',
+        app: appRecord,
+        autoDetected: autoDetect,
+        detectedScopes: finalScopes,
+        introspectionResult: introspectionResult
       }, corsHeaders);
 
     } catch (error) {
       return this.handleError(error, 'Save app', corsHeaders);
+    }
+  }
+
+  /**
+   * Test app credentials and fetch scopes
+   */
+  async testAppCredentials(request, corsHeaders) {
+    try {
+      const { platform, clientId, clientSecret } = await request.json();
+      
+      if (!platform || !clientId || !clientSecret) {
+        throw new Error('Platform, clientId, and clientSecret are required');
+      }
+
+      // Import introspection service
+      const { introspectApp } = await import('../../core/platforms/oauth/app-introspection.js');
+      
+      // Test credentials and fetch app configuration
+      const result = await introspectApp(platform, clientId, clientSecret);
+      
+      return this.successResponse({
+        success: true,
+        platform: platform,
+        appName: result.appName,
+        detectedScopes: result.finalScopes || [],
+        requiredScopes: result.requiredScopes || [],
+        optionalScopes: result.optionalScopes || [],
+        verified: result.verified,
+        note: result.note,
+        credentialsValid: true
+      }, corsHeaders);
+
+    } catch (error) {
+      return this.errorResponse({
+        success: false,
+        error: error.message,
+        credentialsValid: false
+      }, 400, corsHeaders);
     }
   }
 
