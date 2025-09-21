@@ -324,45 +324,65 @@ export const MODERN_CSS = `
     margin-left: var(--sidebar-width-collapsed);
   }
   
-  /* Hide sidebar text immediately when globally collapsed */
+  /* Hide sidebar text immediately when globally collapsed - inline expansion */
   .sidebar-collapsed .nav-item-text,
   .sidebar-collapsed .sidebar-logo span,
   .sidebar-collapsed .profile-info,
   .sidebar-collapsed .profile-menu .nav-item-icon {
     opacity: 0;
     width: 0;
+    margin-left: 0;
+    margin-right: 0;
     overflow: hidden;
-    transition: opacity var(--transition-base), width var(--transition-base);
+    white-space: nowrap;
+    transition: opacity var(--transition-base), width var(--transition-base), margin var(--transition-base);
+  }
+  
+  /* When expanded, text appears inline to the right of icons */
+  .nav-item-text,
+  .sidebar-logo span,
+  .profile-info {
+    opacity: 1;
+    width: auto;
+    margin-left: var(--space-3); /* Space between icon and text */
+    transition: opacity var(--transition-base), width var(--transition-base), margin var(--transition-base);
   }
   
   /* Fix sidebar layout when globally collapsed */
   .sidebar-collapsed .nav-item {
     position: relative;
-    justify-content: center; /* Center icons */
-    padding: var(--space-4) var(--space-3); /* Proper vertical spacing */
+    justify-content: flex-start; /* Keep icons in same horizontal position */
+    padding: var(--space-4) var(--space-5); /* Fixed padding - icons stay in place */
+  }
+  
+  .sidebar-collapsed .nav-item-icon {
+    min-width: 24px; /* Fixed icon width */
+    margin-right: 0; /* No margin when collapsed */
   }
   
   .sidebar-collapsed .profile-menu {
-    justify-content: center; /* Center profile avatar */
-    padding: var(--space-4); /* Generous padding for profile */
+    justify-content: flex-start; /* Keep profile avatar in same position */
+    padding: var(--space-4) var(--space-5); /* Consistent with nav items */
   }
   
   .sidebar-collapsed .sidebar-header {
-    padding: var(--space-4); /* Proper header padding */
+    padding: var(--space-5); /* Consistent header padding */
     display: flex;
-    justify-content: space-between; /* Space between logo and toggle */
+    justify-content: flex-start; /* Keep logo in same position */
     align-items: center;
+    position: relative;
   }
   
   .sidebar-collapsed .sidebar-logo {
-    justify-content: center; /* Center just the logo icon */
-    flex: 1;
+    justify-content: flex-start; /* Keep logo icon in same position */
+    margin-right: 0;
   }
   
   .sidebar-collapsed .sidebar-toggle {
-    /* Keep toggle arrow in header, positioned to the right */
-    flex-shrink: 0;
-    margin-left: 0;
+    position: absolute;
+    right: var(--space-4); /* Fixed position in header */
+    top: 50%;
+    transform: translateY(-50%);
   }
   
   /* Show tooltips when globally collapsed */
@@ -489,7 +509,7 @@ export const MODERN_CSS = `
   .nav-item {
     display: flex;
     align-items: center;
-    gap: var(--space-3);
+    gap: 0; /* No gap - use margin for better control */
     padding: var(--space-3) var(--space-4);
     border-radius: var(--radius-md);
     text-decoration: none;
@@ -498,6 +518,14 @@ export const MODERN_CSS = `
     transition: all var(--transition-fast);
     position: relative;
     overflow: hidden;
+  }
+  
+  .nav-item-icon {
+    min-width: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0; /* Icon stays same size */
   }
 
   .nav-item:hover {
