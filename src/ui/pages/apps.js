@@ -1096,7 +1096,31 @@ export function getModernAppsPage() {
           // Hide status section when no platform selected
           statusSection.style.display = 'none';
         }
+        
+        // Check if form is ready
+        checkFormReady();
       }
+      
+      // Check if form is ready to submit
+      function checkFormReady() {
+        const platform = document.getElementById('platform').value;
+        const clientId = document.getElementById('clientId').value;
+        const clientSecret = document.getElementById('clientSecret').value;
+        const addBtn = document.getElementById('add-app-btn');
+        
+        // Enable button when all required fields are filled
+        const isReady = platform && clientId && clientSecret;
+        addBtn.disabled = !isReady;
+        
+        if (isReady) {
+          addBtn.innerHTML = '${MODERN_ICONS.plus} <span>Add App</span>';
+        } else {
+          addBtn.innerHTML = '${MODERN_ICONS.plus} <span>Add App</span>';
+        }
+      }
+      
+      // Alias for backward compatibility
+      const checkCredentialsEntered = checkFormReady;
       
       
       // Initialize scope selector
@@ -1374,12 +1398,14 @@ export function getModernAppsPage() {
           document.querySelectorAll('.profile-avatar').forEach(el => el.textContent = initials);
         }
         
-        // Add event listeners for credential checking
+        // Add event listeners for form validation
+        const platformSelect = document.getElementById('platform');
         const clientIdInput = document.getElementById('clientId');
         const clientSecretInput = document.getElementById('clientSecret');
         
-        if (clientIdInput) clientIdInput.addEventListener('input', checkCredentialsEntered);
-        if (clientSecretInput) clientSecretInput.addEventListener('input', checkCredentialsEntered);
+        if (platformSelect) platformSelect.addEventListener('change', checkFormReady);
+        if (clientIdInput) clientIdInput.addEventListener('input', checkFormReady);
+        if (clientSecretInput) clientSecretInput.addEventListener('input', checkFormReady);
         
         loadApps();
       });
