@@ -928,7 +928,6 @@ export function getModernAppsPage() {
       
       let apps = [];
       let editingApp = null;
-      let selectedScopes = new Set();
       
       // Load apps
         async function loadApps() {
@@ -1047,13 +1046,22 @@ export function getModernAppsPage() {
       // Show add app modal
       function showAddAppModal() {
         editingApp = null;
-        selectedScopes = new Set();
         document.getElementById('modal-title').textContent = 'Add OAuth App';
-        document.getElementById('save-btn-text').textContent = 'Add App';
         document.getElementById('app-form').reset();
         
-        // Hide scopes section initially
-        document.getElementById('scopes-section').style.display = 'none';
+        // Hide status section initially
+        document.getElementById('status-section').style.display = 'none';
+        
+        // Reset button state
+        const addBtn = document.getElementById('add-app-btn');
+        addBtn.disabled = true;
+        addBtn.innerHTML = '${MODERN_ICONS.plus} <span id="add-btn-text">Add App</span>';
+        
+        // Clear any previous status
+        const statusDisplay = document.getElementById('connection-status');
+        if (statusDisplay) {
+          statusDisplay.innerHTML = '';
+        }
         
         document.getElementById('app-modal').classList.add('active');
       }
@@ -1081,7 +1089,6 @@ export function getModernAppsPage() {
         
         updatePlatformInfo();
         document.getElementById('app-modal').classList.add('active');
-        initializeScopeSelector();
       }
       
       // Update platform info
@@ -1123,7 +1130,7 @@ export function getModernAppsPage() {
       const checkCredentialsEntered = checkFormReady;
       
       
-      // Initialize scope selector
+      // Legacy scope selector (no longer used - auto-detection handles this)
       function initializeScopeSelector() {
         const container = document.getElementById('scope-selector');
         const platformKey = document.getElementById('platform').value;
