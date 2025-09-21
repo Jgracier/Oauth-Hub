@@ -153,9 +153,15 @@ export function getModernScripts() {
     </script>
     
     <script>
-      // Profile Picture Management
+      // Profile Picture Management - Enhanced with caching
       async function loadProfilePicture() {
         try {
+          // Check if we already have cached data and it's fresh
+          const globalState = window.OAUTH_HUB_STATE;
+          if (globalState?.profilePicture && globalState.initialized) {
+            return; // Already loaded and applied
+          }
+          
           const userEmail = localStorage.getItem('userEmail');
           if (!userEmail) return;
           
@@ -180,11 +186,24 @@ export function getModernScripts() {
                 profilePicture = user.githubProfile.avatar_url;
               }
               
+              // Cache the profile picture for instant loading on other pages
               if (profilePicture) {
+                sessionStorage.setItem('profilePicture', profilePicture);
                 const avatarElements = document.querySelectorAll('.profile-avatar');
                 avatarElements.forEach(el => {
                   el.innerHTML = \`<img src="\${profilePicture}" alt="Profile" style="width: 100%; height: 100%; border-radius: inherit; object-fit: cover;">\`;
                 });
+              } else {
+                // Cache initials if no profile picture
+                const userName = localStorage.getItem('userName') || 'User';
+                const initials = userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+                sessionStorage.setItem('userInitials', initials);
+              }
+              
+              // Update global state
+              if (globalState) {
+                globalState.profilePicture = profilePicture;
+                globalState.initialized = true;
               }
             }
           }
@@ -220,7 +239,7 @@ export function getModernScripts() {
         if (headerThemeIcon) headerThemeIcon.innerHTML = icon;
       }
       
-      // Sidebar Management
+      // Sidebar Management - Enhanced with global state
       function initSidebar() {
         const sidebar = document.getElementById('sidebar');
         const sidebarToggle = document.getElementById('sidebar-toggle');
@@ -228,9 +247,11 @@ export function getModernScripts() {
         const profileMenu = document.getElementById('profile-menu');
         const profileDropdown = document.getElementById('profile-dropdown');
         
-        // Load saved state
-        const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
-        if (isCollapsed) {
+        // Use global state if available, otherwise load from localStorage
+        const globalState = window.OAUTH_HUB_STATE;
+        const isCollapsed = globalState?.sidebarCollapsed || localStorage.getItem('sidebarCollapsed') === 'true';
+        
+        if (isCollapsed && sidebar) {
           sidebar.classList.add('collapsed');
           updateToggleIcon(true);
         }
@@ -239,8 +260,24 @@ export function getModernScripts() {
         sidebarToggle?.addEventListener('click', () => {
           const isCurrentlyCollapsed = sidebar.classList.contains('collapsed');
           sidebar.classList.toggle('collapsed');
-          localStorage.setItem('sidebarCollapsed', !isCurrentlyCollapsed);
-          updateToggleIcon(!isCurrentlyCollapsed);
+          
+          // Update both localStorage and global state
+          const newCollapsedState = !isCurrentlyCollapsed;
+          localStorage.setItem('sidebarCollapsed', newCollapsedState);
+          
+          // Update global state for other pages
+          if (window.OAUTH_HUB_STATE) {
+            window.OAUTH_HUB_STATE.sidebarCollapsed = newCollapsedState;
+          }
+          
+          // Update global CSS class for immediate effect on future pages
+          if (newCollapsedState) {
+            document.documentElement.classList.add('sidebar-collapsed');
+          } else {
+            document.documentElement.classList.remove('sidebar-collapsed');
+          }
+          
+          updateToggleIcon(newCollapsedState);
         });
         
         // Mobile menu toggle

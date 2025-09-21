@@ -2,15 +2,66 @@
 // 🎨 MODERN DESIGN SYSTEM - Tesla/Apple Inspired
 // =============================================================================
 
-// Global theme prevention script - prevents dark mode flash
-export const THEME_PREVENTION_SCRIPT = `
+// Global initialization script - prevents flashing and jumping
+export const GLOBAL_INIT_SCRIPT = `
 <script>
-  // PREVENT DARK MODE FLASH - Apply theme IMMEDIATELY before any content renders
+  // GLOBAL STATE MANAGEMENT - Prevents flashing, jumping, and reloading
   (function() {
+    // 1. PREVENT DARK MODE FLASH - Apply theme IMMEDIATELY
     const savedTheme = localStorage.getItem('theme') || 'light';
     document.documentElement.setAttribute('data-theme', savedTheme);
+    
+    // 2. PREVENT SIDEBAR JUMP - Apply sidebar state immediately
+    const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+    if (isCollapsed) {
+      document.documentElement.classList.add('sidebar-collapsed');
+    }
+    
+    // 3. CACHE USER DATA - Store in sessionStorage for instant loading
+    const cachedProfilePic = sessionStorage.getItem('profilePicture');
+    const cachedUserName = localStorage.getItem('userName');
+    const cachedUserEmail = localStorage.getItem('userEmail');
+    const cachedInitials = sessionStorage.getItem('userInitials');
+    
+    // Store global user state for instant access
+    window.OAUTH_HUB_STATE = {
+      theme: savedTheme,
+      sidebarCollapsed: isCollapsed,
+      profilePicture: cachedProfilePic,
+      userName: cachedUserName,
+      userEmail: cachedUserEmail,
+      userInitials: cachedInitials,
+      initialized: false
+    };
+    
+    // 4. APPLY PROFILE PICTURE IMMEDIATELY when DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+      // Apply cached profile picture immediately
+      if (cachedProfilePic) {
+        const avatarElements = document.querySelectorAll('.profile-avatar');
+        avatarElements.forEach(el => {
+          el.innerHTML = \`<img src="\${cachedProfilePic}" alt="Profile" style="width: 100%; height: 100%; border-radius: inherit; object-fit: cover;">\`;
+        });
+      } else if (cachedInitials) {
+        const avatarElements = document.querySelectorAll('.profile-avatar');
+        avatarElements.forEach(el => {
+          el.textContent = cachedInitials;
+        });
+      }
+      
+      // Apply cached user info immediately
+      if (cachedUserName) {
+        document.querySelectorAll('.profile-name').forEach(el => el.textContent = cachedUserName);
+      }
+      if (cachedUserEmail) {
+        document.querySelectorAll('.profile-email').forEach(el => el.textContent = cachedUserEmail);
+      }
+    });
   })();
 </script>`;
+
+// Backward compatibility
+export const THEME_PREVENTION_SCRIPT = GLOBAL_INIT_SCRIPT;
 
 export const MODERN_CSS = `
   /* Import modern fonts */
@@ -173,6 +224,15 @@ export const MODERN_CSS = `
     flex-direction: column;
     transition: width var(--transition-base);
     z-index: var(--z-fixed);
+  }
+  
+  /* Global sidebar collapsed state - prevents jumping on page load */
+  .sidebar-collapsed .sidebar {
+    width: var(--sidebar-width-collapsed);
+  }
+  
+  .sidebar-collapsed .main-wrapper {
+    margin-left: var(--sidebar-width-collapsed);
   }
 
   .sidebar.collapsed {
