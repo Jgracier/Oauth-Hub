@@ -4,7 +4,7 @@
 
 import { MODERN_CSS, MODERN_ICONS, THEME_PREVENTION_SCRIPT } from '../styles.js';
 import { getModernLayout, getModernScripts } from '../navigation.js';
-import { getClientAuthScript } from '../../lib/auth/client-auth.js';
+import { getAuthManagerScript } from '../../lib/auth/auth-manager.js';
 
 export function getModernDocsPage() {
   const content = `
@@ -1605,7 +1605,7 @@ public class OAuthHubClient
 <body>
     ${getModernLayout('docs', 'Documentation', content)}
     
-    ${getClientAuthScript()}
+    ${getAuthManagerScript()}
     ${getModernScripts()}
     
     <script>

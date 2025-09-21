@@ -3,6 +3,7 @@
 // =============================================================================
 
 import { MODERN_CSS, MODERN_ICONS, THEME_PREVENTION_SCRIPT } from '../styles.js';
+import { getAuthManagerScript } from '../../lib/auth/auth-manager.js';
 
 export function getModernAuthPage() {
   return `<!DOCTYPE html>
@@ -886,11 +887,11 @@ export function getModernAuthPage() {
         return false;
       }
       
-      // Check if already logged in
-      if (localStorage.getItem('userEmail')) {
-                    window.location.href = '/dashboard';
-                }
+      // Authentication is now handled by AuthManager
+      
     </script>
+    
+    ${getAuthManagerScript()}
 </body>
 </html>`;
 }

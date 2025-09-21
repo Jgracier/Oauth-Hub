@@ -4,7 +4,7 @@
 
 import { MODERN_CSS, MODERN_ICONS, THEME_PREVENTION_SCRIPT } from '../styles.js';
 import { getModernLayout, getModernScripts } from '../navigation.js';
-import { getClientAuthScript } from '../../lib/auth/client-auth.js';
+import { getAuthManagerScript } from '../../lib/auth/auth-manager.js';
 
 export function getModernProfilePage() {
   const content = `
@@ -216,7 +216,7 @@ export function getModernProfilePage() {
 <body>
     ${getModernLayout('profile', 'Profile', content)}
     
-    ${getClientAuthScript()}
+    ${getAuthManagerScript()}
     ${getModernScripts()}
     
     <script>

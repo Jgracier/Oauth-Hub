@@ -4,14 +4,18 @@
 
 /**
  * Client-side authentication check for protected pages
- * Uses server session validation instead of localStorage
+ * Uses server session validation with global state management
  */
 export function getClientAuthScript() {
   return `
     <script>
       (async function() {
-        // Check server session instead of localStorage
+        // Prevent multiple auth checks from running simultaneously
+        if (window.OAUTH_HUB_AUTH_CHECKING) return;
+        window.OAUTH_HUB_AUTH_CHECKING = true;
+        
         try {
+          // Check server session
           const response = await fetch('/check-session', {
             method: 'GET',
             credentials: 'include'
@@ -25,16 +29,27 @@ export function getClientAuthScript() {
               localStorage.setItem('userEmail', sessionData.user.email);
               localStorage.setItem('userName', sessionData.user.name);
               
+              // Update global state
+              if (window.OAUTH_HUB_STATE) {
+                window.OAUTH_HUB_STATE.userEmail = sessionData.user.email;
+                window.OAUTH_HUB_STATE.userName = sessionData.user.name;
+              }
+              
               // Display user info
               const userEmailElement = document.getElementById('user-email');
               if (userEmailElement) {
                 userEmailElement.textContent = sessionData.user.email;
               }
+              
+              window.OAUTH_HUB_AUTH_CHECKING = false;
               return; // Stay on current page
             }
           }
           
-          // Not authenticated - redirect to auth page if not already there
+          // Not authenticated - clear data and redirect if not on auth page
+          localStorage.clear();
+          sessionStorage.clear();
+          
           if (window.location.pathname !== '/auth' && 
               window.location.pathname !== '/') {
             window.location.href = '/auth';
@@ -43,12 +58,17 @@ export function getClientAuthScript() {
           
         } catch (error) {
           console.error('Session check failed:', error);
-          // On error, redirect to auth page if not already there
+          // On error, clear data and redirect to auth page if not already there
+          localStorage.clear();
+          sessionStorage.clear();
+          
           if (window.location.pathname !== '/auth' && 
               window.location.pathname !== '/') {
             window.location.href = '/auth';
           }
         }
+        
+        window.OAUTH_HUB_AUTH_CHECKING = false;
       })();
     </script>
   `;

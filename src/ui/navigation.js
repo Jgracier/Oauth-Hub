@@ -337,26 +337,31 @@ export function getModernScripts() {
         }
       });
       
-      // Logout function
+      // Logout function - Use AuthManager if available
       async function logout() {
-        try {
-          await fetch('/logout', { 
-            method: 'POST',
-            credentials: 'include'
-          });
-        } catch (error) {
-          console.error('Logout request failed:', error);
-        } finally {
-          // Clear all cached data
-          localStorage.clear();
-          sessionStorage.clear();
-          
-          // Clear global state
-          if (window.OAUTH_HUB_STATE) {
-            window.OAUTH_HUB_STATE = null;
+        if (window.AuthManager) {
+          await window.AuthManager.logout();
+        } else {
+          // Fallback logout
+          try {
+            await fetch('/logout', { 
+              method: 'POST',
+              credentials: 'include'
+            });
+          } catch (error) {
+            console.error('Logout request failed:', error);
+          } finally {
+            // Clear all cached data
+            localStorage.clear();
+            sessionStorage.clear();
+            
+            // Clear global state
+            if (window.OAUTH_HUB_STATE) {
+              window.OAUTH_HUB_STATE = null;
+            }
+            
+            window.location.href = '/auth';
           }
-          
-          window.location.href = '/auth';
         }
       }
     </script>
