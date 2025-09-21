@@ -324,6 +324,36 @@ export const MODERN_CSS = `
     margin-left: var(--sidebar-width-collapsed);
   }
   
+  /* Hide sidebar text immediately when globally collapsed */
+  .sidebar-collapsed .nav-item-text,
+  .sidebar-collapsed .sidebar-logo span {
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
+    transition: opacity var(--transition-base), width var(--transition-base);
+  }
+  
+  /* Show tooltips when globally collapsed */
+  .sidebar-collapsed .nav-item {
+    position: relative;
+  }
+  
+  .sidebar-collapsed .nav-item:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: calc(100% + var(--space-2));
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--bg-inverse);
+    color: var(--text-inverse);
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
+    white-space: nowrap;
+    z-index: var(--z-tooltip);
+    pointer-events: none;
+  }
+  
   /* Global profile data - prevents blinking on page load */
   
   /* Profile pictures - only when has-profile-pic class is present */
