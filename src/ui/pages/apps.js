@@ -78,16 +78,21 @@ export function getModernAppsPage() {
               </div>
                 </div>
                 
+                <div class="form-group" id="scopes-section" style="display: none;">
+              <label class="form-label">Scopes</label>
+              <div id="scope-selector" class="scope-container">
+                <p class="text-muted text-small">Select a platform to configure scopes</p>
+                    </div>
+                </div>
           </form>
                 </div>
                 
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" onclick="hideAppModal()">Cancel</button>
-          <button type="submit" class="btn btn-primary" form="app-form" id="add-app-btn">
-            ${MODERN_ICONS.plus}
-            <span id="add-btn-text">Add App</span>
-          </button>
-        </div>
+          <button type="submit" class="btn btn-primary" form="app-form">
+            <span id="save-btn-text">Add App</span>
+                    </button>
+                </div>
         </div>
     </div>
   `;
@@ -415,6 +420,11 @@ export function getModernAppsPage() {
         border-top: 1px solid var(--border-light);
       }
       
+      /* Scope Selector */
+      .scope-selector {
+        max-height: 300px;
+        overflow-y: auto;
+      }
       
       .scope-group {
         margin-bottom: var(--space-3);
@@ -872,6 +882,7 @@ export function getModernAppsPage() {
       
       let apps = [];
       let editingApp = null;
+      let selectedScopes = new Set();
       
       // Load apps
         async function loadApps() {
@@ -990,13 +1001,13 @@ export function getModernAppsPage() {
       // Show add app modal
       function showAddAppModal() {
         editingApp = null;
+        selectedScopes = new Set();
         document.getElementById('modal-title').textContent = 'Add OAuth App';
+        document.getElementById('save-btn-text').textContent = 'Add App';
         document.getElementById('app-form').reset();
         
-        // Reset button state
-        const addBtn = document.getElementById('add-app-btn');
-        addBtn.disabled = true;
-        addBtn.innerHTML = '${MODERN_ICONS.plus} <span id="add-btn-text">Add App</span>';
+        // Hide scopes section initially
+        document.getElementById('scopes-section').style.display = 'none';
         
         document.getElementById('app-modal').classList.add('active');
       }
@@ -1024,37 +1035,26 @@ export function getModernAppsPage() {
         
         updatePlatformInfo();
         document.getElementById('app-modal').classList.add('active');
+        initializeScopeSelector();
       }
       
       // Update platform info
       function updatePlatformInfo() {
-        // Check if form is ready when platform changes
-        checkFormReady();
-      }
-      
-      // Check if form is ready to submit
-      function checkFormReady() {
-        const platform = document.getElementById('platform').value;
-        const clientId = document.getElementById('clientId').value;
-        const clientSecret = document.getElementById('clientSecret').value;
-        const addBtn = document.getElementById('add-app-btn');
+        const platformKey = document.getElementById('platform').value;
+        const scopesSection = document.getElementById('scopes-section');
         
-        // Enable button when all required fields are filled
-        const isReady = platform && clientId && clientSecret;
-        addBtn.disabled = !isReady;
-        
-        if (isReady) {
-          addBtn.innerHTML = '${MODERN_ICONS.plus} <span>Add App</span>';
+        if (platformKey) {
+          // Show scopes section and initialize scope selector
+          scopesSection.style.display = 'block';
+          initializeScopeSelector();
         } else {
-          addBtn.innerHTML = '${MODERN_ICONS.plus} <span>Add App</span>';
+          // Hide scopes section when no platform selected
+          scopesSection.style.display = 'none';
         }
       }
       
-      // Alias for backward compatibility
-      const checkCredentialsEntered = checkFormReady;
       
-      
-      // Legacy scope selector (no longer used - auto-detection handles this)
+      // Initialize scope selector
       function initializeScopeSelector() {
         const container = document.getElementById('scope-selector');
         const platformKey = document.getElementById('platform').value;
@@ -1199,62 +1199,43 @@ export function getModernAppsPage() {
         }
       }
       
-      // Handle add app - auto-detects scopes and adds in one step
+      // Handle save app
       async function handleSaveApp(event) {
         event.preventDefault();
         
         const formData = new FormData(event.target);
         const email = localStorage.getItem('userEmail');
-        const platformKey = formData.get('platform');
-        const clientId = formData.get('clientId');
-        const clientSecret = formData.get('clientSecret');
-        
-        if (!platformKey || !clientId || !clientSecret) {
-          alert('Please fill in all required fields');
-          return;
-        }
-        
-        const addBtn = document.getElementById('add-app-btn');
-        
-        // Show loading state
-        addBtn.disabled = true;
-        addBtn.innerHTML = '${MODERN_ICONS.loading} <span>Adding App...</span>';
-        
-        try {
-          // Auto-detect and save in one API call (silent background process)
-          const appData = {
-            platform: platformKey,
-            clientId: clientId,
-            clientSecret: clientSecret,
-            autoDetect: true, // This triggers scope auto-detection in the backend
-            userEmail: email
-          };
             
+            const platformKey = formData.get('platform');
+            const platform = PLATFORMS[platformKey];
+            const appData = {
+          platform: platformKey,
+          name: platform.displayName,
+          clientId: formData.get('clientId'),
+          clientSecret: formData.get('clientSecret'),
+          scopes: Array.from(selectedScopes),
+          userEmail: email
+            };
+            
+            try {
           const response = await fetch('/save-app', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(appData)
-          });
-          
-          const result = await response.json();
-          
-          if (result.success) {
-            // Silent success - just close modal and refresh
+                    });
+                    
+                    if (response.ok) {
             hideAppModal();
-            await loadApps();
-          } else {
-            // Show error briefly
-            alert('Failed to add app: ' + result.error);
-          }
-          
-        } catch (error) {
-          console.error('Error adding app:', error);
-          alert('Could not connect to platform. Please check your credentials.');
-        } finally {
-          // Reset button
-          addBtn.disabled = false;
-          addBtn.innerHTML = '${MODERN_ICONS.plus} <span>Add App</span>';
-        }
+                        await loadApps();
+                    } else {
+                    const error = await response.json();
+            console.error('Save app error:', error);
+            alert(error.error || 'Failed to save app');
+                    }
+                } catch (error) {
+                    console.error('Network error saving app:', error);
+                    alert('Network error. Please try again.');
+            }
       }
       
       // Delete app
@@ -1294,15 +1275,6 @@ export function getModernAppsPage() {
           const initials = userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
           document.querySelectorAll('.profile-avatar').forEach(el => el.textContent = initials);
         }
-        
-        // Add event listeners for form validation
-        const platformSelect = document.getElementById('platform');
-        const clientIdInput = document.getElementById('clientId');
-        const clientSecretInput = document.getElementById('clientSecret');
-        
-        if (platformSelect) platformSelect.addEventListener('change', checkFormReady);
-        if (clientIdInput) clientIdInput.addEventListener('input', checkFormReady);
-        if (clientSecretInput) clientSecretInput.addEventListener('input', checkFormReady);
         
         loadApps();
       });

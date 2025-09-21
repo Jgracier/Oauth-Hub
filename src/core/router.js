@@ -554,9 +554,6 @@ export class Router {
       if (path === '/save-app' && method === 'POST') {
         return await this.appHandler.saveApp(request, corsHeaders);
       }
-      if (path === '/test-app-credentials' && method === 'POST') {
-        return await this.appHandler.testAppCredentials(request, corsHeaders);
-      }
       if (path.startsWith('/delete-app/') && method === 'DELETE') {
         return await this.appHandler.deleteApp(request, corsHeaders);
       }
