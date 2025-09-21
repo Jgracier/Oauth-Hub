@@ -153,75 +153,7 @@ export function getModernScripts() {
     </script>
     
     <script>
-      // Profile Picture Management - Session-based caching (loads only once)
-      async function loadProfilePicture() {
-        try {
-          // Check if we already have valid cached data
-          const globalState = window.OAUTH_HUB_STATE;
-          const sessionCacheKey = 'profileDataLoaded';
-          const cacheTimestamp = sessionStorage.getItem('profileDataTimestamp');
-          const now = Date.now();
-          const cacheAge = now - (parseInt(cacheTimestamp) || 0);
-          const maxCacheAge = 5 * 60 * 1000; // 5 minutes
-          
-          // If data is cached and fresh, skip server call
-          if (sessionStorage.getItem(sessionCacheKey) === 'true' && cacheAge < maxCacheAge) {
-            return; // Already loaded this session and cache is fresh
-          }
-          
-          const userEmail = localStorage.getItem('userEmail');
-          if (!userEmail) return;
-          
-          // Only fetch from server once per session (or when cache expires)
-          const response = await fetch('/check-session', {
-            method: 'GET',
-            credentials: 'include'
-          });
-          
-          if (response.ok) {
-            const sessionData = await response.json();
-            if (sessionData.authenticated && sessionData.user) {
-              const user = sessionData.user;
-              
-              // Check for OAuth profile pictures
-              let profilePicture = null;
-              
-              // Priority: Google > GitHub > initials
-              if (user.googleProfile?.picture) {
-                profilePicture = user.googleProfile.picture;
-              } else if (user.githubProfile?.avatar_url) {
-                profilePicture = user.githubProfile.avatar_url;
-              }
-              
-              // Cache the profile picture for instant loading on other pages
-              if (profilePicture) {
-                sessionStorage.setItem('profilePicture', profilePicture);
-                const avatarElements = document.querySelectorAll('.profile-avatar');
-                avatarElements.forEach(el => {
-                  el.innerHTML = \`<img src="\${profilePicture}" alt="Profile" style="width: 100%; height: 100%; border-radius: inherit; object-fit: cover;">\`;
-                });
-              } else {
-                // Cache initials if no profile picture
-                const userName = localStorage.getItem('userName') || 'User';
-                const initials = userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-                sessionStorage.setItem('userInitials', initials);
-              }
-              
-              // Mark as loaded for this session
-              sessionStorage.setItem(sessionCacheKey, 'true');
-              sessionStorage.setItem('profileDataTimestamp', now.toString());
-              
-              // Update global state
-              if (globalState) {
-                globalState.profilePicture = profilePicture;
-                globalState.initialized = true;
-              }
-            }
-          }
-        } catch (error) {
-          console.log('Could not load profile picture:', error);
-        }
-      }
+      // Profile management is now handled by AuthManager and global state
       
       // Theme Management
       function initTheme() {
@@ -325,16 +257,7 @@ export function getModernScripts() {
         initTheme();
         initSidebar();
         
-        // Only load profile picture if not already cached in this session
-        const sessionCacheKey = 'profileDataLoaded';
-        const cacheTimestamp = sessionStorage.getItem('profileDataTimestamp');
-        const now = Date.now();
-        const cacheAge = now - (parseInt(cacheTimestamp) || 0);
-        const maxCacheAge = 5 * 60 * 1000; // 5 minutes
-        
-        if (sessionStorage.getItem(sessionCacheKey) !== 'true' || cacheAge >= maxCacheAge) {
-          loadProfilePicture();
-        }
+        // Profile loading is now handled by AuthManager
       });
       
       // Logout function - Use AuthManager if available

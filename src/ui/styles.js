@@ -36,27 +36,28 @@ export const GLOBAL_INIT_SCRIPT = `
     
     // 4. APPLY PROFILE DATA IMMEDIATELY when DOM is ready
     document.addEventListener('DOMContentLoaded', function() {
-      // Apply cached profile picture immediately
+      // Apply cached profile picture immediately to ALL profile elements
       if (cachedProfilePic) {
-        const avatarElements = document.querySelectorAll('.profile-avatar');
+        const avatarElements = document.querySelectorAll('.profile-avatar, #profile-avatar');
         avatarElements.forEach(el => {
           el.innerHTML = \`<img src="\${cachedProfilePic}" alt="Profile" style="width: 100%; height: 100%; border-radius: inherit; object-fit: cover;">\`;
         });
       } else if (cachedInitials) {
-        const avatarElements = document.querySelectorAll('.profile-avatar');
+        const avatarElements = document.querySelectorAll('.profile-avatar, #profile-avatar');
         avatarElements.forEach(el => {
           el.textContent = cachedInitials;
         });
       } else if (cachedUserName) {
         // Generate initials from cached name if no initials cached
         const initials = cachedUserName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-        const avatarElements = document.querySelectorAll('.profile-avatar');
+        sessionStorage.setItem('userInitials', initials);
+        const avatarElements = document.querySelectorAll('.profile-avatar, #profile-avatar');
         avatarElements.forEach(el => {
           el.textContent = initials;
         });
       }
       
-      // Apply cached user info immediately
+      // Apply cached user info immediately to ALL profile elements
       if (cachedUserName) {
         document.querySelectorAll('.profile-name').forEach(el => el.textContent = cachedUserName);
       }
@@ -94,8 +95,8 @@ export const GLOBAL_INIT_SCRIPT = `
             sessionStorage.setItem('profileDataLoaded', 'true');
             sessionStorage.setItem('profileDataTimestamp', Date.now().toString());
             
-            // Apply to current page
-            const avatarElements = document.querySelectorAll('.profile-avatar');
+            // Apply to current page (including sidebar)
+            const avatarElements = document.querySelectorAll('.profile-avatar, #profile-avatar');
             if (profilePicture) {
               avatarElements.forEach(el => {
                 el.innerHTML = \`<img src="\${profilePicture}" alt="Profile" style="width: 100%; height: 100%; border-radius: inherit; object-fit: cover;">\`;

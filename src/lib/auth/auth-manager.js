@@ -43,6 +43,38 @@ export function getAuthManagerScript() {
                   window.OAUTH_HUB_STATE.userName = sessionData.user.name;
                 }
                 
+                // Update profile elements immediately if they exist
+                const profileNameElements = document.querySelectorAll('.profile-name');
+                const profileEmailElements = document.querySelectorAll('.profile-email');
+                
+                profileNameElements.forEach(el => el.textContent = sessionData.user.name);
+                profileEmailElements.forEach(el => el.textContent = sessionData.user.email);
+                
+                // Update profile picture if available
+                if (sessionData.user.googleProfile?.picture) {
+                  const profilePic = sessionData.user.googleProfile.picture;
+                  sessionStorage.setItem('profilePicture', profilePic);
+                  const avatarElements = document.querySelectorAll('.profile-avatar, #profile-avatar');
+                  avatarElements.forEach(el => {
+                    el.innerHTML = \`<img src="\${profilePic}" alt="Profile" style="width: 100%; height: 100%; border-radius: inherit; object-fit: cover;">\`;
+                  });
+                } else if (sessionData.user.githubProfile?.avatar_url) {
+                  const profilePic = sessionData.user.githubProfile.avatar_url;
+                  sessionStorage.setItem('profilePicture', profilePic);
+                  const avatarElements = document.querySelectorAll('.profile-avatar, #profile-avatar');
+                  avatarElements.forEach(el => {
+                    el.innerHTML = \`<img src="\${profilePic}" alt="Profile" style="width: 100%; height: 100%; border-radius: inherit; object-fit: cover;">\`;
+                  });
+                } else {
+                  // Generate and cache initials
+                  const initials = sessionData.user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+                  sessionStorage.setItem('userInitials', initials);
+                  const avatarElements = document.querySelectorAll('.profile-avatar, #profile-avatar');
+                  avatarElements.forEach(el => {
+                    el.textContent = initials;
+                  });
+                }
+                
                 this.isChecking = false;
                 return true;
               }
