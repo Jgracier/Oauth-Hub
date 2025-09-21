@@ -78,12 +78,6 @@ export function getModernAppsPage() {
               </div>
                 </div>
                 
-                <!-- Auto-detection status (optional display) -->
-                <div class="form-group" id="status-section" style="display: none;">
-                  <div id="connection-status" class="connection-status">
-                    <!-- Status messages will appear here during add process -->
-                  </div>
-                </div>
           </form>
                 </div>
                 
@@ -421,56 +415,6 @@ export function getModernAppsPage() {
         border-top: 1px solid var(--border-light);
       }
       
-      /* Connection Status Display */
-      .connection-status {
-        min-height: 40px;
-        padding: var(--space-3);
-        background: var(--bg-tertiary);
-        border: 1px solid var(--border-light);
-        border-radius: var(--radius-md);
-      }
-      
-      .scope-summary {
-        padding: var(--space-3);
-        background: var(--bg-secondary);
-        border-radius: var(--radius-md);
-      }
-      
-      .scope-tags {
-        display: flex;
-        flex-wrap: wrap;
-        gap: var(--space-2);
-      }
-      
-      .scope-tag {
-        background: var(--brand-accent);
-        color: white;
-        padding: var(--space-1) var(--space-2);
-        border-radius: var(--radius-sm);
-        font-size: var(--text-sm);
-        font-weight: 500;
-      }
-      
-      .alert {
-        display: flex;
-        align-items: center;
-        gap: var(--space-2);
-        padding: var(--space-3);
-        border-radius: var(--radius-md);
-        font-weight: 500;
-      }
-      
-      .alert-success {
-        background: rgba(34, 197, 94, 0.1);
-        color: var(--success-color);
-        border: 1px solid rgba(34, 197, 94, 0.2);
-      }
-      
-      .alert-error {
-        background: rgba(239, 68, 68, 0.1);
-        color: var(--error-color);
-        border: 1px solid rgba(239, 68, 68, 0.2);
-      }
       
       .scope-group {
         margin-bottom: var(--space-3);
@@ -1049,19 +993,10 @@ export function getModernAppsPage() {
         document.getElementById('modal-title').textContent = 'Add OAuth App';
         document.getElementById('app-form').reset();
         
-        // Hide status section initially
-        document.getElementById('status-section').style.display = 'none';
-        
         // Reset button state
         const addBtn = document.getElementById('add-app-btn');
         addBtn.disabled = true;
         addBtn.innerHTML = '${MODERN_ICONS.plus} <span id="add-btn-text">Add App</span>';
-        
-        // Clear any previous status
-        const statusDisplay = document.getElementById('connection-status');
-        if (statusDisplay) {
-          statusDisplay.innerHTML = '';
-        }
         
         document.getElementById('app-modal').classList.add('active');
       }
@@ -1093,18 +1028,7 @@ export function getModernAppsPage() {
       
       // Update platform info
       function updatePlatformInfo() {
-        const platformKey = document.getElementById('platform').value;
-        const statusSection = document.getElementById('status-section');
-        
-        if (platformKey) {
-          // Show status section for feedback during add process
-          statusSection.style.display = 'block';
-        } else {
-          // Hide status section when no platform selected
-          statusSection.style.display = 'none';
-        }
-        
-        // Check if form is ready
+        // Check if form is ready when platform changes
         checkFormReady();
       }
       
@@ -1291,15 +1215,13 @@ export function getModernAppsPage() {
         }
         
         const addBtn = document.getElementById('add-app-btn');
-        const statusDisplay = document.getElementById('connection-status');
         
         // Show loading state
         addBtn.disabled = true;
         addBtn.innerHTML = '${MODERN_ICONS.loading} <span>Adding App...</span>';
-        statusDisplay.innerHTML = '<p class="text-muted">🔄 Testing credentials and auto-detecting scopes...</p>';
         
         try {
-          // Auto-detect and save in one API call
+          // Auto-detect and save in one API call (silent background process)
           const appData = {
             platform: platformKey,
             clientId: clientId,
@@ -1317,49 +1239,17 @@ export function getModernAppsPage() {
           const result = await response.json();
           
           if (result.success) {
-            // Show success with detected scopes
-            statusDisplay.innerHTML = \`
-              <div class="alert alert-success">
-                <span style="width: 20px; height: 20px;">${MODERN_ICONS.check}</span>
-                <span><strong>App added successfully!</strong> Auto-detected \${result.detectedScopes?.length || 0} scopes</span>
-              </div>
-              
-              \${result.detectedScopes?.length > 0 ? \`
-                <div class="scope-summary mt-3">
-                  <h4 class="font-semibold mb-2">📱 \${result.app.name}</h4>
-                  <div class="scope-list">
-                    <strong>Auto-detected Scopes (\${result.detectedScopes.length}):</strong>
-                    <div class="scope-tags mt-2">
-                      \${result.detectedScopes.map(scope => \`<span class="scope-tag">\${scope}</span>\`).join('')}
-                    </div>
-                  </div>
-                </div>
-              \` : ''}
-            \`;
-            
-            // Close modal after brief delay to show success
-            setTimeout(() => {
-              hideAppModal();
-              loadApps();
-            }, 2000);
-            
+            // Silent success - just close modal and refresh
+            hideAppModal();
+            await loadApps();
           } else {
-            statusDisplay.innerHTML = \`
-              <div class="alert alert-error">
-                <span style="width: 20px; height: 20px;">${MODERN_ICONS.warning}</span>
-                <span><strong>Failed to add app:</strong> \${result.error}</span>
-              </div>
-            \`;
+            // Show error briefly
+            alert('Failed to add app: ' + result.error);
           }
           
         } catch (error) {
           console.error('Error adding app:', error);
-          statusDisplay.innerHTML = \`
-            <div class="alert alert-error">
-              <span style="width: 20px; height: 20px;">${MODERN_ICONS.warning}</span>
-              <span><strong>Error:</strong> Could not connect to platform. Please check your credentials.</span>
-            </div>
-          \`;
+          alert('Could not connect to platform. Please check your credentials.');
         } finally {
           // Reset button
           addBtn.disabled = false;
