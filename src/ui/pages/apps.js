@@ -78,26 +78,20 @@ export function getModernAppsPage() {
               </div>
                 </div>
                 
-                <!-- Auto-detected scopes section -->
-                <div class="form-group" id="scopes-section" style="display: none;">
-                  <label class="form-label">Detected Configuration</label>
-                  <div id="scope-display" class="scope-display">
-                    <p class="text-muted text-small">Enter credentials and click "Test Connection" to auto-detect scopes</p>
+                <!-- Auto-detection status (optional display) -->
+                <div class="form-group" id="status-section" style="display: none;">
+                  <div id="connection-status" class="connection-status">
+                    <!-- Status messages will appear here during add process -->
                   </div>
-                  
-                  <button type="button" class="btn btn-secondary" id="test-credentials-btn" onclick="testAppCredentials()" disabled>
-                    ${MODERN_ICONS.refresh}
-                    Test Connection & Auto-Detect Scopes
-                  </button>
                 </div>
           </form>
                 </div>
                 
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" onclick="hideAppModal()">Cancel</button>
-          <button type="submit" class="btn btn-primary" form="app-form" id="connect-app-btn" disabled>
-            ${MODERN_ICONS.link}
-            <span id="save-btn-text">Connect App</span>
+          <button type="submit" class="btn btn-primary" form="app-form" id="add-app-btn">
+            ${MODERN_ICONS.plus}
+            <span id="add-btn-text">Add App</span>
           </button>
         </div>
         </div>
@@ -427,14 +421,13 @@ export function getModernAppsPage() {
         border-top: 1px solid var(--border-light);
       }
       
-      /* Scope Display */
-      .scope-display {
-        min-height: 60px;
+      /* Connection Status Display */
+      .connection-status {
+        min-height: 40px;
         padding: var(--space-3);
         background: var(--bg-tertiary);
         border: 1px solid var(--border-light);
         border-radius: var(--radius-md);
-        margin-bottom: var(--space-3);
       }
       
       .scope-summary {
@@ -1094,122 +1087,14 @@ export function getModernAppsPage() {
       // Update platform info
       function updatePlatformInfo() {
         const platformKey = document.getElementById('platform').value;
-        const scopesSection = document.getElementById('scopes-section');
-        const testBtn = document.getElementById('test-credentials-btn');
-        const connectBtn = document.getElementById('connect-app-btn');
+        const statusSection = document.getElementById('status-section');
         
         if (platformKey) {
-          // Show scopes section
-          scopesSection.style.display = 'block';
-          testBtn.disabled = false;
-          
-          // Check if credentials are entered to enable test button
-          checkCredentialsEntered();
+          // Show status section for feedback during add process
+          statusSection.style.display = 'block';
         } else {
-          // Hide scopes section when no platform selected
-          scopesSection.style.display = 'none';
-          testBtn.disabled = true;
-          connectBtn.disabled = true;
-        }
-      }
-      
-      // Check if credentials are entered
-      function checkCredentialsEntered() {
-        const clientId = document.getElementById('clientId').value;
-        const clientSecret = document.getElementById('clientSecret').value;
-        const platform = document.getElementById('platform').value;
-        const testBtn = document.getElementById('test-credentials-btn');
-        const connectBtn = document.getElementById('connect-app-btn');
-        
-        const hasCredentials = clientId && clientSecret && platform;
-        testBtn.disabled = !hasCredentials;
-        
-        // Enable connect button only after successful test
-        if (!hasCredentials) {
-          connectBtn.disabled = true;
-        }
-      }
-      
-      // Test app credentials and auto-detect scopes
-      async function testAppCredentials() {
-        const platform = document.getElementById('platform').value;
-        const clientId = document.getElementById('clientId').value;
-        const clientSecret = document.getElementById('clientSecret').value;
-        const testBtn = document.getElementById('test-credentials-btn');
-        const connectBtn = document.getElementById('connect-app-btn');
-        const scopeDisplay = document.getElementById('scope-display');
-        
-        if (!platform || !clientId || !clientSecret) {
-          alert('Please fill in all required fields');
-          return;
-        }
-        
-        // Show loading state
-        testBtn.disabled = true;
-        testBtn.innerHTML = '${MODERN_ICONS.loading} Testing...';
-        scopeDisplay.innerHTML = '<p class="text-muted">Testing credentials and detecting scopes...</p>';
-        
-        try {
-          const response = await fetch('/test-app-credentials', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ platform, clientId, clientSecret })
-          });
-          
-          const result = await response.json();
-          
-          if (result.success) {
-            // Show detected configuration
-            scopeDisplay.innerHTML = \`
-              <div class="alert alert-success mb-3">
-                <span style="width: 20px; height: 20px;">${MODERN_ICONS.check}</span>
-                <span><strong>Connection successful!</strong> Auto-detected \${result.detectedScopes.length} scopes</span>
-              </div>
-              
-              <div class="scope-summary">
-                <h4 class="font-semibold mb-2">App: \${result.appName}</h4>
-                <p class="text-small text-secondary mb-3">\${result.note || 'Scopes auto-detected from platform configuration'}</p>
-                
-                <div class="scope-list">
-                  <strong>Detected Scopes (\${result.detectedScopes.length}):</strong>
-                  <div class="scope-tags mt-2">
-                    \${result.detectedScopes.map(scope => \`<span class="scope-tag">\${scope}</span>\`).join('')}
-                  </div>
-                </div>
-              </div>
-            \`;
-            
-            // Enable connect button
-            connectBtn.disabled = false;
-            connectBtn.innerHTML = '${MODERN_ICONS.check} Connect App';
-            
-            // Store detected data for form submission
-            window.detectedAppData = result;
-            
-          } else {
-            // Show error
-            scopeDisplay.innerHTML = \`
-              <div class="alert alert-error">
-                <span style="width: 20px; height: 20px;">${MODERN_ICONS.warning}</span>
-                <span><strong>Connection failed:</strong> \${result.error}</span>
-              </div>
-            \`;
-            connectBtn.disabled = true;
-          }
-          
-        } catch (error) {
-          console.error('Credential test failed:', error);
-          scopeDisplay.innerHTML = \`
-            <div class="alert alert-error">
-              <span style="width: 20px; height: 20px;">${MODERN_ICONS.warning}</span>
-              <span><strong>Test failed:</strong> Could not connect to platform</span>
-            </div>
-          \`;
-          connectBtn.disabled = true;
-        } finally {
-          // Reset button
-          testBtn.disabled = false;
-          testBtn.innerHTML = '${MODERN_ICONS.refresh} Test Connection & Auto-Detect Scopes';
+          // Hide status section when no platform selected
+          statusSection.style.display = 'none';
         }
       }
       
@@ -1359,50 +1244,96 @@ export function getModernAppsPage() {
         }
       }
       
-      // Handle save app with auto-detected scopes
+      // Handle add app - auto-detects scopes and adds in one step
       async function handleSaveApp(event) {
         event.preventDefault();
         
         const formData = new FormData(event.target);
         const email = localStorage.getItem('userEmail');
         const platformKey = formData.get('platform');
+        const clientId = formData.get('clientId');
+        const clientSecret = formData.get('clientSecret');
         
-        // Use auto-detected data if available
-        const detectedData = window.detectedAppData;
-        if (!detectedData) {
-          alert('Please test the connection first to auto-detect scopes');
+        if (!platformKey || !clientId || !clientSecret) {
+          alert('Please fill in all required fields');
           return;
         }
         
-        const appData = {
-          platform: platformKey,
-          name: detectedData.appName,
-          clientId: formData.get('clientId'),
-          clientSecret: formData.get('clientSecret'),
-          scopes: detectedData.detectedScopes,
-          autoDetect: true,
-          userEmail: email
-        };
+        const addBtn = document.getElementById('add-app-btn');
+        const statusDisplay = document.getElementById('connection-status');
+        
+        // Show loading state
+        addBtn.disabled = true;
+        addBtn.innerHTML = '${MODERN_ICONS.loading} <span>Adding App...</span>';
+        statusDisplay.innerHTML = '<p class="text-muted">🔄 Testing credentials and auto-detecting scopes...</p>';
+        
+        try {
+          // Auto-detect and save in one API call
+          const appData = {
+            platform: platformKey,
+            clientId: clientId,
+            clientSecret: clientSecret,
+            autoDetect: true, // This triggers scope auto-detection in the backend
+            userEmail: email
+          };
             
-            try {
           const response = await fetch('/save-app', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(appData)
-                    });
-                    
-                    if (response.ok) {
-            hideAppModal();
-                        await loadApps();
-                    } else {
-                    const error = await response.json();
-            console.error('Save app error:', error);
-            alert(error.error || 'Failed to save app');
-                    }
-                } catch (error) {
-                    console.error('Network error saving app:', error);
-                    alert('Network error. Please try again.');
-            }
+          });
+          
+          const result = await response.json();
+          
+          if (result.success) {
+            // Show success with detected scopes
+            statusDisplay.innerHTML = \`
+              <div class="alert alert-success">
+                <span style="width: 20px; height: 20px;">${MODERN_ICONS.check}</span>
+                <span><strong>App added successfully!</strong> Auto-detected \${result.detectedScopes?.length || 0} scopes</span>
+              </div>
+              
+              \${result.detectedScopes?.length > 0 ? \`
+                <div class="scope-summary mt-3">
+                  <h4 class="font-semibold mb-2">📱 \${result.app.name}</h4>
+                  <div class="scope-list">
+                    <strong>Auto-detected Scopes (\${result.detectedScopes.length}):</strong>
+                    <div class="scope-tags mt-2">
+                      \${result.detectedScopes.map(scope => \`<span class="scope-tag">\${scope}</span>\`).join('')}
+                    </div>
+                  </div>
+                </div>
+              \` : ''}
+            \`;
+            
+            // Close modal after brief delay to show success
+            setTimeout(() => {
+              hideAppModal();
+              loadApps();
+            }, 2000);
+            
+          } else {
+            statusDisplay.innerHTML = \`
+              <div class="alert alert-error">
+                <span style="width: 20px; height: 20px;">${MODERN_ICONS.warning}</span>
+                <span><strong>Failed to add app:</strong> \${result.error}</span>
+              </div>
+            \`;
+          }
+          
+        } catch (error) {
+          console.error('Error adding app:', error);
+          statusDisplay.innerHTML = \`
+            <div class="alert alert-error">
+              <span style="width: 20px; height: 20px;">${MODERN_ICONS.warning}</span>
+              <span><strong>Error:</strong> Could not connect to platform. Please check your credentials.</span>
+            </div>
+          \`;
+        } finally {
+          // Reset button
+          addBtn.disabled = false;
+          addBtn.innerHTML = '${MODERN_ICONS.plus} <span>Add App</span>';
+        }
       }
       
       // Delete app
