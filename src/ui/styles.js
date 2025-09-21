@@ -23,17 +23,26 @@ export const GLOBAL_INIT_SCRIPT = `
     const cachedUserEmail = localStorage.getItem('userEmail');
     const cachedInitials = sessionStorage.getItem('userInitials');
     
-    // Apply profile data immediately to prevent blinking
+    // Apply profile data immediately to prevent blinking (mutually exclusive)
     if (cachedProfilePic) {
+      // Show profile picture only
       document.documentElement.style.setProperty('--cached-profile-pic', \`url(\${cachedProfilePic})\`);
+      document.documentElement.style.removeProperty('--cached-initials');
       document.documentElement.classList.add('has-profile-pic');
+      document.documentElement.classList.remove('has-initials');
     } else if (cachedInitials) {
+      // Show initials only
       document.documentElement.style.setProperty('--cached-initials', \`"\${cachedInitials}"\`);
+      document.documentElement.style.removeProperty('--cached-profile-pic');
       document.documentElement.classList.add('has-initials');
+      document.documentElement.classList.remove('has-profile-pic');
     } else if (cachedUserName) {
+      // Generate and show initials only
       const initials = cachedUserName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
       document.documentElement.style.setProperty('--cached-initials', \`"\${initials}"\`);
+      document.documentElement.style.removeProperty('--cached-profile-pic');
       document.documentElement.classList.add('has-initials');
+      document.documentElement.classList.remove('has-profile-pic');
       sessionStorage.setItem('userInitials', initials);
     }
     
@@ -316,16 +325,26 @@ export const MODERN_CSS = `
   }
   
   /* Global profile data - prevents blinking on page load */
+  
+  /* Profile pictures - only when has-profile-pic class is present */
   .has-profile-pic .profile-avatar,
   .has-profile-pic #profile-avatar {
     background-image: var(--cached-profile-pic);
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
+    color: transparent; /* Hide any text content */
   }
   
-  .has-initials .profile-avatar::before,
-  .has-initials #profile-avatar::before {
+  /* Clear any existing content when showing profile pic */
+  .has-profile-pic .profile-avatar::before,
+  .has-profile-pic #profile-avatar::before {
+    content: none;
+  }
+  
+  /* Initials - only when has-initials class is present AND no profile pic */
+  .has-initials:not(.has-profile-pic) .profile-avatar::before,
+  .has-initials:not(.has-profile-pic) #profile-avatar::before {
     content: var(--cached-initials);
     display: flex;
     align-items: center;
@@ -334,6 +353,12 @@ export const MODERN_CSS = `
     height: 100%;
     font-weight: 600;
     color: var(--text-primary);
+  }
+  
+  /* Ensure initials don't show when profile pic is present */
+  .has-profile-pic .profile-avatar,
+  .has-profile-pic #profile-avatar {
+    font-size: 0; /* Hide any text content */
   }
 
   .sidebar.collapsed {

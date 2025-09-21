@@ -51,31 +51,33 @@ export function getAuthManagerScript() {
                 profileEmailElements.forEach(el => el.textContent = sessionData.user.email);
                 
                 // Update profile picture if available - Apply globally
+                let profilePic = null;
                 if (sessionData.user.googleProfile?.picture) {
-                  const profilePic = sessionData.user.googleProfile.picture;
-                  sessionStorage.setItem('profilePicture', profilePic);
-                  
-                  // Apply globally via CSS custom properties (immediate)
-                  document.documentElement.style.setProperty('--cached-profile-pic', \`url(\${profilePic})\`);
-                  document.documentElement.classList.add('has-profile-pic');
-                  document.documentElement.classList.remove('has-initials');
-                  
+                  profilePic = sessionData.user.googleProfile.picture;
                 } else if (sessionData.user.githubProfile?.avatar_url) {
-                  const profilePic = sessionData.user.githubProfile.avatar_url;
+                  profilePic = sessionData.user.githubProfile.avatar_url;
+                }
+                
+                if (profilePic) {
+                  // Has profile picture - show it and hide initials
                   sessionStorage.setItem('profilePicture', profilePic);
+                  sessionStorage.removeItem('userInitials'); // Clear initials when we have a photo
                   
                   // Apply globally via CSS custom properties (immediate)
                   document.documentElement.style.setProperty('--cached-profile-pic', \`url(\${profilePic})\`);
+                  document.documentElement.style.removeProperty('--cached-initials');
                   document.documentElement.classList.add('has-profile-pic');
                   document.documentElement.classList.remove('has-initials');
                   
                 } else {
-                  // Generate and cache initials - Apply globally
+                  // No profile picture - show initials only
                   const initials = sessionData.user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
                   sessionStorage.setItem('userInitials', initials);
+                  sessionStorage.removeItem('profilePicture'); // Clear profile pic when we only have initials
                   
                   // Apply globally via CSS custom properties (immediate)
                   document.documentElement.style.setProperty('--cached-initials', \`"\${initials}"\`);
+                  document.documentElement.style.removeProperty('--cached-profile-pic');
                   document.documentElement.classList.add('has-initials');
                   document.documentElement.classList.remove('has-profile-pic');
                 }
@@ -110,6 +112,11 @@ export function getAuthManagerScript() {
           sessionStorage.removeItem('userInitials');
           sessionStorage.removeItem('profileDataLoaded');
           sessionStorage.removeItem('profileDataTimestamp');
+          
+          // Clear global CSS classes and properties
+          document.documentElement.classList.remove('has-profile-pic', 'has-initials');
+          document.documentElement.style.removeProperty('--cached-profile-pic');
+          document.documentElement.style.removeProperty('--cached-initials');
           
           if (window.OAUTH_HUB_STATE) {
             window.OAUTH_HUB_STATE.userEmail = null;
