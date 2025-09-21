@@ -50,29 +50,34 @@ export function getAuthManagerScript() {
                 profileNameElements.forEach(el => el.textContent = sessionData.user.name);
                 profileEmailElements.forEach(el => el.textContent = sessionData.user.email);
                 
-                // Update profile picture if available
+                // Update profile picture if available - Apply globally
                 if (sessionData.user.googleProfile?.picture) {
                   const profilePic = sessionData.user.googleProfile.picture;
                   sessionStorage.setItem('profilePicture', profilePic);
-                  const avatarElements = document.querySelectorAll('.profile-avatar, #profile-avatar');
-                  avatarElements.forEach(el => {
-                    el.innerHTML = \`<img src="\${profilePic}" alt="Profile" style="width: 100%; height: 100%; border-radius: inherit; object-fit: cover;">\`;
-                  });
+                  
+                  // Apply globally via CSS custom properties (immediate)
+                  document.documentElement.style.setProperty('--cached-profile-pic', \`url(\${profilePic})\`);
+                  document.documentElement.classList.add('has-profile-pic');
+                  document.documentElement.classList.remove('has-initials');
+                  
                 } else if (sessionData.user.githubProfile?.avatar_url) {
                   const profilePic = sessionData.user.githubProfile.avatar_url;
                   sessionStorage.setItem('profilePicture', profilePic);
-                  const avatarElements = document.querySelectorAll('.profile-avatar, #profile-avatar');
-                  avatarElements.forEach(el => {
-                    el.innerHTML = \`<img src="\${profilePic}" alt="Profile" style="width: 100%; height: 100%; border-radius: inherit; object-fit: cover;">\`;
-                  });
+                  
+                  // Apply globally via CSS custom properties (immediate)
+                  document.documentElement.style.setProperty('--cached-profile-pic', \`url(\${profilePic})\`);
+                  document.documentElement.classList.add('has-profile-pic');
+                  document.documentElement.classList.remove('has-initials');
+                  
                 } else {
-                  // Generate and cache initials
+                  // Generate and cache initials - Apply globally
                   const initials = sessionData.user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
                   sessionStorage.setItem('userInitials', initials);
-                  const avatarElements = document.querySelectorAll('.profile-avatar, #profile-avatar');
-                  avatarElements.forEach(el => {
-                    el.textContent = initials;
-                  });
+                  
+                  // Apply globally via CSS custom properties (immediate)
+                  document.documentElement.style.setProperty('--cached-initials', \`"\${initials}"\`);
+                  document.documentElement.classList.add('has-initials');
+                  document.documentElement.classList.remove('has-profile-pic');
                 }
                 
                 this.isChecking = false;

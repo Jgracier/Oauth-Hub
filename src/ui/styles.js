@@ -17,11 +17,25 @@ export const GLOBAL_INIT_SCRIPT = `
       document.documentElement.classList.add('sidebar-collapsed');
     }
     
-    // 3. CACHE USER DATA - Store in sessionStorage for instant loading
+    // 3. PREVENT PROFILE BLINKING - Apply profile data IMMEDIATELY
     const cachedProfilePic = sessionStorage.getItem('profilePicture');
     const cachedUserName = localStorage.getItem('userName');
     const cachedUserEmail = localStorage.getItem('userEmail');
     const cachedInitials = sessionStorage.getItem('userInitials');
+    
+    // Apply profile data immediately to prevent blinking
+    if (cachedProfilePic) {
+      document.documentElement.style.setProperty('--cached-profile-pic', \`url(\${cachedProfilePic})\`);
+      document.documentElement.classList.add('has-profile-pic');
+    } else if (cachedInitials) {
+      document.documentElement.style.setProperty('--cached-initials', \`"\${cachedInitials}"\`);
+      document.documentElement.classList.add('has-initials');
+    } else if (cachedUserName) {
+      const initials = cachedUserName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+      document.documentElement.style.setProperty('--cached-initials', \`"\${initials}"\`);
+      document.documentElement.classList.add('has-initials');
+      sessionStorage.setItem('userInitials', initials);
+    }
     
     // Store global user state for instant access
     window.OAUTH_HUB_STATE = {
@@ -34,37 +48,53 @@ export const GLOBAL_INIT_SCRIPT = `
       initialized: false
     };
     
-    // 4. APPLY PROFILE DATA IMMEDIATELY when DOM is ready
-    document.addEventListener('DOMContentLoaded', function() {
-      // Apply cached profile picture immediately to ALL profile elements
+    // 4. APPLY PROFILE DATA IMMEDIATELY - Multiple strategies to prevent blinking
+    
+    // Strategy 1: Apply as soon as possible (before DOM ready)
+    function applyProfileDataNow() {
+      const avatarElements = document.querySelectorAll('.profile-avatar, #profile-avatar');
+      const nameElements = document.querySelectorAll('.profile-name');
+      const emailElements = document.querySelectorAll('.profile-email');
+      
       if (cachedProfilePic) {
-        const avatarElements = document.querySelectorAll('.profile-avatar, #profile-avatar');
         avatarElements.forEach(el => {
           el.innerHTML = \`<img src="\${cachedProfilePic}" alt="Profile" style="width: 100%; height: 100%; border-radius: inherit; object-fit: cover;">\`;
         });
       } else if (cachedInitials) {
-        const avatarElements = document.querySelectorAll('.profile-avatar, #profile-avatar');
         avatarElements.forEach(el => {
           el.textContent = cachedInitials;
         });
       } else if (cachedUserName) {
-        // Generate initials from cached name if no initials cached
         const initials = cachedUserName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
         sessionStorage.setItem('userInitials', initials);
-        const avatarElements = document.querySelectorAll('.profile-avatar, #profile-avatar');
         avatarElements.forEach(el => {
           el.textContent = initials;
         });
       }
       
-      // Apply cached user info immediately to ALL profile elements
       if (cachedUserName) {
-        document.querySelectorAll('.profile-name').forEach(el => el.textContent = cachedUserName);
+        nameElements.forEach(el => el.textContent = cachedUserName);
       }
       if (cachedUserEmail) {
-        document.querySelectorAll('.profile-email').forEach(el => el.textContent = cachedUserEmail);
+        emailElements.forEach(el => el.textContent = cachedUserEmail);
       }
-    });
+    }
+    
+    // Strategy 2: Apply immediately when DOM is ready
+    document.addEventListener('DOMContentLoaded', applyProfileDataNow);
+    
+    // Strategy 3: Apply continuously until elements are found (for immediate rendering)
+    let applyAttempts = 0;
+    const maxApplyAttempts = 20;
+    const applyInterval = setInterval(() => {
+      applyAttempts++;
+      const avatarElements = document.querySelectorAll('.profile-avatar, #profile-avatar');
+      
+      if (avatarElements.length > 0 || applyAttempts >= maxApplyAttempts) {
+        applyProfileDataNow();
+        clearInterval(applyInterval);
+      }
+    }, 10); // Check every 10ms
     
     // 5. GLOBAL PROFILE REFRESH FUNCTION
     window.refreshProfileCache = async function() {
@@ -95,12 +125,11 @@ export const GLOBAL_INIT_SCRIPT = `
             sessionStorage.setItem('profileDataLoaded', 'true');
             sessionStorage.setItem('profileDataTimestamp', Date.now().toString());
             
-            // Apply to current page (including sidebar)
-            const avatarElements = document.querySelectorAll('.profile-avatar, #profile-avatar');
+            // Apply globally via CSS custom properties (immediate)
             if (profilePicture) {
-              avatarElements.forEach(el => {
-                el.innerHTML = \`<img src="\${profilePicture}" alt="Profile" style="width: 100%; height: 100%; border-radius: inherit; object-fit: cover;">\`;
-              });
+              document.documentElement.style.setProperty('--cached-profile-pic', \`url(\${profilePicture})\`);
+              document.documentElement.classList.add('has-profile-pic');
+              document.documentElement.classList.remove('has-initials');
             }
           }
         }
@@ -284,6 +313,27 @@ export const MODERN_CSS = `
   
   .sidebar-collapsed .main-wrapper {
     margin-left: var(--sidebar-width-collapsed);
+  }
+  
+  /* Global profile data - prevents blinking on page load */
+  .has-profile-pic .profile-avatar,
+  .has-profile-pic #profile-avatar {
+    background-image: var(--cached-profile-pic);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+  
+  .has-initials .profile-avatar::before,
+  .has-initials #profile-avatar::before {
+    content: var(--cached-initials);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    font-weight: 600;
+    color: var(--text-primary);
   }
 
   .sidebar.collapsed {
