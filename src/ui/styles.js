@@ -214,7 +214,7 @@ export const MODERN_CSS = `
     
     /* Sizing */
     --sidebar-width-expanded: 280px;
-    --sidebar-width-collapsed: 80px;
+    --sidebar-width-collapsed: 100px; /* Expanded for better icon spacing */
     --header-height: 60px;
     --container-max: 1440px;
     
@@ -339,16 +339,18 @@ export const MODERN_CSS = `
   .sidebar-collapsed .nav-item {
     position: relative;
     justify-content: center; /* Center icons */
-    padding: var(--space-3); /* Reduce padding */
+    padding: var(--space-4) var(--space-3); /* Proper vertical spacing */
   }
   
   .sidebar-collapsed .profile-menu {
     justify-content: center; /* Center profile avatar */
-    padding: var(--space-3); /* Consistent padding */
+    padding: var(--space-4); /* Generous padding for profile */
   }
   
   .sidebar-collapsed .sidebar-header {
-    padding: var(--space-3); /* Reduce header padding */
+    padding: var(--space-4); /* Proper header padding */
+    display: flex;
+    justify-content: center; /* Center logo icon */
   }
   
   .sidebar-collapsed .sidebar-toggle {
