@@ -153,19 +153,26 @@ export function getModernScripts() {
     </script>
     
     <script>
-      // Profile Picture Management - Enhanced with caching
+      // Profile Picture Management - Session-based caching (loads only once)
       async function loadProfilePicture() {
         try {
-          // Check if we already have cached data and it's fresh
+          // Check if we already have valid cached data
           const globalState = window.OAUTH_HUB_STATE;
-          if (globalState?.profilePicture && globalState.initialized) {
-            return; // Already loaded and applied
+          const sessionCacheKey = 'profileDataLoaded';
+          const cacheTimestamp = sessionStorage.getItem('profileDataTimestamp');
+          const now = Date.now();
+          const cacheAge = now - (parseInt(cacheTimestamp) || 0);
+          const maxCacheAge = 5 * 60 * 1000; // 5 minutes
+          
+          // If data is cached and fresh, skip server call
+          if (sessionStorage.getItem(sessionCacheKey) === 'true' && cacheAge < maxCacheAge) {
+            return; // Already loaded this session and cache is fresh
           }
           
           const userEmail = localStorage.getItem('userEmail');
           if (!userEmail) return;
           
-          // Get user profile data from server
+          // Only fetch from server once per session (or when cache expires)
           const response = await fetch('/check-session', {
             method: 'GET',
             credentials: 'include'
@@ -199,6 +206,10 @@ export function getModernScripts() {
                 const initials = userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
                 sessionStorage.setItem('userInitials', initials);
               }
+              
+              // Mark as loaded for this session
+              sessionStorage.setItem(sessionCacheKey, 'true');
+              sessionStorage.setItem('profileDataTimestamp', now.toString());
               
               // Update global state
               if (globalState) {
@@ -313,7 +324,17 @@ export function getModernScripts() {
       document.addEventListener('DOMContentLoaded', () => {
         initTheme();
         initSidebar();
-        loadProfilePicture();
+        
+        // Only load profile picture if not already cached in this session
+        const sessionCacheKey = 'profileDataLoaded';
+        const cacheTimestamp = sessionStorage.getItem('profileDataTimestamp');
+        const now = Date.now();
+        const cacheAge = now - (parseInt(cacheTimestamp) || 0);
+        const maxCacheAge = 5 * 60 * 1000; // 5 minutes
+        
+        if (sessionStorage.getItem(sessionCacheKey) !== 'true' || cacheAge >= maxCacheAge) {
+          loadProfilePicture();
+        }
       });
       
       // Logout function
@@ -326,7 +347,15 @@ export function getModernScripts() {
         } catch (error) {
           console.error('Logout request failed:', error);
         } finally {
+          // Clear all cached data
           localStorage.clear();
+          sessionStorage.clear();
+          
+          // Clear global state
+          if (window.OAUTH_HUB_STATE) {
+            window.OAUTH_HUB_STATE = null;
+          }
+          
           window.location.href = '/auth';
         }
       }

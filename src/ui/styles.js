@@ -34,7 +34,7 @@ export const GLOBAL_INIT_SCRIPT = `
       initialized: false
     };
     
-    // 4. APPLY PROFILE PICTURE IMMEDIATELY when DOM is ready
+    // 4. APPLY PROFILE DATA IMMEDIATELY when DOM is ready
     document.addEventListener('DOMContentLoaded', function() {
       // Apply cached profile picture immediately
       if (cachedProfilePic) {
@@ -47,6 +47,13 @@ export const GLOBAL_INIT_SCRIPT = `
         avatarElements.forEach(el => {
           el.textContent = cachedInitials;
         });
+      } else if (cachedUserName) {
+        // Generate initials from cached name if no initials cached
+        const initials = cachedUserName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+        const avatarElements = document.querySelectorAll('.profile-avatar');
+        avatarElements.forEach(el => {
+          el.textContent = initials;
+        });
       }
       
       // Apply cached user info immediately
@@ -57,6 +64,49 @@ export const GLOBAL_INIT_SCRIPT = `
         document.querySelectorAll('.profile-email').forEach(el => el.textContent = cachedUserEmail);
       }
     });
+    
+    // 5. GLOBAL PROFILE REFRESH FUNCTION
+    window.refreshProfileCache = async function() {
+      try {
+        const response = await fetch('/check-session', {
+          method: 'GET',
+          credentials: 'include'
+        });
+        
+        if (response.ok) {
+          const sessionData = await response.json();
+          if (sessionData.authenticated && sessionData.user) {
+            const user = sessionData.user;
+            
+            // Update cached data
+            let profilePicture = null;
+            if (user.googleProfile?.picture) {
+              profilePicture = user.googleProfile.picture;
+            } else if (user.githubProfile?.avatar_url) {
+              profilePicture = user.githubProfile.avatar_url;
+            }
+            
+            if (profilePicture) {
+              sessionStorage.setItem('profilePicture', profilePicture);
+            }
+            
+            // Update cache timestamp
+            sessionStorage.setItem('profileDataLoaded', 'true');
+            sessionStorage.setItem('profileDataTimestamp', Date.now().toString());
+            
+            // Apply to current page
+            const avatarElements = document.querySelectorAll('.profile-avatar');
+            if (profilePicture) {
+              avatarElements.forEach(el => {
+                el.innerHTML = \`<img src="\${profilePicture}" alt="Profile" style="width: 100%; height: 100%; border-radius: inherit; object-fit: cover;">\`;
+              });
+            }
+          }
+        }
+      } catch (error) {
+        console.log('Could not refresh profile cache:', error);
+      }
+    };
   })();
 </script>`;
 
