@@ -9,7 +9,7 @@
 /**
  * Get platform configuration by name
  */
-export function getPlatform(platformName, platforms) {
+export async function getPlatform(platformName, platforms) {
   if (!platforms) {
     // Lazy import to avoid circular dependency
     const { PLATFORMS } = await import('../index.js');
@@ -26,7 +26,7 @@ export function getPlatform(platformName, platforms) {
 /**
  * Get all available platform names
  */
-export function getAllPlatforms(platforms) {
+export async function getAllPlatforms(platforms) {
   if (!platforms) {
     // Lazy import to avoid circular dependency
     const { PLATFORMS } = await import('../index.js');
@@ -39,7 +39,7 @@ export function getAllPlatforms(platforms) {
 /**
  * Get platform names with display information
  */
-export function getPlatformNames(platforms) {
+export async function getPlatformNames(platforms) {
   if (!platforms) {
     // Lazy import to avoid circular dependency
     const { PLATFORMS } = await import('../index.js');
@@ -58,8 +58,8 @@ export function getPlatformNames(platforms) {
 /**
  * Get platform scopes organized by category
  */
-export function getPlatformScopes(platformName, platforms) {
-  const platform = getPlatform(platformName, platforms);
+export async function getPlatformScopes(platformName, platforms) {
+  const platform = await getPlatform(platformName, platforms);
   return platform.scopes || {};
 }
 

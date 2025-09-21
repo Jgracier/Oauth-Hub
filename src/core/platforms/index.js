@@ -11,8 +11,8 @@
  * - Utilities from ./utils/
  */
 
-// Import available platform configurations
-// Note: More platforms can be added by creating config files in ./configs/
+// Import all platform configurations
+// Note: Each platform is now in its own dedicated file for better maintainability
 import { google } from './configs/google.js';
 import { facebook } from './configs/facebook.js';
 import { instagram } from './configs/instagram.js';
@@ -23,9 +23,35 @@ import { microsoft } from './configs/microsoft.js';
 import { github } from './configs/github.js';
 import { spotify } from './configs/spotify.js';
 import { discord } from './configs/discord.js';
+import { twitch } from './configs/twitch.js';
+import { slack } from './configs/slack.js';
+import { pinterest } from './configs/pinterest.js';
+import { tiktok } from './configs/tiktok.js';
+import { reddit } from './configs/reddit.js';
+import { wordpress } from './configs/wordpress.js';
+import { shopify } from './configs/shopify.js';
+import { stripe } from './configs/stripe.js';
+import { paypal } from './configs/paypal.js';
+import { amazon } from './configs/amazon.js';
+import { salesforce } from './configs/salesforce.js';
+import { hubspot } from './configs/hubspot.js';
+import { zoom } from './configs/zoom.js';
+import { trello } from './configs/trello.js';
+import { asana } from './configs/asana.js';
+import { notion } from './configs/notion.js';
+import { adobe } from './configs/adobe.js';
+import { figma } from './configs/figma.js';
+import { canva } from './configs/canva.js';
+import { dribbble } from './configs/dribbble.js';
+import { unsplash } from './configs/unsplash.js';
+import { dropbox } from './configs/dropbox.js';
+import { box } from './configs/box.js';
+import { netflix } from './configs/netflix.js';
+import { steam } from './configs/steam.js';
+import { coinbase } from './configs/coinbase.js';
+import { mailchimp } from './configs/mailchimp.js';
 
-// Stub configurations - replace with full configs from original platforms.js
-import { createStubConfig, STUB_PLATFORMS } from './configs/_stub-template.js';
+// Note: All 37 platforms are now fully implemented in individual config files
 
 // Import OAuth handlers
 import { 
@@ -48,8 +74,9 @@ import {
 // All platform configurations in one place for easy access
 // ============================================================================
 
-// Available platform configurations (fully implemented)
-const AVAILABLE_PLATFORMS = {
+// All platform configurations (fully implemented)
+export const PLATFORMS = {
+  // Tier 1 American Platforms (7)
   google,
   facebook,
   instagram,
@@ -57,21 +84,54 @@ const AVAILABLE_PLATFORMS = {
   linkedin,
   apple,
   microsoft,
+  
+  // Developer Tools (1)
   github,
+  
+  // Entertainment & Gaming (5)
   spotify,
-  discord
-};
-
-// Generate stub configurations for remaining platforms
-const STUB_PLATFORMS_CONFIGS = {};
-for (const [platformName, info] of Object.entries(STUB_PLATFORMS)) {
-  STUB_PLATFORMS_CONFIGS[platformName] = createStubConfig(platformName, info);
-}
-
-// Combine available platforms with stubs
-export const PLATFORMS = {
-  ...AVAILABLE_PLATFORMS,
-  ...STUB_PLATFORMS_CONFIGS
+  discord,
+  twitch,
+  netflix,
+  steam,
+  
+  // Business & Productivity (7)
+  slack,
+  salesforce,
+  hubspot,
+  zoom,
+  trello,
+  asana,
+  notion,
+  
+  // Social & Communication (4)
+  pinterest,
+  tiktok,
+  reddit,
+  wordpress,
+  
+  // E-commerce & Payments (4)
+  shopify,
+  stripe,
+  paypal,
+  amazon,
+  
+  // Creative & Design (5)
+  adobe,
+  figma,
+  canva,
+  dribbble,
+  unsplash,
+  
+  // Cloud Storage (2)
+  dropbox,
+  box,
+  
+  // Cryptocurrency & Finance (1)
+  coinbase,
+  
+  // Email & Marketing (1)
+  mailchimp
 };
 
 // ============================================================================
@@ -98,17 +158,18 @@ export {
 // ============================================================================
 
 export const PLATFORM_STATS = {
-  totalPlatforms: Object.keys(PLATFORMS).length,
+  totalPlatforms: 37,
   categories: {
-    'Social Media': ['google', 'facebook', 'instagram', 'twitter', 'linkedin', 'tiktok', 'pinterest', 'reddit'],
-    'Business & Productivity': ['microsoft', 'salesforce', 'hubspot', 'zoom', 'slack', 'trello', 'asana', 'notion'],
+    'Tier 1 American': ['google', 'facebook', 'instagram', 'twitter', 'linkedin', 'apple', 'microsoft'],
+    'Business & Productivity': ['slack', 'salesforce', 'hubspot', 'zoom', 'trello', 'asana', 'notion'],
+    'Entertainment & Gaming': ['spotify', 'discord', 'twitch', 'netflix', 'steam'],
+    'Social & Communication': ['pinterest', 'tiktok', 'reddit', 'wordpress'],
+    'E-commerce & Payments': ['shopify', 'stripe', 'paypal', 'amazon'],
     'Creative & Design': ['adobe', 'figma', 'canva', 'dribbble', 'unsplash'],
-    'E-commerce & Payments': ['amazon', 'shopify', 'stripe', 'paypal', 'coinbase'],
-    'Developer Tools': ['github'],
-    'Entertainment & Gaming': ['spotify', 'twitch', 'discord', 'netflix', 'steam'],
     'Cloud Storage': ['dropbox', 'box'],
-    'Content Management': ['wordpress'],
-    'Marketing': ['mailchimp']
+    'Developer Tools': ['github'],
+    'Cryptocurrency & Finance': ['coinbase'],
+    'Email & Marketing': ['mailchimp']
   },
   supportedAuthTypes: ['OAuth 2.0', 'OAuth 1.0a', 'OpenID Connect'],
   lastUpdated: new Date().toISOString()
