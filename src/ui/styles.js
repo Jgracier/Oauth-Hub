@@ -326,18 +326,40 @@ export const MODERN_CSS = `
   
   /* Hide sidebar text immediately when globally collapsed */
   .sidebar-collapsed .nav-item-text,
-  .sidebar-collapsed .sidebar-logo span {
+  .sidebar-collapsed .sidebar-logo span,
+  .sidebar-collapsed .profile-info,
+  .sidebar-collapsed .profile-menu .nav-item-icon {
     opacity: 0;
     width: 0;
     overflow: hidden;
     transition: opacity var(--transition-base), width var(--transition-base);
   }
   
-  /* Show tooltips when globally collapsed */
+  /* Fix sidebar layout when globally collapsed */
   .sidebar-collapsed .nav-item {
     position: relative;
+    justify-content: center; /* Center icons */
+    padding: var(--space-3); /* Reduce padding */
   }
   
+  .sidebar-collapsed .profile-menu {
+    justify-content: center; /* Center profile avatar */
+    padding: var(--space-3); /* Consistent padding */
+  }
+  
+  .sidebar-collapsed .sidebar-header {
+    padding: var(--space-3); /* Reduce header padding */
+  }
+  
+  .sidebar-collapsed .sidebar-toggle {
+    position: absolute;
+    right: -12px; /* Position toggle arrow properly outside border */
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+  }
+  
+  /* Show tooltips when globally collapsed */
   .sidebar-collapsed .nav-item:hover::after {
     content: attr(data-tooltip);
     position: absolute;
