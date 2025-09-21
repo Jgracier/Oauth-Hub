@@ -350,15 +350,19 @@ export const MODERN_CSS = `
   .sidebar-collapsed .sidebar-header {
     padding: var(--space-4); /* Proper header padding */
     display: flex;
-    justify-content: center; /* Center logo icon */
+    justify-content: space-between; /* Space between logo and toggle */
+    align-items: center;
+  }
+  
+  .sidebar-collapsed .sidebar-logo {
+    justify-content: center; /* Center just the logo icon */
+    flex: 1;
   }
   
   .sidebar-collapsed .sidebar-toggle {
-    position: absolute;
-    right: -12px; /* Position toggle arrow properly outside border */
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 10;
+    /* Keep toggle arrow in header, positioned to the right */
+    flex-shrink: 0;
+    margin-left: 0;
   }
   
   /* Show tooltips when globally collapsed */
