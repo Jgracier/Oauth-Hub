@@ -47,11 +47,7 @@
     "playwright": "^1.55.0",
     "wrangler": "^3.84.1"
   },
-  "dependencies": {
-    "express": "^4.18.2",
-    "node-fetch": "^2.6.7",
-    "simple-oauth2": "^5.1.0"
-  },
+  "dependencies": {},
   "engines": {
     "node": ">=16.0.0"
   }
