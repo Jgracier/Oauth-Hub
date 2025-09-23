@@ -34,27 +34,29 @@ export class GitHubAuthHandler extends BaseHandler {
   
   async initiateGitHubAuth(request) {
     try {
-      // Use the unified OAuth service instead of manual URL building
+      // Use the unified OAuth service for consistent OAuth flow
       const { generateConsentUrl } = await import('../../core/platforms/oauth/oauth-service.js');
-
-      // Create user app config for auth (using demo credentials)
-      const userApp = {
-        platform: 'github',
-        clientId: this.env.GITHUB_CLIENT_ID || 'demo-github-client-id',
-        clientSecret: this.env.GITHUB_CLIENT_SECRET || 'demo-github-client-secret'
-      };
 
       // Generate state parameter for security
       const state = generateRandomString(32);
 
+      // Create virtual user app config for authentication (demo credentials for development)
+      const userApp = {
+        platform: 'github',
+        clientId: this.env.GITHUB_CLIENT_ID || 'demo-github-client-id',
+        clientSecret: this.env.GITHUB_CLIENT_SECRET || 'demo-github-client-secret',
+        scopes: ['user:email'] // Standard GitHub auth scopes
+      };
+
       // Generate consent URL using the same service as OAuth apps
-      const consentUrl = await generateConsentUrl('github', userApp, 'auth-system', state, 'https://oauth-hub.com');
+      const consentUrl = await generateConsentUrl('github', userApp, 'auth-system', state, 'https://oauth-hub.com/auth/github');
 
       return Response.redirect(consentUrl, 302);
 
     } catch (error) {
       console.error('Error initiating GitHub auth:', error);
-      return this.jsonResponse({ error: 'Failed to initiate GitHub authentication' }, 500);
+      console.error('Error stack:', error.stack);
+      return this.jsonResponse({ error: 'Failed to initiate GitHub authentication', details: error.message }, 500);
     }
   }
   
@@ -92,13 +94,14 @@ export class GitHubAuthHandler extends BaseHandler {
       }
       
       // Exchange code for tokens using unified OAuth service
-      const { exchangeCodeForToken } = await import('../../core/platforms/oauth/oauth-service.js');
+      const { exchangeCodeForToken, getUserInfo } = await import('../../core/platforms/oauth/oauth-service.js');
 
-      // Create user app config for auth
+      // Create virtual user app config for authentication
       const userApp = {
         platform: 'github',
         clientId: this.env.GITHUB_CLIENT_ID || 'demo-github-client-id',
-        clientSecret: this.env.GITHUB_CLIENT_SECRET || 'demo-github-client-secret'
+        clientSecret: this.env.GITHUB_CLIENT_SECRET || 'demo-github-client-secret',
+        scopes: ['user:email']
       };
 
       let tokens;
@@ -134,8 +137,8 @@ export class GitHubAuthHandler extends BaseHandler {
         `);
       }
       
-      // Get user info from GitHub
-      const userInfo = await this.getGitHubUserInfo(tokens.access_token);
+      // Get user info from GitHub using unified OAuth service
+      const userInfo = await getUserInfo('github', tokens.access_token, userApp);
       
       if (!userInfo) {
         return this.htmlResponse(`
@@ -210,45 +213,6 @@ export class GitHubAuthHandler extends BaseHandler {
   }
   
   
-  async getGitHubUserInfo(accessToken) {
-    try {
-      // Get basic user info
-      const userResponse = await fetch('https://api.github.com/user', {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'User-Agent': 'OAuth-Hub'
-        }
-      });
-      
-      if (!userResponse.ok) {
-        console.error('Failed to get GitHub user info:', await userResponse.text());
-        return null;
-      }
-      
-      const userInfo = await userResponse.json();
-      
-      // Get user email (might be private)
-      const emailResponse = await fetch('https://api.github.com/user/emails', {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'User-Agent': 'OAuth-Hub'
-        }
-      });
-      
-      if (emailResponse.ok) {
-        const emails = await emailResponse.json();
-        const primaryEmail = emails.find(email => email.primary);
-        if (primaryEmail) {
-          userInfo.email = primaryEmail.email;
-        }
-      }
-      
-      return userInfo;
-    } catch (error) {
-      console.error('Error getting GitHub user info:', error);
-      return null;
-    }
-  }
   
   async createOrLoginGitHubUser(githubUserInfo) {
     try {

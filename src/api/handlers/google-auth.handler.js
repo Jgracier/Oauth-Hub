@@ -33,21 +33,22 @@ export class GoogleAuthHandler extends BaseHandler {
   
   async initiateGoogleAuth(request) {
     try {
-      // Use the unified OAuth service instead of manual URL building
+      // Use the unified OAuth service for consistent OAuth flow
       const { generateConsentUrl } = await import('../../core/platforms/oauth/oauth-service.js');
-
-      // Create user app config for auth (using demo credentials)
-      const userApp = {
-        platform: 'google',
-        clientId: this.env.GOOGLE_CLIENT_ID || 'demo-google-client-id',
-        clientSecret: this.env.GOOGLE_CLIENT_SECRET || 'demo-google-client-secret'
-      };
 
       // Generate state parameter for security
       const state = generateRandomString(32);
 
+      // Create virtual user app config for authentication (demo credentials for development)
+      const userApp = {
+        platform: 'google',
+        clientId: this.env.GOOGLE_CLIENT_ID || 'demo-google-client-id',
+        clientSecret: this.env.GOOGLE_CLIENT_SECRET || 'demo-google-client-secret',
+        scopes: ['openid', 'email', 'profile'] // Standard Google auth scopes
+      };
+
       // Generate consent URL using the same service as OAuth apps
-      const consentUrl = await generateConsentUrl('google', userApp, 'auth-system', state, 'https://oauth-hub.com');
+      const consentUrl = await generateConsentUrl('google', userApp, 'auth-system', state, 'https://oauth-hub.com/auth/google');
 
       return Response.redirect(consentUrl, 302);
 
@@ -92,13 +93,14 @@ export class GoogleAuthHandler extends BaseHandler {
       }
       
       // Exchange code for tokens using unified OAuth service
-      const { exchangeCodeForToken } = await import('../../core/platforms/oauth/oauth-service.js');
+      const { exchangeCodeForToken, getUserInfo } = await import('../../core/platforms/oauth/oauth-service.js');
 
-      // Create user app config for auth
+      // Create virtual user app config for authentication
       const userApp = {
         platform: 'google',
         clientId: this.env.GOOGLE_CLIENT_ID || 'demo-google-client-id',
-        clientSecret: this.env.GOOGLE_CLIENT_SECRET || 'demo-google-client-secret'
+        clientSecret: this.env.GOOGLE_CLIENT_SECRET || 'demo-google-client-secret',
+        scopes: ['openid', 'email', 'profile']
       };
 
       let tokens;
@@ -134,8 +136,8 @@ export class GoogleAuthHandler extends BaseHandler {
         `);
       }
       
-      // Get user info from Google
-      const userInfo = await this.getGoogleUserInfo(tokens.access_token);
+      // Get user info from Google using unified OAuth service
+      const userInfo = await getUserInfo('google', tokens.access_token, userApp);
       
       if (!userInfo) {
         return this.htmlResponse(`
@@ -209,26 +211,6 @@ export class GoogleAuthHandler extends BaseHandler {
     }
   }
   
-  
-  async getGoogleUserInfo(accessToken) {
-    try {
-      const response = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`
-        }
-      });
-      
-      if (!response.ok) {
-        console.error('Failed to get user info:', await response.text());
-        return null;
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('Error getting user info:', error);
-      return null;
-    }
-  }
   
   async createOrLoginGoogleUser(googleUserInfo) {
     try {
