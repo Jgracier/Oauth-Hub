@@ -158,7 +158,15 @@ export class GitHubAuthHandler extends BaseHandler {
         tokens = await exchangeCodeForToken('github', code, userApp);
       } catch (error) {
         console.error('Token exchange error:', error);
-        if (error.message.includes('invalid_client') || error.message.includes('OAuth2 error') || error.message.includes('Demo mode:') || this.env.GITHUB_CLIENT_ID === 'demo-github-client-id') {
+        if (this.env.GITHUB_CLIENT_ID === 'demo-github-client-id' ||
+            (error.message && (
+              error.message.includes('invalid_client') ||
+              error.message.includes('OAuth2 error') ||
+              error.message.includes('Not Found') ||
+              error.message.includes('bad_verification_code') ||
+              error.message.includes('Demo mode:')
+            ))
+        ) {
           return this.htmlResponse(`
             <!DOCTYPE html>
             <html lang="en">
