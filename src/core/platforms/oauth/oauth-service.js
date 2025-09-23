@@ -36,7 +36,7 @@ export async function generateConsentUrl(platform, userApp, apiKey, state, baseU
 
     const authorizationUri = client.authorizationCode.getAuthorizeUri({
       redirectUri: `${baseUrl}/callback`,
-      scope: allScopes, // Pass as array, not string
+      scope: allScopes, // Pass as array
       state: state,
       ...platformConfig.additionalParams
     });
