@@ -1,6 +1,7 @@
 /**
  * 👤 USER INFO EXTRACTOR
  * Extracts platform user IDs from user info responses
+ * Simplified for use with simple-oauth2 service integration
  * Handles platform-specific data structure differences
  */
 
@@ -12,6 +13,7 @@ export function extractPlatformUserId(platform, userInfo, platformConfig) {
   
   try {
     // Handle platform-specific data structures
+    // Note: This works with simple-oauth2 service - userInfo comes from getUserInfo() calls
     switch (platform.toLowerCase()) {
       case 'apple':
         return userInfo.sub;

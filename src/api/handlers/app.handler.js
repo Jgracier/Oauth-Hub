@@ -60,6 +60,7 @@ export class AppHandler extends BaseHandler {
         clientSecret: clientSecret,
         scopes: finalScopes,
         redirectUri: redirectUri,
+        scopeImportResult: scopeImportResult, // Store import results for debugging
         createdAt: new Date().toISOString()
       };
 

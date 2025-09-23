@@ -1,7 +1,34 @@
 /**
  * 🛠️ OAUTH UTILITIES
- * PKCE helpers and other OAuth-related utility functions
+ * OAuth-related utility functions for simple-oauth2 integration
+ * Note: PKCE now handled by simple-oauth2 package automatically
  */
+
+/**
+ * Generate a secure state parameter for OAuth flows
+ */
+export function generateState(platform, apiKey) {
+  const timestamp = Date.now();
+  const uuid = crypto.randomUUID();
+  return `${platform}_${apiKey}_${timestamp}_${uuid}`;
+}
+
+/**
+ * Parse state parameter back to components
+ */
+export function parseState(state) {
+  const parts = state.split('_');
+  if (parts.length < 4) {
+    throw new Error('Invalid state parameter format');
+  }
+  
+  return {
+    platform: parts[0],
+    apiKey: parts.slice(1, -2).join('_'), // Everything between platform and timestamp+uuid
+    timestamp: parts[parts.length - 2],
+    uuid: parts[parts.length - 1]
+  };
+}
 
 /**
  * Validate OAuth response and extract error information
@@ -41,6 +68,7 @@ export function validateOAuthResponse(searchParams) {
 
 /**
  * Check if a token is expired or will expire soon
+ * Enhanced for simple-oauth2 integration with configurable buffer
  */
 export function isTokenExpired(expiresAt, bufferSeconds = 300) {
   if (!expiresAt) return false; // No expiration set
