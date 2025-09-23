@@ -66,21 +66,7 @@ export class GitHubAuthHandler extends BaseHandler {
       const code = url.searchParams.get('code');
       const state = url.searchParams.get('state');
       const error = url.searchParams.get('error');
-
-      // Check for demo mode first - provide clear error message
-      if (!this.env.GITHUB_CLIENT_ID || this.env.GITHUB_CLIENT_ID === 'demo-github-client-id') {
-        return this.htmlResponse(`
-          <html>
-            <body>
-              <script>
-                alert('Demo Mode: GitHub OAuth requires real credentials.\\n\\nPlease configure these environment variables:\\n• GITHUB_CLIENT_ID\\n• GITHUB_CLIENT_SECRET\\n\\nThen restart the application.');
-                window.location.href = '/auth';
-              </script>
-            </body>
-          </html>
-        `);
-      }
-
+      
       if (error) {
         return this.htmlResponse(`
           <html>
@@ -93,7 +79,7 @@ export class GitHubAuthHandler extends BaseHandler {
           </html>
         `);
       }
-
+      
       if (!code) {
         return this.htmlResponse(`
           <html>

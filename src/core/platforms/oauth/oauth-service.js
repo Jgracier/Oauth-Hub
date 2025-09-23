@@ -5,6 +5,7 @@
  */
 
 // Note: PLATFORMS will be imported lazily to avoid circular dependencies
+import { OAuth2Client } from '@badgateway/oauth2-client';
 import { normalizeTokenResponse } from './token-manager.js';
 import { extractPlatformUserId } from './user-info-extractor.js';
 
@@ -25,20 +26,26 @@ export async function generateConsentUrl(platform, userApp, apiKey, state, baseU
     const allScopes = [...new Set([...requiredScopes, ...userScopes])];
     const scopeString = allScopes.join(platformConfig.scopeDelimiter || ' ');
 
-    // Build URL parameters manually (Workers-compatible)
-    const params = new URLSearchParams({
-      client_id: userApp.clientId,
-      redirect_uri: `${baseUrl}/callback`,
-      response_type: 'code',
-      scope: scopeString,
-      state: state,
-      ...platformConfig.additionalParams
+    // Create OAuth2Client for Cloudflare Workers compatibility
+    const client = new OAuth2Client({
+      server: platformConfig.authUrl,
+      clientId: userApp.clientId,
+      clientSecret: userApp.clientSecret,
+      tokenEndpoint: platformConfig.tokenUrl,
+      authorizationEndpoint: platformConfig.authUrl
     });
 
-    const authUrl = new URL(platformConfig.authUrl);
-    authUrl.search = params.toString();
+    // Build authorization URL with scopes and parameters
+    const authUrlOptions = {
+      redirectUri: `${baseUrl}/callback`,
+      scope: allScopes, // Pass as array
+      state: state,
+      ...platformConfig.additionalParams
+    };
 
-    return authUrl.toString();
+    const authorizationUri = await client.authorizationCode.getAuthorizeUri(authUrlOptions);
+
+    return authorizationUri; // Caller (router) can access if needed
   } catch (error) {
     throw new Error(`[${platform}] Failed to generate consent URL: ${error.message}`);
   }
@@ -47,7 +54,7 @@ export async function generateConsentUrl(platform, userApp, apiKey, state, baseU
 /**
  * Exchange authorization code for access token with platform-specific handling
  */
-export async function exchangeCodeForToken(platform, code, userApp, baseUrl = 'https://oauth-hub.com') {
+export async function exchangeCodeForToken(platform, code, userApp) {
   const { PLATFORMS } = await import('../index.js');
   const platformConfig = PLATFORMS[platform.toLowerCase()];
   if (!platformConfig) {
@@ -55,43 +62,32 @@ export async function exchangeCodeForToken(platform, code, userApp, baseUrl = 'h
   }
 
   try {
-    // Build token exchange request manually (Workers-compatible)
-    const params = new URLSearchParams({
-      client_id: userApp.clientId,
-      client_secret: userApp.clientSecret,
-      code: code,
-      grant_type: 'authorization_code',
-      redirect_uri: `${baseUrl}/callback`
+    // Create OAuth2Client for Cloudflare Workers compatibility
+    const client = new OAuth2Client({
+      server: platformConfig.authUrl,
+      clientId: userApp.clientId,
+      clientSecret: userApp.clientSecret,
+      tokenEndpoint: platformConfig.tokenUrl,
+      authorizationEndpoint: platformConfig.authUrl
     });
 
-    // Platform-specific handling
-    let headers = {
-      'Content-Type': 'application/x-www-form-urlencoded'
+    const tokenOptions = {
+      code,
+      redirectUri: 'https://oauth-hub.com/callback'
     };
 
-    // Some platforms require basic auth instead of form params
-    if (platformConfig.authMethod === 'basic') {
-      const credentials = btoa(`${userApp.clientId}:${userApp.clientSecret}`);
-      headers['Authorization'] = `Basic ${credentials}`;
-      // Remove client_secret from body for basic auth
-      params.delete('client_secret');
-    }
+    const tokenData = await client.authorizationCode.getToken(tokenOptions);
 
-    const response = await fetch(platformConfig.tokenUrl, {
-      method: 'POST',
-      headers: headers,
-      body: params.toString()
-    });
+    // Normalize token response for consistent interface
+    const normalized = {
+      accessToken: tokenData.accessToken,
+      refreshToken: tokenData.refreshToken,
+      tokenType: tokenData.tokenType || 'Bearer',
+      expiresIn: tokenData.expiresIn,
+      expiresAt: tokenData.expiresIn ? Date.now() + (tokenData.expiresIn * 1000) : null,
+      scope: tokenData.scope
+    };
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Token exchange failed: ${response.status} ${errorText}`);
-    }
-
-    const tokenData = await response.json();
-
-    // Normalize token response
-    const normalized = normalizeTokenResponse(platform, tokenData);
     return normalized;
   } catch (error) {
     throw new Error(`[${platform}] Token exchange failed: ${error.message}`);
@@ -205,32 +201,32 @@ export async function refreshAccessToken(platform, refreshToken, userApp) {
   }
 
   try {
-    // Build refresh token request manually (Workers-compatible)
-    const params = new URLSearchParams({
-      client_id: userApp.clientId,
-      client_secret: userApp.clientSecret,
-      refresh_token: refreshToken,
-      grant_type: 'refresh_token'
+    // Create OAuth2Client for Cloudflare Workers compatibility
+    const client = new OAuth2Client({
+      server: platformConfig.authUrl,
+      clientId: userApp.clientId,
+      clientSecret: userApp.clientSecret,
+      tokenEndpoint: platformConfig.tokenUrl,
+      authorizationEndpoint: platformConfig.authUrl
     });
 
-    const response = await fetch(platformConfig.tokenUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
-      body: params.toString()
-    });
+    // Create a token object for the refresh operation
+    const tokenToRefresh = {
+      accessToken: '', // Not needed for refresh
+      refreshToken: refreshToken,
+      expiresAt: null
+    };
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Token refresh failed: ${response.status} ${errorText}`);
-    }
+    const tokenData = await client.refreshToken(tokenToRefresh);
 
-    const tokenData = await response.json();
-
-    // Normalize token response
-    const normalized = normalizeTokenResponse(platform, tokenData);
-    return normalized;
+    return {
+      accessToken: tokenData.accessToken,
+      refreshToken: tokenData.refreshToken || refreshToken, // Keep old if not new
+      tokenType: tokenData.tokenType || 'Bearer',
+      expiresIn: tokenData.expiresIn,
+      expiresAt: tokenData.expiresIn ? Date.now() + (tokenData.expiresIn * 1000) : null,
+      scope: tokenData.scope
+    };
   } catch (error) {
     throw new Error(`[${platform}] Token refresh failed: ${error.message}`);
   }
@@ -240,53 +236,21 @@ export async function revokeToken(platform, accessToken, userApp, env) {
   const { PLATFORMS } = await import('../index.js');
   const platformConfig = PLATFORMS[platform.toLowerCase()];
 
-  if (!platformConfig) {
-    throw new Error(`[${platform}] Unsupported platform`);
-  }
+  // Create OAuth2Client for Cloudflare Workers compatibility
+  const client = new OAuth2Client({
+    server: platformConfig.authUrl,
+    clientId: userApp.clientId,
+    clientSecret: userApp.clientSecret,
+    tokenEndpoint: platformConfig.tokenUrl,
+    authorizationEndpoint: platformConfig.authUrl
+  });
 
-  try {
-    // Try platform-specific revocation endpoints
-    let revokeUrl;
-    let revokeParams;
-    let headers = {};
-
-    switch (platform.toLowerCase()) {
-      case 'google':
-        revokeUrl = 'https://oauth2.googleapis.com/revoke';
-        revokeParams = new URLSearchParams({ token: accessToken });
-        break;
-      case 'github':
-        // GitHub doesn't have a revoke endpoint - just delete locally
-        return true;
-      case 'microsoft':
-        revokeUrl = 'https://login.microsoftonline.com/common/oauth2/v2.0/logout';
-        revokeParams = new URLSearchParams({ post_logout_redirect_uri: 'https://oauth-hub.com' });
-        break;
-      default:
-        // For platforms without revoke endpoints, just log and return success
-        console.log(`[${platform}] No revocation endpoint available - token will expire naturally`);
-        return true;
-    }
-
-    if (revokeUrl) {
-      const response = await fetch(revokeUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          ...headers
-        },
-        body: revokeParams.toString()
-      });
-
-      if (!response.ok) {
-        console.warn(`[${platform}] Revocation may have failed: ${response.status} ${await response.text()}`);
-      }
-    }
-
-    return true;
-  } catch (error) {
-    console.error(`[${platform}] Token revocation failed: ${error.message}`);
-    // Don't throw - revocation failure shouldn't break the flow
-    return false;
+  // Try using client's revoke method if available, otherwise manual revoke
+  if (client.revokeToken) {
+    await client.revokeToken({ token: accessToken });
+  } else {
+    // Manual revocation - some platforms don't support token revocation
+    // Just log that we would revoke if supported
+    console.log(`[${platform}] Token revocation not supported by provider`);
   }
 }

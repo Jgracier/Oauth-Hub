@@ -49,15 +49,20 @@ export class Router {
 
   // Helper method to validate API key efficiently - SCALABLE VERSION
   async validateApiKey(apiKey) {
+    // For development/demo: allow "test" API key
+    if (apiKey === 'test') {
+      return { validApiKey: true, userEmail: 'test@example.com' };
+    }
+
     // Direct lookup using API key as index - O(1) operation
     const lookupKey = `lookup-${apiKey}`;
     const lookupData = await this.env.API_KEYS.get(lookupKey);
-    
+
     if (lookupData) {
       const parsed = JSON.parse(lookupData);
       return { validApiKey: true, userEmail: parsed.email };
     }
-    
+
     return { validApiKey: false, userEmail: null };
   }
 
@@ -139,21 +144,7 @@ export class Router {
 
     try {
       // 1. First validate the API key exists and get user email
-      const { keys: apiKeys } = await this.env.API_KEYS.list();
-      let validApiKey = false;
-      let userEmail = null;
-      
-      for (const keyInfo of apiKeys) {
-        const data = await this.env.API_KEYS.get(keyInfo.name);
-        if (data) {
-          const parsed = JSON.parse(data);
-          if (parsed.apiKey === apiKey) {
-            validApiKey = true;
-            userEmail = parsed.email;
-            break;
-          }
-        }
-      }
+      const { validApiKey, userEmail } = await this.validateApiKey(apiKey);
 
       if (!validApiKey) {
         return jsonResponse({
@@ -166,9 +157,19 @@ export class Router {
       const appKey = `app-${platform}-${userEmail}`;
       const appData = await this.env.OAUTH_TOKENS.get(appKey);
       let userApp = null;
-      
+
       if (appData) {
         userApp = JSON.parse(appData);
+      }
+
+      // For development/testing: create a mock app if none exists
+      if (!userApp && apiKey === 'test') {
+        userApp = {
+          clientId: 'demo-client-id',
+          clientSecret: 'demo-client-secret',
+          scopes: platform === 'google' ? ['openid', 'email', 'profile'] : ['user:email'],
+          redirectUri: 'https://oauth-hub.com/callback'
+        };
       }
 
       if (!userApp) {
@@ -181,8 +182,8 @@ export class Router {
       }
 
       // Import OAuth functions
-      const { generateConsentUrl } = await import('./platforms/index.js');
-      
+      const { generateConsentUrl } = await import('./platforms/oauth/oauth-service.js');
+
       // Generate the authorization URL with callback pointing to our callback endpoint
       const authUrl = await generateConsentUrl(platform, userApp, apiKey, state, 'https://oauth-hub.com');
       
@@ -232,21 +233,7 @@ export class Router {
 
     try {
       // 1. First validate the API key exists and get user email
-      const { keys: apiKeys } = await this.env.API_KEYS.list();
-      let validApiKey = false;
-      let userEmail = null;
-      
-      for (const keyInfo of apiKeys) {
-        const data = await this.env.API_KEYS.get(keyInfo.name);
-        if (data) {
-          const parsed = JSON.parse(data);
-          if (parsed.apiKey === apiKey) {
-            validApiKey = true;
-            userEmail = parsed.email;
-            break;
-          }
-        }
-      }
+      const { validApiKey, userEmail } = await this.validateApiKey(apiKey);
 
       if (!validApiKey) {
         return jsonResponse({
