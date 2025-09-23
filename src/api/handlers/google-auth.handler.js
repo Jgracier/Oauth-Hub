@@ -65,7 +65,21 @@ export class GoogleAuthHandler extends BaseHandler {
       const code = url.searchParams.get('code');
       const state = url.searchParams.get('state');
       const error = url.searchParams.get('error');
-      
+
+      // Check for demo mode first - provide clear error message
+      if (!this.env.GOOGLE_CLIENT_ID || this.env.GOOGLE_CLIENT_ID === 'demo-google-client-id') {
+        return this.htmlResponse(`
+          <html>
+            <body>
+              <script>
+                alert('Demo Mode: Google OAuth requires real credentials.\\n\\nPlease configure these environment variables:\\n• GOOGLE_CLIENT_ID\\n• GOOGLE_CLIENT_SECRET\\n\\nThen restart the application.');
+                window.location.href = '/auth';
+              </script>
+            </body>
+          </html>
+        `);
+      }
+
       if (error) {
         return this.htmlResponse(`
           <html>
@@ -78,7 +92,7 @@ export class GoogleAuthHandler extends BaseHandler {
           </html>
         `);
       }
-      
+
       if (!code) {
         return this.htmlResponse(`
           <html>
@@ -103,25 +117,8 @@ export class GoogleAuthHandler extends BaseHandler {
         scopes: ['openid', 'email', 'profile']
       };
 
-      let tokens;
-      try {
-        tokens = await exchangeCodeForToken('google', code, userApp);
-      } catch (error) {
-        console.error('Token exchange error:', error);
-        if (error.message.includes('Demo mode:') || this.env.GOOGLE_CLIENT_ID === 'demo-google-client-id') {
-          return this.htmlResponse(`
-            <html>
-              <body>
-                <script>
-                  alert('Demo Mode: Google OAuth requires real credentials. Please configure GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET environment variables.');
-                  window.location.href = '/auth';
-                </script>
-              </body>
-            </html>
-          `);
-        }
-        throw error;
-      }
+      // Exchange code for tokens using unified OAuth service
+      const tokens = await exchangeCodeForToken('google', code, userApp);
 
       if (!tokens) {
         return this.htmlResponse(`

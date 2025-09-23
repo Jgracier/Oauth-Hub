@@ -5,7 +5,6 @@
  */
 
 // Note: PLATFORMS will be imported lazily to avoid circular dependencies
-import { OAuth2Client } from '@badgateway/oauth2-client';
 import { normalizeTokenResponse } from './token-manager.js';
 import { extractPlatformUserId } from './user-info-extractor.js';
 
@@ -24,27 +23,22 @@ export async function generateConsentUrl(platform, userApp, apiKey, state, baseU
     const requiredScopes = platformConfig.requiredScopes || [];
     const userScopes = userApp.scopes || [];
     const allScopes = [...new Set([...requiredScopes, ...userScopes])];
+    const scopeString = allScopes.join(platformConfig.scopeDelimiter || ' ');
 
-    // Build base URL from request
-    if (!baseUrl.endsWith('/')) baseUrl += '/';
-
-    // Create OAuth2 client with @badgateway/oauth2-client
-    const client = new OAuth2Client({
-      clientId: userApp.clientId,
-      clientSecret: userApp.clientSecret,
-      authorizationEndpoint: platformConfig.authUrl,
-      tokenEndpoint: platformConfig.tokenUrl
-    });
-
-    // Generate authorization URL
-    const authUrl = client.authorizationCode.getAuthorizeUri({
-      redirectUri: `${baseUrl}/callback`,
-      scope: allScopes, // Pass as array
+    // Build URL parameters manually (Workers-compatible)
+    const params = new URLSearchParams({
+      client_id: userApp.clientId,
+      redirect_uri: `${baseUrl}/callback`,
+      response_type: 'code',
+      scope: scopeString,
       state: state,
       ...platformConfig.additionalParams
     });
 
-    return authUrl;
+    const authUrl = new URL(platformConfig.authUrl);
+    authUrl.search = params.toString();
+
+    return authUrl.toString();
   } catch (error) {
     throw new Error(`[${platform}] Failed to generate consent URL: ${error.message}`);
   }
@@ -53,7 +47,7 @@ export async function generateConsentUrl(platform, userApp, apiKey, state, baseU
 /**
  * Exchange authorization code for access token with platform-specific handling
  */
-export async function exchangeCodeForToken(platform, code, userApp, redirectUri = 'https://oauth-hub.com/callback') {
+export async function exchangeCodeForToken(platform, code, userApp, baseUrl = 'https://oauth-hub.com') {
   const { PLATFORMS } = await import('../index.js');
   const platformConfig = PLATFORMS[platform.toLowerCase()];
   if (!platformConfig) {
@@ -61,30 +55,43 @@ export async function exchangeCodeForToken(platform, code, userApp, redirectUri 
   }
 
   try {
-    // Create OAuth2 client with @badgateway/oauth2-client
-    const client = new OAuth2Client({
-      clientId: userApp.clientId,
-      clientSecret: userApp.clientSecret,
-      authorizationEndpoint: platformConfig.authUrl,
-      tokenEndpoint: platformConfig.tokenUrl
-    });
-
-    // Exchange code for token
-    const token = await client.authorizationCode.getToken({
+    // Build token exchange request manually (Workers-compatible)
+    const params = new URLSearchParams({
+      client_id: userApp.clientId,
+      client_secret: userApp.clientSecret,
       code: code,
-      redirectUri: redirectUri
+      grant_type: 'authorization_code',
+      redirect_uri: `${baseUrl}/callback`
     });
 
-    // Normalize token response
-    const normalized = {
-      accessToken: token.accessToken,
-      refreshToken: token.refreshToken,
-      tokenType: token.tokenType || 'Bearer',
-      expiresIn: token.expiresIn,
-      expiresAt: token.expiresIn ? Date.now() + (token.expiresIn * 1000) : null,
-      scope: Array.isArray(token.scope) ? token.scope.join(' ') : token.scope
+    // Platform-specific handling
+    let headers = {
+      'Content-Type': 'application/x-www-form-urlencoded'
     };
 
+    // Some platforms require basic auth instead of form params
+    if (platformConfig.authMethod === 'basic') {
+      const credentials = btoa(`${userApp.clientId}:${userApp.clientSecret}`);
+      headers['Authorization'] = `Basic ${credentials}`;
+      // Remove client_secret from body for basic auth
+      params.delete('client_secret');
+    }
+
+    const response = await fetch(platformConfig.tokenUrl, {
+      method: 'POST',
+      headers: headers,
+      body: params.toString()
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Token exchange failed: ${response.status} ${errorText}`);
+    }
+
+    const tokenData = await response.json();
+
+    // Normalize token response
+    const normalized = normalizeTokenResponse(platform, tokenData);
     return normalized;
   } catch (error) {
     throw new Error(`[${platform}] Token exchange failed: ${error.message}`);
@@ -198,26 +205,32 @@ export async function refreshAccessToken(platform, refreshToken, userApp) {
   }
 
   try {
-    // Create OAuth2 client with @badgateway/oauth2-client
-    const client = new OAuth2Client({
-      clientId: userApp.clientId,
-      clientSecret: userApp.clientSecret,
-      authorizationEndpoint: platformConfig.authUrl,
-      tokenEndpoint: platformConfig.tokenUrl
+    // Build refresh token request manually (Workers-compatible)
+    const params = new URLSearchParams({
+      client_id: userApp.clientId,
+      client_secret: userApp.clientSecret,
+      refresh_token: refreshToken,
+      grant_type: 'refresh_token'
     });
 
-    // Refresh token
-    const token = await client.refreshToken(refreshToken);
+    const response = await fetch(platformConfig.tokenUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: params.toString()
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Token refresh failed: ${response.status} ${errorText}`);
+    }
+
+    const tokenData = await response.json();
 
     // Normalize token response
-    return {
-      accessToken: token.accessToken,
-      refreshToken: token.refreshToken || refreshToken, // Keep old if not new
-      tokenType: token.tokenType || 'Bearer',
-      expiresIn: token.expiresIn,
-      expiresAt: token.expiresIn ? Date.now() + (token.expiresIn * 1000) : null,
-      scope: Array.isArray(token.scope) ? token.scope.join(' ') : token.scope
-    };
+    const normalized = normalizeTokenResponse(platform, tokenData);
+    return normalized;
   } catch (error) {
     throw new Error(`[${platform}] Token refresh failed: ${error.message}`);
   }
@@ -227,19 +240,53 @@ export async function revokeToken(platform, accessToken, userApp, env) {
   const { PLATFORMS } = await import('../index.js');
   const platformConfig = PLATFORMS[platform.toLowerCase()];
 
-  try {
-    // Create OAuth2 client with @badgateway/oauth2-client
-    const client = new OAuth2Client({
-      clientId: userApp.clientId,
-      clientSecret: userApp.clientSecret,
-      authorizationEndpoint: platformConfig.authUrl,
-      tokenEndpoint: platformConfig.tokenUrl
-    });
+  if (!platformConfig) {
+    throw new Error(`[${platform}] Unsupported platform`);
+  }
 
-    // Revoke token (if supported by platform)
-    await client.revokeToken(accessToken);
+  try {
+    // Try platform-specific revocation endpoints
+    let revokeUrl;
+    let revokeParams;
+    let headers = {};
+
+    switch (platform.toLowerCase()) {
+      case 'google':
+        revokeUrl = 'https://oauth2.googleapis.com/revoke';
+        revokeParams = new URLSearchParams({ token: accessToken });
+        break;
+      case 'github':
+        // GitHub doesn't have a revoke endpoint - just delete locally
+        return true;
+      case 'microsoft':
+        revokeUrl = 'https://login.microsoftonline.com/common/oauth2/v2.0/logout';
+        revokeParams = new URLSearchParams({ post_logout_redirect_uri: 'https://oauth-hub.com' });
+        break;
+      default:
+        // For platforms without revoke endpoints, just log and return success
+        console.log(`[${platform}] No revocation endpoint available - token will expire naturally`);
+        return true;
+    }
+
+    if (revokeUrl) {
+      const response = await fetch(revokeUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          ...headers
+        },
+        body: revokeParams.toString()
+      });
+
+      if (!response.ok) {
+        console.warn(`[${platform}] Revocation may have failed: ${response.status} ${await response.text()}`);
+      }
+    }
+
+    return true;
   } catch (error) {
-    // Some platforms don't support revocation, log but don't throw
-    console.warn(`[${platform}] Token revocation not supported or failed: ${error.message}`);
+    console.error(`[${platform}] Token revocation failed: ${error.message}`);
+    // Don't throw - revocation failure shouldn't break the flow
+    return false;
   }
 }
