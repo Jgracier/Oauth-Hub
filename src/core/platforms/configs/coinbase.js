@@ -12,10 +12,13 @@ export const coinbase = {
   tokenUrl: 'https://api.coinbase.com/oauth/token',
   userInfoUrl: 'https://api.coinbase.com/v2/user',
   userIdField: 'data.id',
+  revokeUrl: null, // OAuth token revocation endpoint
+  introspectUrl: null, // OAuth token introspection endpoint
   docsUrl: 'https://developers.coinbase.com/docs/wallet/coinbase-connect',
   description: 'Coinbase cryptocurrency platform',
   requiredScopes: ['wallet:user:read'],
   scopeDelimiter: ' ',
+  requiresPKCE: false, // PKCE requirement for enhanced security
   additionalParams: { response_type: 'code' },
   scopes: {
     'User Information': {

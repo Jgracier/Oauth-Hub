@@ -12,10 +12,13 @@ export const linkedin = {
   tokenUrl: 'https://www.linkedin.com/oauth/v2/accessToken',
   userInfoUrl: 'https://api.linkedin.com/v2/userinfo',
   userIdField: 'sub',
+  revokeUrl: 'https://www.linkedin.com/oauth/v2/revoke', // OAuth token revocation endpoint
+  introspectUrl: null, // OAuth token introspection endpoint
   docsUrl: 'https://developer.linkedin.com/',
   description: 'Access LinkedIn APIs for profile and company data',
   requiredScopes: ['openid', 'profile', 'email'],
-  scopeDelimiter: ' ', // Space-delimited
+  scopeDelimiter: ' ',
+  requiresPKCE: false, // PKCE requirement for enhanced security // Space-delimited
   additionalParams: {
     response_type: 'code'
   },

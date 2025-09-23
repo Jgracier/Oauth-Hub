@@ -11,11 +11,14 @@ export const facebook = {
   authUrl: 'https://www.facebook.com/v18.0/dialog/oauth',
   tokenUrl: 'https://graph.facebook.com/v18.0/oauth/access_token',
   userInfoUrl: 'https://graph.facebook.com/me?fields=id,name,email',
+  revokeUrl: 'https://graph.facebook.com/me/permissions',
+  introspectUrl: 'https://graph.facebook.com/debug_token',
   userIdField: 'id',
   docsUrl: 'https://developers.facebook.com/',
   description: 'Access Facebook Graph API for posts, pages, and user data',
   requiredScopes: ['public_profile', 'email'],
   scopeDelimiter: ',', // Comma-delimited
+  requiresPKCE: false, // Facebook doesn't require PKCE
   additionalParams: {
     response_type: 'code',
     access_type: 'offline' // For refresh tokens

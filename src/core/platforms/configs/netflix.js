@@ -12,10 +12,13 @@ export const netflix = {
   tokenUrl: 'https://api.netflix.com/oauth/access_token',
   userInfoUrl: 'https://api.netflix.com/users/current',
   userIdField: 'user.user_id',
+  revokeUrl: null, // OAuth token revocation endpoint
+  introspectUrl: null, // OAuth token introspection endpoint
   docsUrl: 'https://developer.netflix.com/docs/security',
   description: 'Netflix streaming platform (OAuth 1.0a)',
   requiredScopes: ['read'],
   scopeDelimiter: ' ',
+  requiresPKCE: false, // PKCE requirement for enhanced security
   additionalParams: { oauth_version: '1.0' },
   scopes: {
     'Basic': {

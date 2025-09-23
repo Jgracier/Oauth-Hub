@@ -12,10 +12,13 @@ export const wordpress = {
   tokenUrl: 'https://public-api.wordpress.com/oauth2/token',
   userInfoUrl: 'https://public-api.wordpress.com/rest/v1/me',
   userIdField: 'ID',
+  revokeUrl: null, // OAuth token revocation endpoint
+  introspectUrl: null, // OAuth token introspection endpoint
   docsUrl: 'https://developer.wordpress.com/apps/',
   description: 'Access WordPress.com API for sites and posts',
   requiredScopes: ['auth'],
   scopeDelimiter: ' ',
+  requiresPKCE: false, // PKCE requirement for enhanced security
   additionalParams: { response_type: 'code' },
   scopes: {
     'Authentication': {

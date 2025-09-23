@@ -1,12 +1,11 @@
 /**
  * 🎫 TOKEN MANAGER
- * Simplified token normalization - now mostly handled by simple-oauth2 package
- * Keeps legacy support for custom platform quirks
+ * Normalizes token responses from different OAuth platforms
+ * Handles platform-specific token format quirks
  */
 
 /**
  * Normalize token response format across all platforms
- * Note: simple-oauth2 handles most normalization, this is for legacy/custom cases
  */
 export function normalizeTokenResponse(platform, tokenResponse) {
   const normalized = {
@@ -19,28 +18,239 @@ export function normalizeTokenResponse(platform, tokenResponse) {
   };
 
   try {
-    // Most platforms now handled by simple-oauth2 package
-    // Only special cases need manual handling
+    // Handle platform-specific token response formats
     switch (platform.toLowerCase()) {
+      case 'github':
+        normalized.accessToken = tokenResponse.access_token;
+        normalized.tokenType = tokenResponse.token_type || 'Bearer';
+        normalized.scope = tokenResponse.scope;
+        break;
+
+      case 'google':
+        normalized.accessToken = tokenResponse.access_token;
+        normalized.refreshToken = tokenResponse.refresh_token;
+        normalized.tokenType = tokenResponse.token_type || 'Bearer';
+        normalized.expiresIn = tokenResponse.expires_in;
+        normalized.scope = tokenResponse.scope;
+        break;
+
+      case 'apple':
+        normalized.accessToken = tokenResponse.access_token;
+        normalized.refreshToken = tokenResponse.refresh_token;
+        normalized.tokenType = tokenResponse.token_type || 'Bearer';
+        normalized.expiresIn = tokenResponse.expires_in;
+        break;
+
+      case 'amazon':
+        normalized.accessToken = tokenResponse.access_token;
+        normalized.refreshToken = tokenResponse.refresh_token;
+        normalized.tokenType = tokenResponse.token_type || 'Bearer';
+        normalized.expiresIn = tokenResponse.expires_in;
+        break;
+
+      case 'shopify':
+        normalized.accessToken = tokenResponse.access_token;
+        normalized.scope = tokenResponse.scope;
+        break;
+
+      case 'stripe':
+        normalized.accessToken = tokenResponse.access_token;
+        normalized.refreshToken = tokenResponse.refresh_token;
+        normalized.tokenType = tokenResponse.token_type || 'Bearer';
+        normalized.scope = tokenResponse.scope;
+        break;
+
+      case 'paypal':
+        normalized.accessToken = tokenResponse.access_token;
+        normalized.tokenType = tokenResponse.token_type || 'Bearer';
+        normalized.expiresIn = tokenResponse.expires_in;
+        normalized.scope = tokenResponse.scope;
+        break;
+
+      case 'salesforce':
+        normalized.accessToken = tokenResponse.access_token;
+        normalized.refreshToken = tokenResponse.refresh_token;
+        normalized.tokenType = tokenResponse.token_type || 'Bearer';
+        normalized.scope = tokenResponse.scope;
+        break;
+
+      case 'hubspot':
+        normalized.accessToken = tokenResponse.access_token;
+        normalized.refreshToken = tokenResponse.refresh_token;
+        normalized.tokenType = tokenResponse.token_type || 'Bearer';
+        normalized.expiresIn = tokenResponse.expires_in;
+        break;
+
+      case 'zoom':
+        normalized.accessToken = tokenResponse.access_token;
+        normalized.refreshToken = tokenResponse.refresh_token;
+        normalized.tokenType = tokenResponse.token_type || 'Bearer';
+        normalized.expiresIn = tokenResponse.expires_in;
+        normalized.scope = tokenResponse.scope;
+        break;
+
+      case 'dropbox':
+        normalized.accessToken = tokenResponse.access_token;
+        normalized.refreshToken = tokenResponse.refresh_token;
+        normalized.tokenType = tokenResponse.token_type || 'Bearer';
+        normalized.expiresIn = tokenResponse.expires_in;
+        normalized.scope = tokenResponse.scope;
+        break;
+
+      case 'coinbase':
+        normalized.accessToken = tokenResponse.access_token;
+        normalized.refreshToken = tokenResponse.refresh_token;
+        normalized.tokenType = tokenResponse.token_type || 'Bearer';
+        normalized.expiresIn = tokenResponse.expires_in;
+        normalized.scope = tokenResponse.scope;
+        break;
+
+      // Additional American platforms
+      case 'mailchimp':
+        normalized.accessToken = tokenResponse.access_token;
+        normalized.tokenType = tokenResponse.token_type || 'Bearer';
+        normalized.expiresIn = tokenResponse.expires_in;
+        normalized.scope = tokenResponse.scope;
+        break;
+
       case 'trello':
-        // OAuth 1.0a: { oauth_token, oauth_token_secret }
+        // Trello (OAuth 1.0a): { oauth_token, oauth_token_secret }
         normalized.accessToken = tokenResponse.oauth_token;
-        normalized.refreshToken = tokenResponse.oauth_token_secret;
+        normalized.refreshToken = tokenResponse.oauth_token_secret; // Store as refresh for consistency
+        break;
+
+      case 'asana':
+        normalized.accessToken = tokenResponse.access_token;
+        normalized.refreshToken = tokenResponse.refresh_token;
+        normalized.tokenType = tokenResponse.token_type || 'Bearer';
+        normalized.expiresIn = tokenResponse.expires_in;
+        break;
+
+      case 'notion':
+        normalized.accessToken = tokenResponse.access_token;
+        normalized.tokenType = tokenResponse.token_type || 'Bearer';
+        break;
+
+      case 'adobe':
+        normalized.accessToken = tokenResponse.access_token;
+        normalized.refreshToken = tokenResponse.refresh_token;
+        normalized.tokenType = tokenResponse.token_type || 'Bearer';
+        normalized.expiresIn = tokenResponse.expires_in;
+        break;
+
+      case 'figma':
+        normalized.accessToken = tokenResponse.access_token;
+        normalized.refreshToken = tokenResponse.refresh_token;
+        normalized.tokenType = tokenResponse.token_type || 'Bearer';
+        normalized.expiresIn = tokenResponse.expires_in;
+        break;
+
+      case 'canva':
+        normalized.accessToken = tokenResponse.access_token;
+        normalized.refreshToken = tokenResponse.refresh_token;
+        normalized.tokenType = tokenResponse.token_type || 'Bearer';
+        normalized.expiresIn = tokenResponse.expires_in;
+        normalized.scope = tokenResponse.scope;
+        break;
+
+      case 'dribbble':
+        normalized.accessToken = tokenResponse.access_token;
+        normalized.tokenType = tokenResponse.token_type || 'Bearer';
+        normalized.scope = tokenResponse.scope;
+        break;
+
+      case 'unsplash':
+        normalized.accessToken = tokenResponse.access_token;
+        normalized.tokenType = tokenResponse.token_type || 'Bearer';
+        normalized.scope = tokenResponse.scope;
+        break;
+
+      case 'box':
+        normalized.accessToken = tokenResponse.access_token;
+        normalized.refreshToken = tokenResponse.refresh_token;
+        normalized.tokenType = tokenResponse.token_type || 'Bearer';
+        normalized.expiresIn = tokenResponse.expires_in;
         break;
 
       case 'netflix':
-        // OAuth 1.0a: { oauth_token, oauth_token_secret, user_id }
+        // Netflix (OAuth 1.0a): { oauth_token, oauth_token_secret, user_id }
         normalized.accessToken = tokenResponse.oauth_token;
         normalized.refreshToken = tokenResponse.oauth_token_secret;
         break;
 
       case 'steam':
-        // OpenID: Returns identity URL, not traditional OAuth tokens
+        // Steam (OpenID): Returns identity URL, not traditional OAuth tokens
         normalized.accessToken = tokenResponse.openid_identity || tokenResponse.access_token;
         break;
 
+      case 'facebook':
+      case 'instagram':
+        normalized.accessToken = tokenResponse.access_token;
+        normalized.refreshToken = tokenResponse.refresh_token;
+        normalized.tokenType = tokenResponse.token_type || 'Bearer';
+        normalized.expiresIn = tokenResponse.expires_in;
+        normalized.scope = tokenResponse.scope;
+        break;
+
+      case 'twitter':
+      case 'x':
+        normalized.accessToken = tokenResponse.access_token;
+        normalized.refreshToken = tokenResponse.refresh_token;
+        normalized.tokenType = tokenResponse.token_type || 'Bearer';
+        normalized.expiresIn = tokenResponse.expires_in;
+        normalized.scope = tokenResponse.scope;
+        break;
+
+      case 'linkedin':
+        normalized.accessToken = tokenResponse.access_token;
+        normalized.refreshToken = tokenResponse.refresh_token;
+        normalized.tokenType = tokenResponse.token_type || 'Bearer';
+        normalized.expiresIn = tokenResponse.expires_in;
+        normalized.scope = tokenResponse.scope;
+        break;
+
+      case 'discord':
+        normalized.accessToken = tokenResponse.access_token;
+        normalized.refreshToken = tokenResponse.refresh_token;
+        normalized.tokenType = tokenResponse.token_type || 'Bearer';
+        normalized.expiresIn = tokenResponse.expires_in;
+        normalized.scope = tokenResponse.scope;
+        break;
+
+      case 'spotify':
+        normalized.accessToken = tokenResponse.access_token;
+        normalized.refreshToken = tokenResponse.refresh_token;
+        normalized.tokenType = tokenResponse.token_type || 'Bearer';
+        normalized.expiresIn = tokenResponse.expires_in;
+        normalized.scope = tokenResponse.scope;
+        break;
+
+      case 'twitch':
+        normalized.accessToken = tokenResponse.access_token;
+        normalized.refreshToken = tokenResponse.refresh_token;
+        normalized.tokenType = tokenResponse.token_type || 'Bearer';
+        normalized.expiresIn = tokenResponse.expires_in;
+        normalized.scope = tokenResponse.scope;
+        break;
+
+      case 'slack':
+        normalized.accessToken = tokenResponse.access_token;
+        normalized.refreshToken = tokenResponse.refresh_token;
+        normalized.tokenType = tokenResponse.token_type || 'Bearer';
+        normalized.expiresIn = tokenResponse.expires_in;
+        normalized.scope = tokenResponse.scope;
+        break;
+
+      case 'microsoft':
+        normalized.accessToken = tokenResponse.access_token;
+        normalized.refreshToken = tokenResponse.refresh_token;
+        normalized.tokenType = tokenResponse.token_type || 'Bearer';
+        normalized.expiresIn = tokenResponse.expires_in;
+        normalized.scope = tokenResponse.scope;
+        break;
+
       default:
-        // Generic OAuth 2.0 response (simple-oauth2 handles most cases)
+        // Generic OAuth 2.0 response
         normalized.accessToken = tokenResponse.access_token;
         normalized.refreshToken = tokenResponse.refresh_token;
         normalized.tokenType = tokenResponse.token_type || 'Bearer';

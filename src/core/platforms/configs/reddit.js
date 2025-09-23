@@ -12,10 +12,13 @@ export const reddit = {
   tokenUrl: 'https://www.reddit.com/api/v1/access_token',
   userInfoUrl: 'https://oauth.reddit.com/api/v1/me',
   userIdField: 'id',
+  revokeUrl: null, // OAuth token revocation endpoint
+  introspectUrl: null, // OAuth token introspection endpoint
   docsUrl: 'https://www.reddit.com/dev/api/',
   description: 'Access Reddit API for posts and user data',
   requiredScopes: ['identity'],
   scopeDelimiter: ' ',
+  requiresPKCE: false, // PKCE requirement for enhanced security
   additionalParams: { response_type: 'code' },
   scopes: {
     'User': {

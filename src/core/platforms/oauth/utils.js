@@ -1,8 +1,32 @@
 /**
  * 🛠️ OAUTH UTILITIES
- * OAuth-related utility functions for simple-oauth2 integration
- * Note: PKCE now handled by simple-oauth2 package automatically
+ * PKCE helpers and other OAuth-related utility functions
  */
+
+/**
+ * Generate a cryptographically secure code verifier for PKCE
+ */
+export function generateCodeVerifier() {
+  const array = new Uint8Array(32);
+  crypto.getRandomValues(array);
+  return btoa(String.fromCharCode.apply(null, array))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=/g, '');
+}
+
+/**
+ * Generate code challenge from code verifier using SHA256
+ */
+export async function generateCodeChallenge(codeVerifier) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(codeVerifier);
+  const digest = await crypto.subtle.digest('SHA-256', data);
+  return btoa(String.fromCharCode.apply(null, new Uint8Array(digest)))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=/g, '');
+}
 
 /**
  * Generate a secure state parameter for OAuth flows
@@ -68,7 +92,6 @@ export function validateOAuthResponse(searchParams) {
 
 /**
  * Check if a token is expired or will expire soon
- * Enhanced for simple-oauth2 integration with configurable buffer
  */
 export function isTokenExpired(expiresAt, bufferSeconds = 300) {
   if (!expiresAt) return false; // No expiration set

@@ -12,10 +12,13 @@ export const notion = {
   tokenUrl: 'https://api.notion.com/v1/oauth/token',
   userInfoUrl: 'https://api.notion.com/v1/users/me',
   userIdField: 'id',
+  revokeUrl: null, // OAuth token revocation endpoint
+  introspectUrl: null, // OAuth token introspection endpoint
   docsUrl: 'https://developers.notion.com/docs/authorization',
   description: 'Notion workspace and productivity platform',
   requiredScopes: ['read'],
   scopeDelimiter: ' ',
+  requiresPKCE: false, // PKCE requirement for enhanced security
   additionalParams: { response_type: 'code' },
   scopes: {
     'Basic': {

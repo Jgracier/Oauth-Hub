@@ -12,10 +12,13 @@ export const tiktok = {
   tokenUrl: 'https://open-api.tiktok.com/oauth/access_token/',
   userInfoUrl: 'https://open-api.tiktok.com/oauth/userinfo/?fields=open_id,union_id,avatar_url,display_name',
   userIdField: 'open_id',
+  revokeUrl: null, // OAuth token revocation endpoint
+  introspectUrl: null, // OAuth token introspection endpoint
   docsUrl: 'https://developers.tiktok.com/',
   description: 'Access TikTok for Developers API',
   requiredScopes: ['user.info.basic'],
   scopeDelimiter: ',',
+  requiresPKCE: false, // PKCE requirement for enhanced security
   additionalParams: { response_type: 'code' },
   scopes: {
     'User Info': {

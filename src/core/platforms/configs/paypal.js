@@ -12,10 +12,13 @@ export const paypal = {
   tokenUrl: 'https://api.paypal.com/v1/oauth2/token',
   userInfoUrl: 'https://api.paypal.com/v1/identity/oauth2/userinfo',
   userIdField: 'user_id',
+  revokeUrl: null, // OAuth token revocation endpoint
+  introspectUrl: null, // OAuth token introspection endpoint
   docsUrl: 'https://developer.paypal.com/docs/log-in-with-paypal/',
   description: 'PayPal authentication and payment processing',
   requiredScopes: ['openid'],
   scopeDelimiter: ' ',
+  requiresPKCE: false, // PKCE requirement for enhanced security
   additionalParams: { response_type: 'code' },
   scopes: {
     'Authentication': {

@@ -12,10 +12,13 @@ export const dribbble = {
   tokenUrl: 'https://dribbble.com/oauth/token',
   userInfoUrl: 'https://api.dribbble.com/v2/user',
   userIdField: 'id',
+  revokeUrl: null, // OAuth token revocation endpoint
+  introspectUrl: null, // OAuth token introspection endpoint
   docsUrl: 'https://developer.dribbble.com/v2/oauth/',
   description: 'Dribbble design community platform',
   requiredScopes: ['public'],
   scopeDelimiter: ' ',
+  requiresPKCE: false, // PKCE requirement for enhanced security
   additionalParams: { response_type: 'code' },
   scopes: {
     'Basic': {

@@ -12,10 +12,13 @@ export const pinterest = {
   tokenUrl: 'https://api.pinterest.com/v5/oauth/token',
   userInfoUrl: 'https://api.pinterest.com/v5/user_account',
   userIdField: 'id',
+  revokeUrl: null, // OAuth token revocation endpoint
+  introspectUrl: null, // OAuth token introspection endpoint
   docsUrl: 'https://developers.pinterest.com/',
   description: 'Access Pinterest API for boards and pins',
   requiredScopes: ['user_accounts:read'],
   scopeDelimiter: ',',
+  requiresPKCE: false, // PKCE requirement for enhanced security
   additionalParams: { response_type: 'code' },
   scopes: {
     'User Account': {

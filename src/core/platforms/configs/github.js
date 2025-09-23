@@ -11,11 +11,14 @@ export const github = {
   authUrl: 'https://github.com/login/oauth/authorize',
   tokenUrl: 'https://github.com/login/oauth/access_token',
   userInfoUrl: 'https://api.github.com/user',
+  revokeUrl: 'https://api.github.com/applications/{client_id}/grant', // Requires DELETE with access_token
+  introspectUrl: null, // GitHub doesn't support standard introspection
   userIdField: 'id',
   docsUrl: 'https://github.com/settings/developers',
   description: 'Access GitHub API for repositories and user data',
   requiredScopes: ['user:email'],
   scopeDelimiter: ' ',
+  requiresPKCE: false, // GitHub doesn't require PKCE but supports it
   additionalParams: { 
     response_type: 'code',
     access_type: 'offline'

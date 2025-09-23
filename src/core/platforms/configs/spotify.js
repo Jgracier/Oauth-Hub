@@ -12,10 +12,13 @@ export const spotify = {
   tokenUrl: 'https://accounts.spotify.com/api/token',
   userInfoUrl: 'https://api.spotify.com/v1/me',
   userIdField: 'id',
+  revokeUrl: null, // OAuth token revocation endpoint
+  introspectUrl: null, // OAuth token introspection endpoint
   docsUrl: 'https://developer.spotify.com/dashboard',
   description: 'Access Spotify Web API for music and playlists',
   requiredScopes: ['user-read-private'],
   scopeDelimiter: ' ',
+  requiresPKCE: true, // PKCE requirement for enhanced security
   additionalParams: { response_type: 'code' },
   scopes: {
     'User Profile': {

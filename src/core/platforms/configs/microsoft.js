@@ -12,10 +12,13 @@ export const microsoft = {
   tokenUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
   userInfoUrl: 'https://graph.microsoft.com/v1.0/me',
   userIdField: 'id',
+  revokeUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/logout', // OAuth token revocation endpoint
+  introspectUrl: null, // OAuth token introspection endpoint
   docsUrl: 'https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps',
   description: 'Access Microsoft Graph API for Office 365 and Azure',
   requiredScopes: ['User.Read'],
   scopeDelimiter: ' ',
+  requiresPKCE: true, // PKCE requirement for enhanced security
   additionalParams: { response_type: 'code' },
   scopes: {
     'User': {

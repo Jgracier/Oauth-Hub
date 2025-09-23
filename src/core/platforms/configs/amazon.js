@@ -12,10 +12,13 @@ export const amazon = {
   tokenUrl: 'https://api.amazon.com/auth/o2/token',
   userInfoUrl: 'https://api.amazon.com/user/profile',
   userIdField: 'user_id',
+  revokeUrl: null, // OAuth token revocation endpoint
+  introspectUrl: null, // OAuth token introspection endpoint
   docsUrl: 'https://developer.amazon.com/docs/login-with-amazon/web-docs.html',
   description: 'Login with Amazon for e-commerce and AWS integration',
   requiredScopes: ['profile'],
   scopeDelimiter: ' ',
+  requiresPKCE: false, // PKCE requirement for enhanced security
   additionalParams: { response_type: 'code' },
   scopes: {
     'Profile': {

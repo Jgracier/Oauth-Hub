@@ -53,14 +53,12 @@ import { mailchimp } from './configs/mailchimp.js';
 
 // Note: All 37 platforms are now fully implemented in individual config files
 
-// Import OAuth handlers (now using simple-oauth2)
+// Import OAuth handlers
 import { 
   generateConsentUrl, 
   exchangeCodeForToken, 
   getUserInfo, 
-  refreshAccessToken,
-  authenticateProvider,
-  revokeAccessToken
+  refreshAccessToken 
 } from './oauth/oauth-service.js';
 
 // Import utilities
@@ -141,21 +139,12 @@ export const PLATFORMS = {
 // Maintain backward compatibility with existing imports
 // ============================================================================
 
-// Compatibility function for router
-export async function revokeToken(platform, accessToken, userApp, env) {
-  return await revokeAccessToken(platform, accessToken, userApp);
-}
-
 export {
-  // OAuth Flow Functions (enhanced with simple-oauth2)
+  // OAuth Flow Functions
   generateConsentUrl,
   exchangeCodeForToken,
   getUserInfo,
   refreshAccessToken,
-  
-  // New OAuth Functions
-  authenticateProvider,  // For Google/GitHub login
-  revokeAccessToken,     // For token revocation
   
   // Utility Functions
   getPlatform,

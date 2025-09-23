@@ -12,10 +12,13 @@ export const canva = {
   tokenUrl: 'https://api.canva.com/rest/v1/oauth/token',
   userInfoUrl: 'https://api.canva.com/rest/v1/users/me',
   userIdField: 'id',
+  revokeUrl: null, // OAuth token revocation endpoint
+  introspectUrl: null, // OAuth token introspection endpoint
   docsUrl: 'https://www.canva.dev/docs/connect/authentication/',
   description: 'Canva design platform and API',
   requiredScopes: ['design:read'],
   scopeDelimiter: ' ',
+  requiresPKCE: false, // PKCE requirement for enhanced security
   additionalParams: { response_type: 'code' },
   scopes: {
     'Design': {

@@ -12,10 +12,13 @@ export const dropbox = {
   tokenUrl: 'https://api.dropboxapi.com/oauth2/token',
   userInfoUrl: 'https://api.dropboxapi.com/2/users/get_current_account',
   userIdField: 'account_id',
+  revokeUrl: null, // OAuth token revocation endpoint
+  introspectUrl: null, // OAuth token introspection endpoint
   docsUrl: 'https://developers.dropbox.com/oauth-guide',
   description: 'Dropbox cloud storage and file sharing platform',
   requiredScopes: ['files.metadata.read'],
   scopeDelimiter: ' ',
+  requiresPKCE: false, // PKCE requirement for enhanced security
   additionalParams: { 
     response_type: 'code',
     token_access_type: 'offline' // For refresh tokens

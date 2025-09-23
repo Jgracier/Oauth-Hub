@@ -12,10 +12,13 @@ export const adobe = {
   tokenUrl: 'https://ims-na1.adobelogin.com/ims/token/v1',
   userInfoUrl: 'https://ims-na1.adobelogin.com/ims/userinfo/v1',
   userIdField: 'user_id',
+  revokeUrl: null, // OAuth token revocation endpoint
+  introspectUrl: null, // OAuth token introspection endpoint
   docsUrl: 'https://developer.adobe.com/developer-console/docs/guides/authentication/OAuth/',
   description: 'Adobe Creative Cloud and Document Services',
   requiredScopes: ['openid'],
   scopeDelimiter: ',',
+  requiresPKCE: false, // PKCE requirement for enhanced security
   additionalParams: { response_type: 'code' },
   scopes: {
     'Authentication': {

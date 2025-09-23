@@ -12,10 +12,13 @@ export const mailchimp = {
   tokenUrl: 'https://login.mailchimp.com/oauth2/token',
   userInfoUrl: 'https://login.mailchimp.com/oauth2/metadata',
   userIdField: 'user_id',
+  revokeUrl: null, // OAuth token revocation endpoint
+  introspectUrl: null, // OAuth token introspection endpoint
   docsUrl: 'https://mailchimp.com/developer/marketing/guides/access-user-data-oauth-2/',
   description: 'Mailchimp email marketing and automation platform',
   requiredScopes: ['read'],
   scopeDelimiter: ' ',
+  requiresPKCE: false, // PKCE requirement for enhanced security
   additionalParams: { response_type: 'code' },
   scopes: {
     'Basic': {

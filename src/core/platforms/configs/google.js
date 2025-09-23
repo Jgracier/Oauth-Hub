@@ -11,11 +11,14 @@ export const google = {
   authUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
   tokenUrl: 'https://oauth2.googleapis.com/token',
   userInfoUrl: 'https://www.googleapis.com/oauth2/v2/userinfo',
+  revokeUrl: 'https://oauth2.googleapis.com/revoke',
+  introspectUrl: null, // Google doesn't support standard introspection
   userIdField: 'id',
   docsUrl: 'https://console.cloud.google.com/',
   description: 'Access Google services like YouTube, Drive, Gmail',
   requiredScopes: ['openid', 'email', 'profile'],
   scopeDelimiter: ' ', // Space-delimited
+  requiresPKCE: true, // Google supports PKCE for enhanced security
   additionalParams: {
     access_type: 'offline', // For refresh tokens
     prompt: 'consent' // Force consent screen

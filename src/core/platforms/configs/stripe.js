@@ -12,10 +12,13 @@ export const stripe = {
   tokenUrl: 'https://connect.stripe.com/oauth/token',
   userInfoUrl: 'https://api.stripe.com/v1/account',
   userIdField: 'id',
+  revokeUrl: null, // OAuth token revocation endpoint
+  introspectUrl: null, // OAuth token introspection endpoint
   docsUrl: 'https://stripe.com/docs/connect/oauth-reference',
   description: 'Stripe Connect for payment processing and marketplace platforms',
   requiredScopes: ['read_only'],
   scopeDelimiter: ' ',
+  requiresPKCE: false, // PKCE requirement for enhanced security
   additionalParams: { response_type: 'code' },
   scopes: {
     'General Access': {

@@ -12,10 +12,13 @@ export const slack = {
   tokenUrl: 'https://slack.com/api/oauth.v2.access',
   userInfoUrl: 'https://slack.com/api/users.identity',
   userIdField: 'id',
+  revokeUrl: 'https://slack.com/api/auth.revoke', // OAuth token revocation endpoint
+  introspectUrl: null, // OAuth token introspection endpoint
   docsUrl: 'https://api.slack.com/apps',
   description: 'Access Slack API for messaging and workspace data',
   requiredScopes: ['users:read'],
   scopeDelimiter: ' ',
+  requiresPKCE: false, // PKCE requirement for enhanced security
   additionalParams: { response_type: 'code' },
   scopes: {
     'Users': {

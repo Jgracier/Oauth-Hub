@@ -12,10 +12,13 @@ export const hubspot = {
   tokenUrl: 'https://api.hubapi.com/oauth/v1/token',
   userInfoUrl: 'https://api.hubapi.com/oauth/v1/access-tokens/{token}',
   userIdField: 'user_id',
+  revokeUrl: null, // OAuth token revocation endpoint
+  introspectUrl: null, // OAuth token introspection endpoint
   docsUrl: 'https://developers.hubspot.com/docs/api/oauth-quickstart-guide',
   description: 'HubSpot CRM and marketing automation platform',
   requiredScopes: ['oauth'],
   scopeDelimiter: ' ',
+  requiresPKCE: false, // PKCE requirement for enhanced security
   additionalParams: { response_type: 'code' },
   scopes: {
     'Basic': {

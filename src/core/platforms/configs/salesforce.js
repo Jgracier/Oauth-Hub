@@ -12,10 +12,13 @@ export const salesforce = {
   tokenUrl: 'https://login.salesforce.com/services/oauth2/token',
   userInfoUrl: 'https://login.salesforce.com/services/oauth2/userinfo',
   userIdField: 'user_id',
+  revokeUrl: null, // OAuth token revocation endpoint
+  introspectUrl: null, // OAuth token introspection endpoint
   docsUrl: 'https://help.salesforce.com/s/articleView?id=sf.remoteaccess_oauth_web_server_flow.htm',
   description: 'Salesforce CRM and cloud platform integration',
   requiredScopes: ['openid'],
   scopeDelimiter: ' ',
+  requiresPKCE: false, // PKCE requirement for enhanced security
   additionalParams: { response_type: 'code' },
   scopes: {
     'Authentication': {

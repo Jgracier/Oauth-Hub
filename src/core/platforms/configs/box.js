@@ -12,10 +12,13 @@ export const box = {
   tokenUrl: 'https://api.box.com/oauth2/token',
   userInfoUrl: 'https://api.box.com/2.0/users/me',
   userIdField: 'id',
+  revokeUrl: null, // OAuth token revocation endpoint
+  introspectUrl: null, // OAuth token introspection endpoint
   docsUrl: 'https://developer.box.com/guides/authentication/oauth2/',
   description: 'Box enterprise cloud storage and collaboration platform',
   requiredScopes: ['root_readwrite'],
   scopeDelimiter: ' ',
+  requiresPKCE: false, // PKCE requirement for enhanced security
   additionalParams: { response_type: 'code' },
   scopes: {
     'Basic': {

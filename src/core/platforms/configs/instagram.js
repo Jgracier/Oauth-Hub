@@ -12,10 +12,13 @@ export const instagram = {
   tokenUrl: 'https://api.instagram.com/oauth/access_token',
   userInfoUrl: 'https://graph.instagram.com/me?fields=id,username',
   userIdField: 'id',
+  revokeUrl: 'https://graph.instagram.com/me/permissions', // OAuth token revocation endpoint
+  introspectUrl: 'https://graph.instagram.com/debug_token', // OAuth token introspection endpoint
   docsUrl: 'https://developers.facebook.com/',
   description: 'Access Instagram Basic Display API for media and profile',
   requiredScopes: ['user_profile'],
   scopeDelimiter: ',',
+  requiresPKCE: false, // PKCE requirement for enhanced security
   additionalParams: { response_type: 'code' },
   scopes: {
     'Basic': {

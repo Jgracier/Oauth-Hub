@@ -12,10 +12,13 @@ export const zoom = {
   tokenUrl: 'https://zoom.us/oauth/token',
   userInfoUrl: 'https://api.zoom.us/v2/users/me',
   userIdField: 'id',
+  revokeUrl: null, // OAuth token revocation endpoint
+  introspectUrl: null, // OAuth token introspection endpoint
   docsUrl: 'https://developers.zoom.us/docs/integrations/oauth/',
   description: 'Zoom video conferencing and communication platform',
   requiredScopes: ['user:read'],
   scopeDelimiter: ' ',
+  requiresPKCE: false, // PKCE requirement for enhanced security
   additionalParams: { response_type: 'code' },
   scopes: {
     'User Management': {

@@ -12,10 +12,13 @@ export const twitch = {
   tokenUrl: 'https://id.twitch.tv/oauth2/token',
   userInfoUrl: 'https://api.twitch.tv/helix/users',
   userIdField: 'id',
+  revokeUrl: 'https://id.twitch.tv/oauth2/revoke', // OAuth token revocation endpoint
+  introspectUrl: null, // OAuth token introspection endpoint
   docsUrl: 'https://dev.twitch.tv/console',
   description: 'Access Twitch API for streams and user data',
   requiredScopes: ['user:read:email'],
   scopeDelimiter: ' ',
+  requiresPKCE: false, // PKCE requirement for enhanced security
   additionalParams: { response_type: 'code' },
   scopes: {
     'User': {

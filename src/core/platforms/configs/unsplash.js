@@ -12,10 +12,13 @@ export const unsplash = {
   tokenUrl: 'https://unsplash.com/oauth/token',
   userInfoUrl: 'https://api.unsplash.com/me',
   userIdField: 'id',
+  revokeUrl: null, // OAuth token revocation endpoint
+  introspectUrl: null, // OAuth token introspection endpoint
   docsUrl: 'https://unsplash.com/documentation#authorization',
   description: 'Unsplash photography platform and API',
   requiredScopes: ['public'],
   scopeDelimiter: '+',
+  requiresPKCE: false, // PKCE requirement for enhanced security
   additionalParams: { response_type: 'code' },
   scopes: {
     'Basic': {

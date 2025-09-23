@@ -12,10 +12,13 @@ export const trello = {
   tokenUrl: 'https://trello.com/1/OAuthGetAccessToken', // OAuth 1.0a
   userInfoUrl: 'https://api.trello.com/1/members/me',
   userIdField: 'id',
+  revokeUrl: null, // OAuth token revocation endpoint
+  introspectUrl: null, // OAuth token introspection endpoint
   docsUrl: 'https://developer.atlassian.com/cloud/trello/guides/rest-api/authorization/',
   description: 'Trello project management and collaboration platform',
   requiredScopes: ['read'],
   scopeDelimiter: ',',
+  requiresPKCE: false, // PKCE requirement for enhanced security
   additionalParams: { 
     response_type: 'token',
     scope: 'read,write,account'

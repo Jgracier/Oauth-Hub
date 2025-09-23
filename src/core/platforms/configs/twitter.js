@@ -12,10 +12,13 @@ export const twitter = {
   tokenUrl: 'https://api.twitter.com/2/oauth2/token',
   userInfoUrl: 'https://api.twitter.com/2/users/me',
   userIdField: 'id',
+  revokeUrl: 'https://api.twitter.com/2/oauth2/revoke', // OAuth token revocation endpoint
+  introspectUrl: 'https://api.twitter.com/2/oauth2/introspect', // OAuth token introspection endpoint
   docsUrl: 'https://developer.x.com/',
   description: 'Access X (Twitter) API v2 for tweets, users, and engagement',
   requiredScopes: ['tweet.read', 'users.read'],
-  scopeDelimiter: ' ', // Space-delimited
+  scopeDelimiter: ' ',
+  requiresPKCE: true, // PKCE requirement for enhanced security // Space-delimited
   additionalParams: {
     response_type: 'code',
     code_challenge_method: 'S256' // PKCE required

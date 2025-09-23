@@ -12,10 +12,13 @@ export const shopify = {
   tokenUrl: 'https://{shop}.myshopify.com/admin/oauth/access_token',
   userInfoUrl: 'https://{shop}.myshopify.com/admin/api/2023-10/shop.json',
   userIdField: 'shop.id',
+  revokeUrl: null, // OAuth token revocation endpoint
+  introspectUrl: null, // OAuth token introspection endpoint
   docsUrl: 'https://shopify.dev/docs/apps/auth/oauth',
   description: 'Access Shopify stores and e-commerce data',
   requiredScopes: ['read_products'],
   scopeDelimiter: ',',
+  requiresPKCE: false, // PKCE requirement for enhanced security
   additionalParams: { response_type: 'code' },
   scopes: {
     'Products': {

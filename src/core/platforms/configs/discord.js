@@ -12,10 +12,13 @@ export const discord = {
   tokenUrl: 'https://discord.com/api/oauth2/token',
   userInfoUrl: 'https://discord.com/api/users/@me',
   userIdField: 'id',
+  revokeUrl: 'https://discord.com/api/oauth2/token/revoke', // OAuth token revocation endpoint
+  introspectUrl: null, // OAuth token introspection endpoint
   docsUrl: 'https://discord.com/developers/',
   description: 'Access Discord API for bot and user functionality',
   requiredScopes: ['identify'],
   scopeDelimiter: ' ',
+  requiresPKCE: false, // PKCE requirement for enhanced security
   additionalParams: { response_type: 'code' },
   scopes: {
     'User': {
