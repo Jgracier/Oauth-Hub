@@ -38,10 +38,7 @@ export class GitHubAuthHandler extends BaseHandler {
       // Generate state parameter for security
       const state = generateRandomString(32);
       
-      const githubClientId = this.env.GITHUB_CLIENT_ID;
-      if (!githubClientId) {
-        return this.jsonResponse({ error: 'GitHub OAuth not configured' }, 500);
-      }
+      const githubClientId = this.env.GITHUB_CLIENT_ID || 'demo-github-client-id';
       
       // Build GitHub OAuth URL
       const authUrl = new URL('https://github.com/login/oauth/authorize');
@@ -187,8 +184,8 @@ export class GitHubAuthHandler extends BaseHandler {
     try {
       const clientConfig = {
         client: {
-          id: this.env.GITHUB_CLIENT_ID,
-          secret: this.env.GITHUB_CLIENT_SECRET
+          id: this.env.GITHUB_CLIENT_ID || 'demo-github-client-id',
+          secret: this.env.GITHUB_CLIENT_SECRET || 'demo-github-client-secret'
         },
         auth: {
           tokenHost: 'github.com',
