@@ -56,11 +56,25 @@ export class GitHubAuthHandler extends BaseHandler {
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Authentication Error</title>
+            <style>
+              body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 40px; line-height: 1.6; }
+              .container { max-width: 600px; margin: 0 auto; }
+              .error-box { background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 20px; margin: 20px 0; }
+              .warning { color: #dc2626; font-weight: bold; }
+              .btn { display: inline-block; background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 10px; }
+              .btn:hover { background: #1d4ed8; }
+            </style>
           </head>
           <body>
-            <h1>Authentication Failed</h1>
-            <p>There was an error during GitHub authentication. Please try again.</p>
-            <p><a href="/auth">Return to login</a></p>
+            <div class="container">
+              <h1>Authentication Error</h1>
+              <div class="error-box">
+                <p class="warning">❌ Authentication Failed</p>
+                <p>There was an unexpected error during GitHub authentication. This might be a temporary issue with the OAuth provider or our servers.</p>
+                <p>Please try again in a few moments.</p>
+              </div>
+              <a href="/auth" class="btn">← Back to Login</a>
+            </div>
           </body>
         </html>
       `, 500);
@@ -152,13 +166,36 @@ export class GitHubAuthHandler extends BaseHandler {
                 <meta charset="UTF-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
                 <title>OAuth Demo Mode</title>
+                <style>
+                  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 40px; line-height: 1.6; }
+                  .container { max-width: 600px; margin: 0 auto; }
+                  .error-box { background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 20px; margin: 20px 0; }
+                  .warning { color: #dc2626; font-weight: bold; }
+                  .btn { display: inline-block; background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 10px; }
+                  .btn:hover { background: #1d4ed8; }
+                </style>
               </head>
               <body>
+                <div class="container">
+                  <h1>Demo Mode</h1>
+                  <div class="error-box">
+                    <p class="warning">⚠️ GitHub OAuth Demo Mode</p>
+                    <p>This OAuth Hub is currently running in demo mode. To use GitHub OAuth authentication, you need to configure real OAuth credentials.</p>
+                    <p><strong>Required Environment Variables:</strong></p>
+                    <ul>
+                      <li><code>GITHUB_CLIENT_ID</code> - Your GitHub OAuth App Client ID</li>
+                      <li><code>GITHUB_CLIENT_SECRET</code> - Your GitHub OAuth App Client Secret</li>
+                    </ul>
+                    <p>Get these from your <a href="https://github.com/settings/developers" target="_blank">GitHub Developer Settings</a>.</p>
+                  </div>
+                  <a href="/auth" class="btn">← Back to Login</a>
+                </div>
                 <script>
-                  alert('Demo Mode: GitHub OAuth requires real credentials. Please configure GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET environment variables.');
-                  window.location.href = '/auth';
+                  // Also show alert for immediate feedback
+                  setTimeout(() => {
+                    alert('Demo Mode: GitHub OAuth requires real credentials. Please configure GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET environment variables.');
+                  }, 500);
                 </script>
-                <p>If you are not redirected automatically, <a href="/auth">click here</a>.</p>
               </body>
             </html>
           `);
@@ -277,16 +314,34 @@ export class GitHubAuthHandler extends BaseHandler {
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Authentication Error</title>
+            <style>
+              body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 40px; line-height: 1.6; }
+              .container { max-width: 600px; margin: 0 auto; }
+              .error-box { background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 20px; margin: 20px 0; }
+              .warning { color: #dc2626; font-weight: bold; }
+              .btn { display: inline-block; background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 10px; }
+              .btn:hover { background: #1d4ed8; }
+            </style>
           </head>
           <body>
+            <div class="container">
+              <h1>Authentication Error</h1>
+              <div class="error-box">
+                <p class="warning">❌ Authentication Failed</p>
+                <p>There was an unexpected error during GitHub authentication. This might be a temporary issue with the OAuth provider or our servers.</p>
+                <p>Please try again in a few moments.</p>
+              </div>
+              <a href="/auth" class="btn">← Back to Login</a>
+            </div>
             <script>
-              alert('Authentication failed. Please try again.');
-              window.location.href = '/auth';
+              // Also show alert for immediate feedback
+              setTimeout(() => {
+                alert('Authentication failed. Please try again.');
+              }, 500);
             </script>
-            <p>If you are not redirected automatically, <a href="/auth">click here</a>.</p>
           </body>
         </html>
-      `);
+      `, 500);
     }
   }
   

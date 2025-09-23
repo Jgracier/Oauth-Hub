@@ -27,6 +27,8 @@ export class GoogleAuthHandler extends BaseHandler {
       return this.jsonResponse({ error: 'Invalid Google auth endpoint' }, 404);
     } catch (error) {
       console.error('Google auth error:', error);
+      console.error('Error message:', error.message);
+      console.error('GOOGLE_CLIENT_ID:', this.env.GOOGLE_CLIENT_ID);
 
       // Check if this is a demo credentials issue
       if (error.message && (
@@ -34,6 +36,7 @@ export class GoogleAuthHandler extends BaseHandler {
         error.message.includes('OAuth2 error') ||
         this.env.GOOGLE_CLIENT_ID === 'demo-google-client-id'
       )) {
+        console.error('Demo mode detected, returning demo HTML');
         return this.htmlResponse(`
           <!DOCTYPE html>
           <html lang="en">
@@ -41,13 +44,30 @@ export class GoogleAuthHandler extends BaseHandler {
               <meta charset="UTF-8">
               <meta name="viewport" content="width=device-width, initial-scale=1.0">
               <title>OAuth Demo Mode</title>
+              <style>
+                body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 40px; line-height: 1.6; }
+                .container { max-width: 600px; margin: 0 auto; }
+                .error-box { background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 20px; margin: 20px 0; }
+                .warning { color: #dc2626; font-weight: bold; }
+                .btn { display: inline-block; background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 10px; }
+                .btn:hover { background: #1d4ed8; }
+              </style>
             </head>
             <body>
-              <script>
-                alert('Demo Mode: Google OAuth requires real credentials. Please configure GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET environment variables.');
-                window.location.href = '/auth';
-              </script>
-              <p>If you are not redirected automatically, <a href="/auth">click here</a>.</p>
+              <div class="container">
+                <h1>Demo Mode</h1>
+                <div class="error-box">
+                  <p class="warning">⚠️ Google OAuth Demo Mode</p>
+                  <p>This OAuth Hub is currently running in demo mode. To use Google OAuth authentication, you need to configure real OAuth credentials.</p>
+                  <p><strong>Required Environment Variables:</strong></p>
+                  <ul>
+                    <li><code>GOOGLE_CLIENT_ID</code> - Your Google OAuth 2.0 Client ID</li>
+                    <li><code>GOOGLE_CLIENT_SECRET</code> - Your Google OAuth 2.0 Client Secret</li>
+                  </ul>
+                  <p>Get these from the <a href="https://console.cloud.google.com/" target="_blank">Google Cloud Console</a>.</p>
+                </div>
+                <a href="/auth" class="btn">← Back to Login</a>
+              </div>
             </body>
           </html>
         `);
@@ -60,11 +80,25 @@ export class GoogleAuthHandler extends BaseHandler {
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Authentication Error</title>
+            <style>
+              body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 40px; line-height: 1.6; }
+              .container { max-width: 600px; margin: 0 auto; }
+              .error-box { background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 20px; margin: 20px 0; }
+              .warning { color: #dc2626; font-weight: bold; }
+              .btn { display: inline-block; background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 10px; }
+              .btn:hover { background: #1d4ed8; }
+            </style>
           </head>
           <body>
-            <h1>Authentication Failed</h1>
-            <p>There was an error during Google authentication. Please try again.</p>
-            <p><a href="/auth">Return to login</a></p>
+            <div class="container">
+              <h1>Authentication Error</h1>
+              <div class="error-box">
+                <p class="warning">❌ Authentication Failed</p>
+                <p>There was an unexpected error during Google authentication. This might be a temporary issue with the OAuth provider or our servers.</p>
+                <p>Please try again in a few moments.</p>
+              </div>
+              <a href="/auth" class="btn">← Back to Login</a>
+            </div>
           </body>
         </html>
       `, 500);
@@ -269,15 +303,40 @@ export class GoogleAuthHandler extends BaseHandler {
     } catch (error) {
       console.error('Error handling Google callback:', error);
       return this.htmlResponse(`
-        <html>
+        <!DOCTYPE html>
+        <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Authentication Error</title>
+            <style>
+              body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 40px; line-height: 1.6; }
+              .container { max-width: 600px; margin: 0 auto; }
+              .error-box { background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 20px; margin: 20px 0; }
+              .warning { color: #dc2626; font-weight: bold; }
+              .btn { display: inline-block; background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 10px; }
+              .btn:hover { background: #1d4ed8; }
+            </style>
+          </head>
           <body>
+            <div class="container">
+              <h1>Authentication Error</h1>
+              <div class="error-box">
+                <p class="warning">❌ Authentication Failed</p>
+                <p>There was an unexpected error during Google authentication. This might be a temporary issue with the OAuth provider or our servers.</p>
+                <p>Please try again in a few moments.</p>
+              </div>
+              <a href="/auth" class="btn">← Back to Login</a>
+            </div>
             <script>
-              alert('Authentication failed. Please try again.');
-              window.location.href = '/auth';
+              // Also show alert for immediate feedback
+              setTimeout(() => {
+                alert('Authentication failed. Please try again.');
+              }, 500);
             </script>
           </body>
         </html>
-      `);
+      `, 500);
     }
   }
   
