@@ -337,6 +337,16 @@ export class Router {
     } catch (error) {
       console.error('OAuth consent processing failed:', error.message);
       console.error('Full error:', error);
+
+      // Check if this is a demo credentials issue
+      if (error.message && error.message.includes('invalid_client')) {
+        return jsonResponse({
+          error: 'Demo Mode: OAuth requires real credentials',
+          message: 'Please configure real OAuth credentials for this platform to use OAuth app management features.',
+          platform: platform
+        }, 400, corsHeaders);
+      }
+
       return jsonResponse({
         error: 'Failed to process OAuth consent',
         details: error.message,

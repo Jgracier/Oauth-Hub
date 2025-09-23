@@ -18,16 +18,37 @@ export class GitHubAuthHandler extends BaseHandler {
     try {
       const url = new URL(request.url);
       const path = url.pathname;
-      
+
       if (path === '/auth/github') {
         return this.initiateGitHubAuth(request);
       } else if (path === '/auth/github/callback') {
         return this.handleGitHubCallback(request);
       }
-      
+
       return this.jsonResponse({ error: 'Invalid GitHub auth endpoint' }, 404);
     } catch (error) {
       console.error('GitHub auth error:', error);
+
+      // Check if this is a demo credentials issue
+      if (error.message && (
+        error.message.includes('invalid_client') ||
+        error.message.includes('OAuth2 error') ||
+        error.message.includes('bad_verification_code') ||
+        error.message.includes('incorrect_client_credentials') ||
+        this.env.GITHUB_CLIENT_ID === 'demo-github-client-id'
+      )) {
+        return this.htmlResponse(`
+          <html>
+            <body>
+              <script>
+                alert('Demo Mode: GitHub OAuth requires real credentials. Please configure GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET environment variables.');
+                window.location.href = '/auth';
+              </script>
+            </body>
+          </html>
+        `);
+      }
+
       return this.jsonResponse({ error: 'Authentication failed' }, 500);
     }
   }
@@ -109,7 +130,7 @@ export class GitHubAuthHandler extends BaseHandler {
         tokens = await exchangeCodeForToken('github', code, userApp);
       } catch (error) {
         console.error('Token exchange error:', error);
-        if (error.message.includes('Demo mode:') || this.env.GITHUB_CLIENT_ID === 'demo-github-client-id') {
+        if (error.message.includes('invalid_client') || error.message.includes('OAuth2 error') || error.message.includes('Demo mode:') || this.env.GITHUB_CLIENT_ID === 'demo-github-client-id') {
           return this.htmlResponse(`
             <html>
               <body>

@@ -17,16 +17,35 @@ export class GoogleAuthHandler extends BaseHandler {
     try {
       const url = new URL(request.url);
       const path = url.pathname;
-      
+
       if (path === '/auth/google') {
         return this.initiateGoogleAuth(request);
       } else if (path === '/auth/google/callback') {
         return this.handleGoogleCallback(request);
       }
-      
+
       return this.jsonResponse({ error: 'Invalid Google auth endpoint' }, 404);
     } catch (error) {
       console.error('Google auth error:', error);
+
+      // Check if this is a demo credentials issue
+      if (error.message && (
+        error.message.includes('invalid_client') ||
+        error.message.includes('OAuth2 error') ||
+        this.env.GOOGLE_CLIENT_ID === 'demo-google-client-id'
+      )) {
+        return this.htmlResponse(`
+          <html>
+            <body>
+              <script>
+                alert('Demo Mode: Google OAuth requires real credentials. Please configure GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET environment variables.');
+                window.location.href = '/auth';
+              </script>
+            </body>
+          </html>
+        `);
+      }
+
       return this.jsonResponse({ error: 'Authentication failed' }, 500);
     }
   }
