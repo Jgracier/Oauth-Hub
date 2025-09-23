@@ -1,51 +1,77 @@
 /**
  * 🔧 OAUTH SERVICE
- * Core OAuth flow logic separated from platform configurations
+ * Core OAuth flow logic using simple-oauth2 package
  * Handles consent URL generation, token exchange, and user info retrieval
  */
 
 // Note: PLATFORMS will be imported lazily to avoid circular dependencies
-import { OAuth2Client } from '@badgateway/oauth2-client';
-import { normalizeTokenResponse } from './token-manager.js';
+import { AuthorizationCode, AccessToken } from 'simple-oauth2';
 import { extractPlatformUserId } from './user-info-extractor.js';
+import { generateState, parseState, validateOAuthResponse, sanitizeForLogging, buildErrorMessage } from './utils.js';
+
+/**
+ * Create OAuth2 client for a platform
+ */
+function createOAuthClient(platformConfig, userApp, forRefresh = false) {
+  const baseUrl = new URL(platformConfig.authUrl);
+  const tokenUrl = new URL(platformConfig.tokenUrl || platformConfig.authUrl);
+  
+  const clientConfig = {
+    client: {
+      id: userApp.clientId,
+      secret: userApp.clientSecret
+    },
+    auth: {
+      tokenHost: tokenUrl.origin,
+      tokenPath: tokenUrl.pathname,
+      authorizeHost: baseUrl.origin,
+      authorizePath: baseUrl.pathname
+    },
+    options: {
+      useBasicAuthorizationHeader: true, // Most providers
+      useBodyAuth: false, // Override per platform if needed
+      usePkce: platformConfig.requiresPKCE !== false // Default PKCE for security
+    }
+  };
+
+  if (forRefresh) {
+    return new AccessToken(clientConfig, { access_token: '', refresh_token: '', token_type: 'Bearer' });
+  }
+  return new AuthorizationCode(clientConfig);
+}
 
 /**
  * Generate OAuth consent URL with required scopes automatically included
  */
 export async function generateConsentUrl(platform, userApp, apiKey, state, baseUrl = 'https://oauth-hub.com') {
   const { PLATFORMS } = await import('../index.js');
+  
   const platformConfig = PLATFORMS[platform.toLowerCase()];
   if (!platformConfig) {
     throw new Error(`[${platform}] Unsupported platform`);
   }
 
   try {
-    // Merge required and user scopes
+    // Combine required scopes with user-selected scopes
     const requiredScopes = platformConfig.requiredScopes || [];
     const userScopes = userApp.scopes || [];
     const allScopes = [...new Set([...requiredScopes, ...userScopes])];
     const scopeString = allScopes.join(platformConfig.scopeDelimiter || ' ');
 
-    // Create OAuth2Client for Cloudflare Workers compatibility
-    const client = new OAuth2Client({
-      server: platformConfig.authUrl,
-      clientId: userApp.clientId,
-      clientSecret: userApp.clientSecret,
-      tokenEndpoint: platformConfig.tokenUrl,
-      authorizationEndpoint: platformConfig.authUrl
-    });
+    const client = createOAuthClient(platformConfig, userApp);
 
-    // Build authorization URL with scopes and parameters
-    const authUrlOptions = {
-      redirectUri: `${baseUrl}/callback`,
-      scope: allScopes, // Pass as array
-      state: state,
-      ...platformConfig.additionalParams
+    // Platform-specific options (minimal switch)
+    let authOptions = {
+      redirect_uri: `${baseUrl}/callback`,
+      scope: scopeString,
+      state: state
     };
 
-    const authorizationUri = await client.authorizationCode.getAuthorizeUri(authUrlOptions);
+    // Add additional params from config
+    Object.assign(authOptions, platformConfig.additionalParams);
 
-    return authorizationUri; // Caller (router) can access if needed
+    const authorizationUri = client.authorizeURL(authOptions);
+    return authorizationUri;
   } catch (error) {
     throw new Error(`[${platform}] Failed to generate consent URL: ${error.message}`);
   }
@@ -54,39 +80,53 @@ export async function generateConsentUrl(platform, userApp, apiKey, state, baseU
 /**
  * Exchange authorization code for access token with platform-specific handling
  */
-export async function exchangeCodeForToken(platform, code, userApp) {
+export async function exchangeCodeForToken(platform, code, userApp, codeVerifier = null) {
   const { PLATFORMS } = await import('../index.js');
+  
   const platformConfig = PLATFORMS[platform.toLowerCase()];
   if (!platformConfig) {
     throw new Error(`[${platform}] Unsupported platform`);
   }
 
   try {
-    // Create OAuth2Client for Cloudflare Workers compatibility
-    const client = new OAuth2Client({
-      server: platformConfig.authUrl,
-      clientId: userApp.clientId,
-      clientSecret: userApp.clientSecret,
-      tokenEndpoint: platformConfig.tokenUrl,
-      authorizationEndpoint: platformConfig.authUrl
-    });
+    const client = createOAuthClient(platformConfig, userApp);
 
-    const tokenOptions = {
+    let tokenOptions = {
       code,
-      redirectUri: 'https://oauth-hub.com/callback'
+      redirect_uri: 'https://oauth-hub.com/callback'
     };
 
-    const tokenData = await client.authorizationCode.getToken(tokenOptions);
+    // Platform-specific token options (minimal switch)
+    switch (platform.toLowerCase()) {
+      case 'github':
+        client.options.useBodyAuth = true; // GitHub uses POST body for client_id/secret
+        break;
+      case 'slack':
+        tokenOptions.client_id = userApp.clientId;
+        tokenOptions.client_secret = userApp.clientSecret;
+        break;
+      case 'shopify':
+        // Assume shopDomain from userApp or config
+        const shopDomain = userApp.shopDomain || 'shop';
+        client.auth.tokenHost = `${shopDomain}.myshopify.com`;
+        break;
+    }
 
-    // Normalize token response for consistent interface
+    const token = await client.getToken(tokenOptions);
+
+    // Package normalizes: token.token = { access_token, refresh_token, expires_in, etc. }
     const normalized = {
-      accessToken: tokenData.accessToken,
-      refreshToken: tokenData.refreshToken,
-      tokenType: tokenData.tokenType || 'Bearer',
-      expiresIn: tokenData.expiresIn,
-      expiresAt: tokenData.expiresIn ? Date.now() + (tokenData.expiresIn * 1000) : null,
-      scope: tokenData.scope
+      accessToken: token.token.access_token,
+      refreshToken: token.token.refresh_token,
+      tokenType: token.token.token_type || 'Bearer',
+      expiresIn: token.token.expires_in,
+      scope: token.token.scope
     };
+
+    // Calculate expiresAt
+    if (normalized.expiresIn) {
+      normalized.expiresAt = Date.now() + (normalized.expiresIn * 1000);
+    }
 
     return normalized;
   } catch (error) {
@@ -98,7 +138,6 @@ export async function exchangeCodeForToken(platform, code, userApp) {
  * Get user info from OAuth provider with platform-specific handling
  */
 export async function getUserInfo(platform, accessToken) {
-  // Lazy import to avoid circular dependency
   const { PLATFORMS } = await import('../index.js');
   
   const platformConfig = PLATFORMS[platform.toLowerCase()];
@@ -107,13 +146,13 @@ export async function getUserInfo(platform, accessToken) {
   }
 
   try {
-    // Build platform-specific headers
-    const headers = {
+    // Build headers (Bearer default)
+    let headers = {
       'Authorization': `Bearer ${accessToken}`,
       'Accept': 'application/json'
     };
 
-    // Add platform-specific headers
+    // Minimal switch for custom headers
     switch (platform.toLowerCase()) {
       case 'github':
         headers['User-Agent'] = 'OAuth-Hub/1.0';
@@ -131,32 +170,12 @@ export async function getUserInfo(platform, accessToken) {
       case 'adobe':
         headers['x-api-key'] = platformConfig.clientId;
         break;
-      case 'hubspot':
-        headers['Content-Type'] = 'application/json';
-        break;
-      case 'zoom':
-        headers['User-Agent'] = 'OAuth-Hub/1.0';
-        break;
-      case 'salesforce':
-        headers['Accept'] = 'application/json';
-        break;
-      case 'dropbox':
-        headers['Dropbox-API-Select-User'] = platformConfig.selectUser || '';
-        break;
-      case 'box':
-        headers['BoxApi'] = `shared_link=${platformConfig.sharedLink || ''}`;
-        break;
-      case 'steam':
-        if (platformConfig.apiKey) {
-          headers['Authorization'] = `Bearer ${platformConfig.apiKey}`;
-        }
-        break;
-      case 'notion':
-        headers['Notion-Version'] = '2022-06-28';
-        break;
       case 'figma':
         headers['X-Figma-Token'] = accessToken;
         delete headers['Authorization'];
+        break;
+      case 'notion':
+        headers['Notion-Version'] = '2022-06-28';
         break;
     }
 
@@ -169,7 +188,7 @@ export async function getUserInfo(platform, accessToken) {
 
     const rawUserInfo = await response.json();
     
-    // Extract platform user ID using platform-specific logic
+    // Extract ID (keep existing logic)
     const platformUserId = extractPlatformUserId(platform, rawUserInfo, platformConfig);
     
     if (!platformUserId) {
@@ -190,67 +209,92 @@ export async function getUserInfo(platform, accessToken) {
  */
 export async function refreshAccessToken(platform, refreshToken, userApp) {
   const { PLATFORMS } = await import('../index.js');
+  
   const platformConfig = PLATFORMS[platform.toLowerCase()];
   if (!platformConfig) {
     throw new Error(`[${platform}] Unsupported platform`);
   }
 
+  // Platforms without refresh (package will error if unsupported)
   const noRefreshPlatforms = ['github', 'shopify', 'trello', 'notion', 'dribbble', 'unsplash', 'netflix', 'steam'];
   if (noRefreshPlatforms.includes(platform.toLowerCase())) {
     throw new Error(`[${platform}] Tokens do not expire and cannot be refreshed`);
   }
 
   try {
-    // Create OAuth2Client for Cloudflare Workers compatibility
-    const client = new OAuth2Client({
-      server: platformConfig.authUrl,
-      clientId: userApp.clientId,
-      clientSecret: userApp.clientSecret,
-      tokenEndpoint: platformConfig.tokenUrl,
-      authorizationEndpoint: platformConfig.authUrl
-    });
+    const client = createOAuthClient(platformConfig, userApp, true); // AccessToken for refresh
 
-    // Create a token object for the refresh operation
-    const tokenToRefresh = {
-      accessToken: '', // Not needed for refresh
-      refreshToken: refreshToken,
-      expiresAt: null
+    const oldToken = { refresh_token: refreshToken };
+    const refreshed = await client.refresh(oldToken);
+
+    // Normalized from package
+    const normalized = {
+      accessToken: refreshed.token.access_token,
+      refreshToken: refreshed.token.refresh_token || refreshToken, // Keep old if not returned
+      tokenType: refreshed.token.token_type || 'Bearer',
+      expiresIn: refreshed.token.expires_in,
+      scope: refreshed.token.scope
     };
 
-    const tokenData = await client.refreshToken(tokenToRefresh);
+    if (normalized.expiresIn) {
+      normalized.expiresAt = Date.now() + (normalized.expiresIn * 1000);
+    }
 
-    return {
-      accessToken: tokenData.accessToken,
-      refreshToken: tokenData.refreshToken || refreshToken, // Keep old if not new
-      tokenType: tokenData.tokenType || 'Bearer',
-      expiresIn: tokenData.expiresIn,
-      expiresAt: tokenData.expiresIn ? Date.now() + (tokenData.expiresIn * 1000) : null,
-      scope: tokenData.scope
-    };
+    return normalized;
   } catch (error) {
     throw new Error(`[${platform}] Token refresh failed: ${error.message}`);
   }
 }
 
-export async function revokeToken(platform, accessToken, userApp, env) {
+/**
+ * New: Authenticate a provider for login/signup (Google/GitHub)
+ * Uses same logic as platform flows but with env vars
+ */
+export async function authenticateProvider(platform, code, clientId, clientSecret, redirectUri) {
+  const hardcodedConfigs = {
+    google: {
+      authUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
+      tokenUrl: 'https://oauth2.googleapis.com/token',
+      userInfoUrl: 'https://www.googleapis.com/oauth2/v2/userinfo',
+      scope: 'openid email profile',
+      additionalParams: { access_type: 'offline', prompt: 'consent' }
+    },
+    github: {
+      authUrl: 'https://github.com/login/oauth/authorize',
+      tokenUrl: 'https://github.com/login/oauth/access_token',
+      userInfoUrl: 'https://api.github.com/user',
+      scope: 'user:email',
+      additionalParams: {}
+    }
+  };
+
+  const config = hardcodedConfigs[platform.toLowerCase()];
+  if (!config) throw new Error(`Unsupported login provider: ${platform}`);
+
+  // Fake userApp for consistency
+  const userApp = { clientId, clientSecret, scopes: config.scope.split(' ') };
+
+  // Exchange and get info
+  const tokens = await exchangeCodeForToken(platform, code, userApp);
+  const { userInfo } = await getUserInfo(platform, tokens.accessToken);
+
+  return { tokens, userInfo };
+}
+
+/**
+ * New: Revoke access token (expand capability)
+ */
+export async function revokeAccessToken(platform, accessToken, userApp) {
   const { PLATFORMS } = await import('../index.js');
   const platformConfig = PLATFORMS[platform.toLowerCase()];
+  if (!platformConfig.revokeUrl) throw new Error(`[${platform}] Revocation not supported`);
 
-  // Create OAuth2Client for Cloudflare Workers compatibility
-  const client = new OAuth2Client({
-    server: platformConfig.authUrl,
-    clientId: userApp.clientId,
-    clientSecret: userApp.clientSecret,
-    tokenEndpoint: platformConfig.tokenUrl,
-    authorizationEndpoint: platformConfig.authUrl
-  });
+  const client = createOAuthClient(platformConfig, userApp);
 
-  // Try using client's revoke method if available, otherwise manual revoke
-  if (client.revokeToken) {
-    await client.revokeToken({ token: accessToken });
-  } else {
-    // Manual revocation - some platforms don't support token revocation
-    // Just log that we would revoke if supported
-    console.log(`[${platform}] Token revocation not supported by provider`);
+  try {
+    await client.revokeToken({ access_token: accessToken });
+    return { success: true, message: 'Token revoked' };
+  } catch (error) {
+    throw new Error(`[${platform}] Revocation failed: ${error.message}`);
   }
 }
