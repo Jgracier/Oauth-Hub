@@ -5,6 +5,7 @@
  */
 
 // Note: PLATFORMS will be imported lazily to avoid circular dependencies
+import { AuthorizationCode } from 'simple-oauth2';
 import { normalizeTokenResponse } from './token-manager.js';
 import { extractPlatformUserId } from './user-info-extractor.js';
 import { generateCodeVerifier, generateCodeChallenge } from './utils.js';
@@ -13,43 +14,59 @@ import { generateCodeVerifier, generateCodeChallenge } from './utils.js';
  * Generate OAuth consent URL with required scopes automatically included
  */
 export async function generateConsentUrl(platform, userApp, apiKey, state, baseUrl = 'https://oauth-hub.com') {
-  // Lazy import to avoid circular dependency
   const { PLATFORMS } = await import('../index.js');
-  
   const platformConfig = PLATFORMS[platform.toLowerCase()];
   if (!platformConfig) {
     throw new Error(`[${platform}] Unsupported platform`);
   }
 
   try {
-    // Combine required scopes with user-selected scopes
+    // Merge required and user scopes
     const requiredScopes = platformConfig.requiredScopes || [];
     const userScopes = userApp.scopes || [];
-    
-    // Merge scopes, ensuring required scopes are always included
     const allScopes = [...new Set([...requiredScopes, ...userScopes])];
     const scopeString = allScopes.join(platformConfig.scopeDelimiter || ' ');
 
-    // Build authorization URL parameters
-    const params = new URLSearchParams({
-      client_id: userApp.clientId,
+    // Create simple-oauth2 client config
+    const clientConfig = {
+      client: {
+        id: userApp.clientId,
+        secret: userApp.clientSecret
+      },
+      auth: {
+        tokenHost: new URL(platformConfig.tokenUrl).host,
+        tokenPath: new URL(platformConfig.tokenUrl).pathname,
+        authorizeHost: new URL(platformConfig.authUrl).host,
+        authorizePath: new URL(platformConfig.authUrl).pathname
+      },
+      options: {
+        useBasicAuthorizationHeader: true, // Or false for POST body, per platform
+        ...(platformConfig.authMethod === 'post' ? { useBasicAuthorizationHeader: false } : {})
+      }
+    };
+
+    const client = new AuthorizationCode(clientConfig);
+
+    // PKCE always (expand security)
+    const codeVerifier = generateCodeVerifier();
+    const codeChallenge = await generateCodeChallenge(codeVerifier);
+
+    const authUrlOptions = {
       redirect_uri: `${baseUrl}/callback`,
-      response_type: 'code', // Standard OAuth parameter
       scope: scopeString,
       state: state,
+      code_challenge: codeChallenge,
+      code_challenge_method: 'S256',
       ...platformConfig.additionalParams
-    });
+    };
 
-    // Handle PKCE for platforms that require it
-    if (platformConfig.requiresPKCE) {
-      const codeVerifier = generateCodeVerifier();
-      const codeChallenge = await generateCodeChallenge(codeVerifier);
-      
-      params.set('code_challenge', codeChallenge);
-      params.set('code_challenge_method', 'S256');
-    }
+    const authorizationUri = client.authorizeURL(authUrlOptions);
 
-    return `${platformConfig.authUrl}?${params.toString()}`;
+    // Store verifier temporarily if needed (e.g., in KV with state as key, TTL 10min)
+    // For now, return it or assume callback handles
+    await env.OAUTH_TOKENS.put(`pkce-${state}`, JSON.stringify({verifier: codeVerifier}), { expirationTtl: 600 });
+
+    return authorizationUri; // Caller (router) can access if needed
   } catch (error) {
     throw new Error(`[${platform}] Failed to generate consent URL: ${error.message}`);
   }
@@ -58,64 +75,78 @@ export async function generateConsentUrl(platform, userApp, apiKey, state, baseU
 /**
  * Exchange authorization code for access token with platform-specific handling
  */
-export async function exchangeCodeForToken(platform, code, userApp, codeVerifier = null) {
-  // Lazy import to avoid circular dependency
+export async function exchangeCodeForToken(platform, code, userApp, state, env) {
   const { PLATFORMS } = await import('../index.js');
-  
   const platformConfig = PLATFORMS[platform.toLowerCase()];
   if (!platformConfig) {
     throw new Error(`[${platform}] Unsupported platform`);
   }
 
   try {
-    const tokenParams = new URLSearchParams({
-      grant_type: 'authorization_code',
-      client_id: userApp.clientId,
-      client_secret: userApp.clientSecret,
-      code: code,
-      redirect_uri: 'https://oauth-hub.com/callback'
-    });
-
-    // Add PKCE code verifier if required
-    if (platformConfig.requiresPKCE && codeVerifier) {
-      tokenParams.set('code_verifier', codeVerifier);
-    }
-
-    // Platform-specific token request handling
-    const headers = {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'Accept': 'application/json'
+    const clientConfig = {
+      client: {
+        id: userApp.clientId,
+        secret: userApp.clientSecret
+      },
+      auth: {
+        tokenHost: new URL(platformConfig.tokenUrl).host,
+        tokenPath: new URL(platformConfig.tokenUrl).pathname,
+        authorizeHost: new URL(platformConfig.authUrl).host,
+        authorizePath: new URL(platformConfig.authUrl).pathname
+      },
+      options: {
+        useBasicAuthorizationHeader: true,
+        ...(platformConfig.authMethod === 'post' ? { useBasicAuthorizationHeader: false } : {})
+      }
     };
 
-    // Add platform-specific headers
+    // Platform-specific options
     switch (platform.toLowerCase()) {
       case 'github':
-        headers['User-Agent'] = 'OAuth-Hub/1.0';
+        clientConfig.options.authorizationHeader = 'User-Agent: OAuth-Hub/1.0';
         break;
       case 'slack':
-        tokenParams.set('client_id', userApp.clientId);
-        tokenParams.set('client_secret', userApp.clientSecret);
+        clientConfig.options.useBasicAuthorizationHeader = false;
         break;
       case 'shopify':
-        // Shopify uses different URL structure
-        const shopDomain = userApp.shopDomain || 'shop';
-        platformConfig.tokenUrl = platformConfig.tokenUrl.replace('{shop}', shopDomain);
+        // Handle shopDomain if in userApp
+        if (userApp.shopDomain) {
+          clientConfig.auth.tokenHost = `${userApp.shopDomain}.myshopify.com`;
+        }
         break;
     }
 
-    const response = await fetch(platformConfig.tokenUrl, {
-      method: 'POST',
-      headers,
-      body: tokenParams.toString()
-    });
+    const client = new AuthorizationCode(clientConfig);
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Token exchange failed: ${response.status} ${errorText}`);
+    const tokenOptions = {
+      code,
+      redirect_uri: 'https://oauth-hub.com/callback'
+    };
+
+    if (state) {
+      const pkceKey = `pkce-${state}`;
+      const pkceData = await env.OAUTH_TOKENS.get(pkceKey);
+      if (pkceData) {
+        const { verifier } = JSON.parse(pkceData);
+        tokenOptions.code_verifier = verifier;
+        await env.OAUTH_TOKENS.delete(pkceKey); // Cleanup
+      }
     }
 
-    const tokenResponse = await response.json();
-    return normalizeTokenResponse(platform, tokenResponse);
+    const result = await client.getToken(tokenOptions);
+    const token = result.token;
+
+    // Use package normalization, add expiresAt
+    const normalized = {
+      accessToken: token.access_token,
+      refreshToken: token.refresh_token,
+      tokenType: token.token_type || 'Bearer',
+      expiresIn: token.expires_in,
+      expiresAt: token.expires_in ? Date.now() + (token.expires_in * 1000) : null,
+      scope: token.scope
+    };
+
+    return normalized;
   } catch (error) {
     throw new Error(`[${platform}] Token exchange failed: ${error.message}`);
   }
@@ -216,47 +247,66 @@ export async function getUserInfo(platform, accessToken) {
  * Refresh OAuth access token with platform-specific handling
  */
 export async function refreshAccessToken(platform, refreshToken, userApp) {
-  // Lazy import to avoid circular dependency
   const { PLATFORMS } = await import('../index.js');
-  
   const platformConfig = PLATFORMS[platform.toLowerCase()];
   if (!platformConfig) {
     throw new Error(`[${platform}] Unsupported platform`);
   }
 
-  // Some platforms don't support refresh tokens
   const noRefreshPlatforms = ['github', 'shopify', 'trello', 'notion', 'dribbble', 'unsplash', 'netflix', 'steam'];
   if (noRefreshPlatforms.includes(platform.toLowerCase())) {
     throw new Error(`[${platform}] Tokens do not expire and cannot be refreshed`);
   }
 
   try {
-    const tokenParams = new URLSearchParams({
-      grant_type: 'refresh_token',
-      client_id: userApp.clientId,
-      client_secret: userApp.clientSecret,
+    const clientConfig = {
+      client: {
+        id: userApp.clientId,
+        secret: userApp.clientSecret
+      },
+      auth: {
+        tokenHost: new URL(platformConfig.tokenUrl).host,
+        tokenPath: new URL(platformConfig.tokenUrl).pathname
+      },
+      options: {
+        useBasicAuthorizationHeader: true
+      }
+    };
+
+    const client = new AuthorizationCode(clientConfig);
+
+    const result = await client.getToken({
       refresh_token: refreshToken
     });
 
-    const headers = {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'Accept': 'application/json'
+    const token = result.token;
+
+    return {
+      accessToken: token.access_token,
+      refreshToken: token.refresh_token || refreshToken, // Keep old if not new
+      tokenType: token.token_type || 'Bearer',
+      expiresIn: token.expires_in,
+      expiresAt: token.expires_in ? Date.now() + (token.expires_in * 1000) : null,
+      scope: token.scope
     };
-
-    const response = await fetch(platformConfig.tokenUrl, {
-      method: 'POST',
-      headers,
-      body: tokenParams.toString()
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Token refresh failed: ${response.status} ${errorText}`);
-    }
-
-    const tokenResponse = await response.json();
-    return normalizeTokenResponse(platform, tokenResponse);
   } catch (error) {
     throw new Error(`[${platform}] Token refresh failed: ${error.message}`);
   }
+}
+
+export async function revokeToken(platform, accessToken, userApp, env) {
+  const { PLATFORMS } = await import('../index.js');
+  const platformConfig = PLATFORMS[platform.toLowerCase()];
+  
+  const clientConfig = {
+    client: { id: userApp.clientId, secret: userApp.clientSecret },
+    auth: { 
+      tokenHost: new URL(platformConfig.tokenUrl).host, 
+      tokenPath: new URL(platformConfig.tokenUrl).pathname + '/revoke' // Or specific revoke URL if different
+    },
+    options: { useBasicAuthorizationHeader: true }
+  };
+  
+  const client = new AuthorizationCode(clientConfig);
+  await client.revokeToken({ token: accessToken });
 }

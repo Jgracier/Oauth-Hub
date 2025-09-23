@@ -58,7 +58,8 @@ import {
   generateConsentUrl, 
   exchangeCodeForToken, 
   getUserInfo, 
-  refreshAccessToken 
+  refreshAccessToken,
+  revokeToken
 } from './oauth/oauth-service.js';
 
 // Import utilities
@@ -145,6 +146,7 @@ export {
   exchangeCodeForToken,
   getUserInfo,
   refreshAccessToken,
+  revokeToken,
   
   // Utility Functions
   getPlatform,

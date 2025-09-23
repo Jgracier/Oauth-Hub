@@ -277,7 +277,7 @@ export class Router {
       const { exchangeCodeForToken, getUserInfo } = await import('./platforms/index.js');
       
       // 3. Exchange authorization code for access token (use the same redirect URI as consent)
-      const tokens = await exchangeCodeForToken(platform, code, userApp);
+      const tokens = await exchangeCodeForToken(platform, code, userApp, state, this.env);
       
       // 4. Get user info to extract platform user ID
       const { platformUserId, userInfo } = await getUserInfo(platform, tokens.accessToken);
@@ -583,6 +583,51 @@ export class Router {
         // Handle token endpoint
         return await this.handleTokenEndpoint(request, corsHeaders);
       }
+      if (path.startsWith('/revoke/') && method === 'DELETE') {
+        // Expected: /revoke/{platformUserId}/{apiKey}
+        const pathParts = path.split('/');
+        if (pathParts.length < 3) {
+          return jsonResponse({ error: 'Invalid revoke endpoint' }, 400, corsHeaders);
+        }
+        const platformUserId = pathParts[2];
+        const apiKey = pathParts[3];
+        
+        try {
+          const { validApiKey, userEmail } = await this.validateApiKey(apiKey);
+          if (!validApiKey) {
+            return jsonResponse({ error: 'Invalid API key' }, 401, corsHeaders);
+          }
+          
+          // Get token data to find platform
+          const tokenKey = `token-${platformUserId}-${apiKey}`;
+          const tokenDataRaw = await this.env.OAUTH_TOKENS.get(tokenKey);
+          if (!tokenDataRaw) {
+            return jsonResponse({ error: 'Token not found' }, 404, corsHeaders);
+          }
+          const tokenData = JSON.parse(tokenDataRaw);
+          const platform = tokenData.platform;
+          
+          // Get app config
+          const appKey = `app-${platform}-${userEmail}`;
+          const appData = await this.env.OAUTH_TOKENS.get(appKey);
+          if (!appData) {
+            return jsonResponse({ error: 'App config not found' }, 404, corsHeaders);
+          }
+          const userApp = JSON.parse(appData);
+          
+          // Import and call revoke
+          const { revokeToken } = await import('./platforms/index.js');
+          await revokeToken(platform, tokenData.accessToken, userApp, this.env);
+          
+          // Delete from KV
+          await this.env.OAUTH_TOKENS.delete(tokenKey);
+          
+          return jsonResponse({ success: true, message: 'Token revoked' }, 200, corsHeaders);
+        } catch (error) {
+          console.error('Revoke failed:', error);
+          return jsonResponse({ error: 'Failed to revoke token' }, 500, corsHeaders);
+        }
+      }
 
       // =============================================================================
       // SUBSCRIPTION ENDPOINTS
@@ -692,6 +737,7 @@ export class Router {
         const result = await subscriptionService.giveAustynFullAccess();
         return jsonResponse(result, result.success ? 200 : 400, corsHeaders);
       }
+
 
       // Health check endpoint
       if (path === '/health') {

@@ -6,6 +6,7 @@ import { BaseHandler } from './base.handler.js';
 import { generateRandomString, generateApiKey, generateId, sanitizeInput } from '../../lib/utils/helpers.js';
 import { AuthService } from '../../lib/services/auth.service.js';
 import { createSessionCookie } from '../../lib/auth/session.js';
+import { AuthorizationCode } from 'simple-oauth2';
 
 export class GitHubAuthHandler extends BaseHandler {
   
@@ -184,25 +185,28 @@ export class GitHubAuthHandler extends BaseHandler {
   
   async exchangeGitHubCodeForTokens(code) {
     try {
-      const response = await fetch('https://github.com/login/oauth/access_token', {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
+      const clientConfig = {
+        client: {
+          id: this.env.GITHUB_CLIENT_ID,
+          secret: this.env.GITHUB_CLIENT_SECRET
         },
-        body: JSON.stringify({
-          client_id: this.env.GITHUB_CLIENT_ID,
-          client_secret: this.env.GITHUB_CLIENT_SECRET,
-          code: code
-        })
+        auth: {
+          tokenHost: 'github.com',
+          tokenPath: '/login/oauth/access_token',
+          authorizeHost: 'github.com',
+          authorizePath: '/login/oauth/authorize'
+        },
+        options: { useBasicAuthorizationHeader: false }
+      };
+
+      const client = new AuthorizationCode(clientConfig);
+
+      const result = await client.getToken({
+        code,
+        // GitHub no redirect_uri in token exchange
       });
-      
-      if (!response.ok) {
-        console.error('GitHub token exchange failed:', await response.text());
-        return null;
-      }
-      
-      return await response.json();
+
+      return result;
     } catch (error) {
       console.error('Error exchanging code for tokens:', error);
       return null;

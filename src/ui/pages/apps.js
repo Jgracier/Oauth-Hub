@@ -78,6 +78,10 @@ export function getModernAppsPage() {
               </div>
                 </div>
                 
+                <div class="alert-info" style="margin-top: 16px; padding: 12px; border-radius: 8px; background: rgba(59, 130, 246, 0.1); border-left: 4px solid #3B82F6;">
+  <p style="margin: 0; font-size: 0.9rem; color: var(--text-primary);"><strong>Security Note:</strong> PKCE is automatically enabled for all flows to protect against authorization code interception.</p>
+</div>
+                
                 <div class="form-group" id="scopes-section" style="display: none;">
               <label class="form-label">Scopes</label>
               <div id="scope-selector" class="scope-container">

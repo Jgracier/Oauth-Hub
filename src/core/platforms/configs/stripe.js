@@ -7,20 +7,22 @@ export const stripe = {
   name: 'Stripe',
   displayName: 'Stripe',
   icon: '💳',
-  color: '#635bff',
+  color: '#635BFF',
   authUrl: 'https://connect.stripe.com/oauth/authorize',
   tokenUrl: 'https://connect.stripe.com/oauth/token',
   userInfoUrl: 'https://api.stripe.com/v1/account',
   userIdField: 'id',
-  docsUrl: 'https://stripe.com/docs/connect/oauth-reference',
-  description: 'Stripe Connect for payment processing and marketplace platforms',
-  requiredScopes: ['read_only'],
+  docsUrl: 'https://docs.stripe.com/connect/oauth',
+  description: 'Connect to Stripe accounts for payments',
+  requiredScopes: ['read_write'],
   scopeDelimiter: ' ',
-  additionalParams: { response_type: 'code' },
+  additionalParams: { response_type: 'code', stripe_landing: 'login' },
+  requiresPKCE: true,
+  authMethod: 'query',
   scopes: {
-    'General Access': {
-      'read_only': { name: 'Read Only', description: 'Read-only access to all account resources', required: true },
-      'read_write': { name: 'Read Write', description: 'Read and write access to all account resources' }
+    'Connect': {
+      'read_write': { name: 'Full Access', description: 'Read and write access to Stripe account data', required: true },
+      'read_only': { name: 'Read Only', description: 'Read-only access to account data' }
     }
   }
 };

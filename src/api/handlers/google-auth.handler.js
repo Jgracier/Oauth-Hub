@@ -5,6 +5,7 @@
 import { BaseHandler } from './base.handler.js';
 import { generateRandomString, generateApiKey, generateId, sanitizeInput } from '../../lib/utils/helpers.js';
 import { AuthService } from '../../lib/services/auth.service.js';
+import { AuthorizationCode } from 'simple-oauth2';
 
 export class GoogleAuthHandler extends BaseHandler {
   
@@ -189,26 +190,28 @@ export class GoogleAuthHandler extends BaseHandler {
   
   async exchangeGoogleCodeForTokens(code) {
     try {
-      const response = await fetch('https://oauth2.googleapis.com/token', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
+      const clientConfig = {
+        client: {
+          id: this.env.GOOGLE_CLIENT_ID,
+          secret: this.env.GOOGLE_CLIENT_SECRET
         },
-        body: new URLSearchParams({
-          client_id: this.env.GOOGLE_CLIENT_ID,
-          client_secret: this.env.GOOGLE_CLIENT_SECRET,
-          code: code,
-          grant_type: 'authorization_code',
-          redirect_uri: 'https://oauth-hub.com/auth/google/callback'
-        })
+        auth: {
+          tokenHost: 'oauth2.googleapis.com',
+          tokenPath: '/token',
+          authorizeHost: 'accounts.google.com',
+          authorizePath: '/o/oauth2/v2/auth'
+        },
+        options: { useBasicAuthorizationHeader: false }
+      };
+
+      const client = new AuthorizationCode(clientConfig);
+
+      const result = await client.getToken({
+        code,
+        redirect_uri: 'https://oauth-hub.com/auth/google/callback'
       });
-      
-      if (!response.ok) {
-        console.error('Token exchange failed:', await response.text());
-        return null;
-      }
-      
-      return await response.json();
+
+      return result;
     } catch (error) {
       console.error('Error exchanging code for tokens:', error);
       return null;

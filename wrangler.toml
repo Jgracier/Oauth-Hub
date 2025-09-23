@@ -1,6 +1,6 @@
 name = "oauth-handler"
 main = "src/index.js"
-compatibility_date = "2024-08-23"
+compatibility_date = "2024-10-01"
 compatibility_flags = ["nodejs_compat"]
 
 # Environment Variables
@@ -33,6 +33,9 @@ id = "59c85e2e54ad45209bf735b06354f219"
 # Production Environment
 [env.production]
 name = "oauth-handler-prod"
+main = "src/index.js"
+compatibility_date = "2024-10-01"
+compatibility_flags = ["nodejs_compat"]
 
 [[env.production.kv_namespaces]]
 binding = "OAUTH_TOKENS"

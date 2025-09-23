@@ -37,7 +37,7 @@ export class AppHandler extends BaseHandler {
   }
 
   /**
-   * Save OAuth app
+   * Save OAuth app with optional scope import
    */
   async saveApp(request, corsHeaders) {
     try {
@@ -49,6 +49,8 @@ export class AppHandler extends BaseHandler {
         throw new Error('Email, platform, clientId, and clientSecret are required');
       }
 
+      let finalScopes = scopes || [];
+
       // Create app record
       const appRecord = {
         userEmail: email,
@@ -56,8 +58,9 @@ export class AppHandler extends BaseHandler {
         name: name || platform.charAt(0).toUpperCase() + platform.slice(1),
         clientId: clientId,
         clientSecret: clientSecret,
-        scopes: scopes || [],
+        scopes: finalScopes,
         redirectUri: redirectUri,
+        scopeImportResult: scopeImportResult, // Store import results for debugging
         createdAt: new Date().toISOString()
       };
 

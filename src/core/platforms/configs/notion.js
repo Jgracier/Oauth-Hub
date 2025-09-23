@@ -12,15 +12,17 @@ export const notion = {
   tokenUrl: 'https://api.notion.com/v1/oauth/token',
   userInfoUrl: 'https://api.notion.com/v1/users/me',
   userIdField: 'id',
-  docsUrl: 'https://developers.notion.com/docs/authorization',
-  description: 'Notion workspace and productivity platform',
-  requiredScopes: ['read'],
+  docsUrl: 'https://developers.notion.com/reference/intro',
+  description: 'Access Notion pages and databases',
+  requiredScopes: ['read', 'write'],
   scopeDelimiter: ' ',
   additionalParams: { response_type: 'code' },
+  requiresPKCE: true,
+  authMethod: 'post',
   scopes: {
-    'Basic': {
-      'read': { name: 'Read', description: 'Read pages, databases, and blocks', required: true },
-      'write': { name: 'Write', description: 'Create and modify pages, databases, and blocks' }
+    'Pages': {
+      'read': { name: 'Read Pages', description: 'View pages and databases', required: true },
+      'write': { name: 'Write Pages', description: 'Edit pages and databases' }
     }
   }
 };

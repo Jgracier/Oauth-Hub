@@ -6,23 +6,26 @@
 export const figma = {
   name: 'Figma',
   displayName: 'Figma',
-  icon: '🎯',
-  color: '#f24e1e',
+  icon: '🎨',
+  color: '#F24E1E',
   authUrl: 'https://www.figma.com/oauth',
   tokenUrl: 'https://www.figma.com/api/oauth/token',
   userInfoUrl: 'https://api.figma.com/v1/me',
   userIdField: 'id',
-  docsUrl: 'https://www.figma.com/developers/api#authentication',
-  description: 'Figma collaborative design platform',
-  requiredScopes: ['file_read'],
+  docsUrl: 'https://www.figma.com/developers/api#oauth2',
+  description: 'Access Figma files and designs',
+  requiredScopes: ['file:read'],
   scopeDelimiter: ' ',
-  additionalParams: { 
-    response_type: 'code',
-    scope: 'file_read'
-  },
+  additionalParams: { response_type: 'code' },
+  requiresPKCE: true,
+  authMethod: 'post',
   scopes: {
     'Files': {
-      'file_read': { name: 'File Read', description: 'Read access to files and projects', required: true }
+      'file:read': { name: 'Read Files', description: 'View files', required: true },
+      'file:write': { name: 'Write Files', description: 'Edit files' }
+    },
+    'Accounts': {
+      'account:read': { name: 'Account Info', description: 'View account details' }
     }
   }
 };

@@ -4,57 +4,6 @@
  */
 
 /**
- * Generate a cryptographically secure code verifier for PKCE
- */
-export function generateCodeVerifier() {
-  const array = new Uint8Array(32);
-  crypto.getRandomValues(array);
-  return btoa(String.fromCharCode.apply(null, array))
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=/g, '');
-}
-
-/**
- * Generate code challenge from code verifier using SHA256
- */
-export async function generateCodeChallenge(codeVerifier) {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(codeVerifier);
-  const digest = await crypto.subtle.digest('SHA-256', data);
-  return btoa(String.fromCharCode.apply(null, new Uint8Array(digest)))
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=/g, '');
-}
-
-/**
- * Generate a secure state parameter for OAuth flows
- */
-export function generateState(platform, apiKey) {
-  const timestamp = Date.now();
-  const uuid = crypto.randomUUID();
-  return `${platform}_${apiKey}_${timestamp}_${uuid}`;
-}
-
-/**
- * Parse state parameter back to components
- */
-export function parseState(state) {
-  const parts = state.split('_');
-  if (parts.length < 4) {
-    throw new Error('Invalid state parameter format');
-  }
-  
-  return {
-    platform: parts[0],
-    apiKey: parts.slice(1, -2).join('_'), // Everything between platform and timestamp+uuid
-    timestamp: parts[parts.length - 2],
-    uuid: parts[parts.length - 1]
-  };
-}
-
-/**
  * Validate OAuth response and extract error information
  */
 export function validateOAuthResponse(searchParams) {

@@ -141,16 +141,12 @@ Extract full configurations from original `platforms.js`:
 # src/core/platforms/configs/{platform}.js
 ```
 
-### 2. **Run Generation Script** 
-```javascript
-// Use the generator to create remaining config files
-import { generateAllConfigs } from './generate-remaining-configs.js';
-await generateAllConfigs();
-```
+### 2. **Create Configuration File**
+Create a new config file following the existing pattern in `src/core/platforms/configs/`.
 
 ### 3. **Validate & Test**
 - Test OAuth flows for each platform
-- Verify error messages are traceable  
+- Verify error messages are traceable
 - Check scope configurations are complete
 
 ## 💡 Adding New Platforms
