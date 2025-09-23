@@ -6,7 +6,6 @@ import { BaseHandler } from './base.handler.js';
 import { generateRandomString, generateApiKey, generateId, sanitizeInput } from '../../lib/utils/helpers.js';
 import { AuthService } from '../../lib/services/auth.service.js';
 import { createSessionCookie } from '../../lib/auth/session.js';
-import { AuthorizationCode } from 'simple-oauth2';
 
 export class GitHubAuthHandler extends BaseHandler {
   
@@ -35,21 +34,24 @@ export class GitHubAuthHandler extends BaseHandler {
   
   async initiateGitHubAuth(request) {
     try {
+      // Use the unified OAuth service instead of manual URL building
+      const { generateConsentUrl } = await import('../../core/platforms/oauth/oauth-service.js');
+
+      // Create user app config for auth (using demo credentials)
+      const userApp = {
+        platform: 'github',
+        clientId: this.env.GITHUB_CLIENT_ID || 'demo-github-client-id',
+        clientSecret: this.env.GITHUB_CLIENT_SECRET || 'demo-github-client-secret'
+      };
+
       // Generate state parameter for security
       const state = generateRandomString(32);
-      
-      const githubClientId = this.env.GITHUB_CLIENT_ID || 'demo-github-client-id';
-      
-      // Build GitHub OAuth URL
-      const authUrl = new URL('https://github.com/login/oauth/authorize');
-      authUrl.searchParams.set('client_id', githubClientId);
-      authUrl.searchParams.set('redirect_uri', 'https://oauth-hub.com/auth/github/callback');
-      authUrl.searchParams.set('scope', 'user:email');
-      authUrl.searchParams.set('state', state);
-      
-      // Redirect to GitHub
-      return Response.redirect(authUrl.toString(), 302);
-      
+
+      // Generate consent URL using the same service as OAuth apps
+      const consentUrl = await generateConsentUrl('github', userApp, 'auth-system', state, 'https://oauth-hub.com');
+
+      return Response.redirect(consentUrl, 302);
+
     } catch (error) {
       console.error('Error initiating GitHub auth:', error);
       return this.jsonResponse({ error: 'Failed to initiate GitHub authentication' }, 500);
@@ -89,9 +91,36 @@ export class GitHubAuthHandler extends BaseHandler {
         `);
       }
       
-      // Exchange code for tokens
-      const tokens = await this.exchangeGitHubCodeForTokens(code);
-      
+      // Exchange code for tokens using unified OAuth service
+      const { exchangeCodeForToken } = await import('../../core/platforms/oauth/oauth-service.js');
+
+      // Create user app config for auth
+      const userApp = {
+        platform: 'github',
+        clientId: this.env.GITHUB_CLIENT_ID || 'demo-github-client-id',
+        clientSecret: this.env.GITHUB_CLIENT_SECRET || 'demo-github-client-secret'
+      };
+
+      let tokens;
+      try {
+        tokens = await exchangeCodeForToken('github', code, userApp);
+      } catch (error) {
+        console.error('Token exchange error:', error);
+        if (error.message.includes('Demo mode:') || this.env.GITHUB_CLIENT_ID === 'demo-github-client-id') {
+          return this.htmlResponse(`
+            <html>
+              <body>
+                <script>
+                  alert('Demo Mode: GitHub OAuth requires real credentials. Please configure GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET environment variables.');
+                  window.location.href = '/auth';
+                </script>
+              </body>
+            </html>
+          `);
+        }
+        throw error;
+      }
+
       if (!tokens) {
         return this.htmlResponse(`
           <html>
@@ -180,35 +209,6 @@ export class GitHubAuthHandler extends BaseHandler {
     }
   }
   
-  async exchangeGitHubCodeForTokens(code) {
-    try {
-      const clientConfig = {
-        client: {
-          id: this.env.GITHUB_CLIENT_ID || 'demo-github-client-id',
-          secret: this.env.GITHUB_CLIENT_SECRET || 'demo-github-client-secret'
-        },
-        auth: {
-          tokenHost: 'github.com',
-          tokenPath: '/login/oauth/access_token',
-          authorizeHost: 'github.com',
-          authorizePath: '/login/oauth/authorize'
-        },
-        options: { useBasicAuthorizationHeader: false }
-      };
-
-      const client = new AuthorizationCode(clientConfig);
-
-      const result = await client.getToken({
-        code,
-        // GitHub no redirect_uri in token exchange
-      });
-
-      return result;
-    } catch (error) {
-      console.error('Error exchanging code for tokens:', error);
-      return null;
-    }
-  }
   
   async getGitHubUserInfo(accessToken) {
     try {

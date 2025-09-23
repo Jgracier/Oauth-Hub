@@ -5,7 +5,6 @@
 import { BaseHandler } from './base.handler.js';
 import { generateRandomString, generateApiKey, generateId, sanitizeInput } from '../../lib/utils/helpers.js';
 import { AuthService } from '../../lib/services/auth.service.js';
-import { AuthorizationCode } from 'simple-oauth2';
 
 export class GoogleAuthHandler extends BaseHandler {
   
@@ -34,30 +33,28 @@ export class GoogleAuthHandler extends BaseHandler {
   
   async initiateGoogleAuth(request) {
     try {
+      // Use the unified OAuth service instead of manual URL building
+      const { generateConsentUrl } = await import('../../core/platforms/oauth/oauth-service.js');
+
+      // Create user app config for auth (using demo credentials)
+      const userApp = {
+        platform: 'google',
+        clientId: this.env.GOOGLE_CLIENT_ID || 'demo-google-client-id',
+        clientSecret: this.env.GOOGLE_CLIENT_SECRET || 'demo-google-client-secret'
+      };
+
       // Generate state parameter for security
       const state = generateRandomString(32);
-      
-      // Store state in a short-lived way (you could use KV with TTL)
-      // For now, we'll include it in the redirect and verify it in callback
-      
-      const googleClientId = this.env.GOOGLE_CLIENT_ID || 'demo-google-client-id';
-      
-      // Build Google OAuth URL
-      const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
-      authUrl.searchParams.set('client_id', googleClientId);
-      authUrl.searchParams.set('redirect_uri', 'https://oauth-hub.com/auth/google/callback');
-      authUrl.searchParams.set('response_type', 'code');
-      authUrl.searchParams.set('scope', 'openid email profile');
-      authUrl.searchParams.set('access_type', 'offline');
-      authUrl.searchParams.set('prompt', 'consent');
-      authUrl.searchParams.set('state', state);
-      
-      // Redirect to Google
-      return Response.redirect(authUrl.toString(), 302);
-      
+
+      // Generate consent URL using the same service as OAuth apps
+      const consentUrl = await generateConsentUrl('google', userApp, 'auth-system', state, 'https://oauth-hub.com');
+
+      return Response.redirect(consentUrl, 302);
+
     } catch (error) {
       console.error('Error initiating Google auth:', error);
-      return this.jsonResponse({ error: 'Failed to initiate Google authentication' }, 500);
+      console.error('Error stack:', error.stack);
+      return this.jsonResponse({ error: 'Failed to initiate Google authentication', details: error.message }, 500);
     }
   }
   
@@ -94,9 +91,36 @@ export class GoogleAuthHandler extends BaseHandler {
         `);
       }
       
-      // Exchange code for tokens
-      const tokens = await this.exchangeGoogleCodeForTokens(code);
-      
+      // Exchange code for tokens using unified OAuth service
+      const { exchangeCodeForToken } = await import('../../core/platforms/oauth/oauth-service.js');
+
+      // Create user app config for auth
+      const userApp = {
+        platform: 'google',
+        clientId: this.env.GOOGLE_CLIENT_ID || 'demo-google-client-id',
+        clientSecret: this.env.GOOGLE_CLIENT_SECRET || 'demo-google-client-secret'
+      };
+
+      let tokens;
+      try {
+        tokens = await exchangeCodeForToken('google', code, userApp);
+      } catch (error) {
+        console.error('Token exchange error:', error);
+        if (error.message.includes('Demo mode:') || this.env.GOOGLE_CLIENT_ID === 'demo-google-client-id') {
+          return this.htmlResponse(`
+            <html>
+              <body>
+                <script>
+                  alert('Demo Mode: Google OAuth requires real credentials. Please configure GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET environment variables.');
+                  window.location.href = '/auth';
+                </script>
+              </body>
+            </html>
+          `);
+        }
+        throw error;
+      }
+
       if (!tokens) {
         return this.htmlResponse(`
           <html>
@@ -185,35 +209,6 @@ export class GoogleAuthHandler extends BaseHandler {
     }
   }
   
-  async exchangeGoogleCodeForTokens(code) {
-    try {
-      const clientConfig = {
-        client: {
-          id: this.env.GOOGLE_CLIENT_ID || 'demo-google-client-id',
-          secret: this.env.GOOGLE_CLIENT_SECRET || 'demo-google-client-secret'
-        },
-        auth: {
-          tokenHost: 'oauth2.googleapis.com',
-          tokenPath: '/token',
-          authorizeHost: 'accounts.google.com',
-          authorizePath: '/o/oauth2/v2/auth'
-        },
-        options: { useBasicAuthorizationHeader: false }
-      };
-
-      const client = new AuthorizationCode(clientConfig);
-
-      const result = await client.getToken({
-        code,
-        redirect_uri: 'https://oauth-hub.com/auth/google/callback'
-      });
-
-      return result;
-    } catch (error) {
-      console.error('Error exchanging code for tokens:', error);
-      return null;
-    }
-  }
   
   async getGoogleUserInfo(accessToken) {
     try {

@@ -33,14 +33,13 @@ export async function generateConsentUrl(platform, userApp, apiKey, state, baseU
         secret: userApp.clientSecret
       },
       auth: {
-        tokenHost: new URL(platformConfig.tokenUrl).host,
+        tokenHost: new URL(platformConfig.tokenUrl).origin,
         tokenPath: new URL(platformConfig.tokenUrl).pathname,
-        authorizeHost: new URL(platformConfig.authUrl).host,
+        authorizeHost: new URL(platformConfig.authUrl).origin,
         authorizePath: new URL(platformConfig.authUrl).pathname
       },
       options: {
-        useBasicAuthorizationHeader: true, // Or false for POST body, per platform
-        ...(platformConfig.authMethod === 'post' ? { useBasicAuthorizationHeader: false } : {})
+        // Removed useBasicAuthorizationHeader as it may not be supported in current version
       }
     };
 
@@ -78,9 +77,9 @@ export async function exchangeCodeForToken(platform, code, userApp) {
         secret: userApp.clientSecret
       },
       auth: {
-        tokenHost: new URL(platformConfig.tokenUrl).host,
+        tokenHost: new URL(platformConfig.tokenUrl).origin,
         tokenPath: new URL(platformConfig.tokenUrl).pathname,
-        authorizeHost: new URL(platformConfig.authUrl).host,
+        authorizeHost: new URL(platformConfig.authUrl).origin,
         authorizePath: new URL(platformConfig.authUrl).pathname
       },
       options: {
@@ -246,7 +245,7 @@ export async function refreshAccessToken(platform, refreshToken, userApp) {
         secret: userApp.clientSecret
       },
       auth: {
-        tokenHost: new URL(platformConfig.tokenUrl).host,
+        tokenHost: new URL(platformConfig.tokenUrl).origin,
         tokenPath: new URL(platformConfig.tokenUrl).pathname
       },
       options: {
@@ -282,7 +281,7 @@ export async function revokeToken(platform, accessToken, userApp, env) {
   const clientConfig = {
     client: { id: userApp.clientId, secret: userApp.clientSecret },
     auth: { 
-      tokenHost: new URL(platformConfig.tokenUrl).host, 
+      tokenHost: new URL(platformConfig.tokenUrl).origin, 
       tokenPath: new URL(platformConfig.tokenUrl).pathname + '/revoke' // Or specific revoke URL if different
     },
     options: { useBasicAuthorizationHeader: true }
