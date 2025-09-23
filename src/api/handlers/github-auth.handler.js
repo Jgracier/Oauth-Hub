@@ -49,7 +49,21 @@ export class GitHubAuthHandler extends BaseHandler {
         `);
       }
 
-      return this.jsonResponse({ error: 'Authentication failed' }, 500);
+      return this.htmlResponse(`
+        <!DOCTYPE html>
+        <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Authentication Error</title>
+          </head>
+          <body>
+            <h1>Authentication Failed</h1>
+            <p>There was an error during GitHub authentication. Please try again.</p>
+            <p><a href="/auth">Return to login</a></p>
+          </body>
+        </html>
+      `, 500);
     }
   }
   
@@ -132,12 +146,19 @@ export class GitHubAuthHandler extends BaseHandler {
         console.error('Token exchange error:', error);
         if (error.message.includes('invalid_client') || error.message.includes('OAuth2 error') || error.message.includes('Demo mode:') || this.env.GITHUB_CLIENT_ID === 'demo-github-client-id') {
           return this.htmlResponse(`
-            <html>
+            <!DOCTYPE html>
+            <html lang="en">
+              <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>OAuth Demo Mode</title>
+              </head>
               <body>
                 <script>
                   alert('Demo Mode: GitHub OAuth requires real credentials. Please configure GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET environment variables.');
                   window.location.href = '/auth';
                 </script>
+                <p>If you are not redirected automatically, <a href="/auth">click here</a>.</p>
               </body>
             </html>
           `);
@@ -147,12 +168,19 @@ export class GitHubAuthHandler extends BaseHandler {
 
       if (!tokens) {
         return this.htmlResponse(`
-          <html>
+          <!DOCTYPE html>
+          <html lang="en">
+            <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Token Exchange Failed</title>
+            </head>
             <body>
               <script>
                 alert('Failed to exchange authorization code for tokens.');
                 window.location.href = '/auth';
               </script>
+              <p>If you are not redirected automatically, <a href="/auth">click here</a>.</p>
             </body>
           </html>
         `);
@@ -163,12 +191,19 @@ export class GitHubAuthHandler extends BaseHandler {
       
       if (!userInfo) {
         return this.htmlResponse(`
-          <html>
+          <!DOCTYPE html>
+          <html lang="en">
+            <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>User Info Error</title>
+            </head>
             <body>
               <script>
                 alert('Failed to get user information from GitHub.');
                 window.location.href = '/auth';
               </script>
+              <p>If you are not redirected automatically, <a href="/auth">click here</a>.</p>
             </body>
           </html>
         `);
@@ -179,12 +214,19 @@ export class GitHubAuthHandler extends BaseHandler {
       
       if (!user) {
         return this.htmlResponse(`
-          <html>
+          <!DOCTYPE html>
+          <html lang="en">
+            <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Account Creation Error</title>
+            </head>
             <body>
               <script>
                 alert('Failed to create or login user.');
                 window.location.href = '/auth';
               </script>
+              <p>If you are not redirected automatically, <a href="/auth">click here</a>.</p>
             </body>
           </html>
         `);
@@ -197,17 +239,25 @@ export class GitHubAuthHandler extends BaseHandler {
       const sessionCookie = createSessionCookie(sessionToken);
       
       return new Response(`
-        <html>
+        <!DOCTYPE html>
+        <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Login Successful</title>
+          </head>
           <body>
             <script>
               // Store user info in localStorage
               localStorage.setItem('userEmail', '${user.email}');
               localStorage.setItem('userName', '${user.name}');
               ${apiKey ? `localStorage.setItem('defaultApiKey', '${apiKey}');` : ''}
-              
+
               // Redirect to dashboard
               window.location.href = '/dashboard';
             </script>
+            <p>Login successful! Redirecting to dashboard...</p>
+            <p>If you are not redirected automatically, <a href="/dashboard">click here</a>.</p>
           </body>
         </html>
       `, {
@@ -221,12 +271,19 @@ export class GitHubAuthHandler extends BaseHandler {
     } catch (error) {
       console.error('Error handling GitHub callback:', error);
       return this.htmlResponse(`
-        <html>
+        <!DOCTYPE html>
+        <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Authentication Error</title>
+          </head>
           <body>
             <script>
               alert('Authentication failed. Please try again.');
               window.location.href = '/auth';
             </script>
+            <p>If you are not redirected automatically, <a href="/auth">click here</a>.</p>
           </body>
         </html>
       `);
