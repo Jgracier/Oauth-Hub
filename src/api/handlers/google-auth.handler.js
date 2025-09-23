@@ -108,7 +108,8 @@ export class GoogleAuthHandler extends BaseHandler {
         tokens = await exchangeCodeForToken('google', code, userApp);
       } catch (error) {
         console.error('Token exchange error:', error);
-        if (error.message.includes('Demo mode:') || this.env.GOOGLE_CLIENT_ID === 'demo-google-client-id') {
+
+        if (error.message.includes('invalid_client') || error.message.includes('Demo mode:') || this.env.GOOGLE_CLIENT_ID === 'demo-google-client-id') {
           return this.htmlResponse(`
             <html>
               <body>

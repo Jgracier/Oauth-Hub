@@ -261,10 +261,10 @@ export class Router {
       }
 
       // 2. Import OAuth functions
-      const { exchangeCodeForToken, getUserInfo } = await import('./platforms/index.js');
-      
+      const { exchangeCodeForToken, getUserInfo } = await import('./platforms/oauth/oauth-service.js');
+
       // 3. Exchange authorization code for access token (use the same redirect URI as consent)
-      const tokens = await exchangeCodeForToken(platform, code, userApp, state, this.env);
+      const tokens = await exchangeCodeForToken(platform, code, userApp);
       
       // 4. Get user info to extract platform user ID
       const { platformUserId, userInfo } = await getUserInfo(platform, tokens.accessToken);
@@ -336,7 +336,12 @@ export class Router {
       
     } catch (error) {
       console.error('OAuth consent processing failed:', error.message);
-      return jsonResponse({ error: 'Failed to process OAuth consent' }, 500, corsHeaders);
+      console.error('Full error:', error);
+      return jsonResponse({
+        error: 'Failed to process OAuth consent',
+        details: error.message,
+        stack: error.stack
+      }, 500, corsHeaders);
     }
   }
 
