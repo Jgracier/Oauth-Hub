@@ -5,7 +5,7 @@
  */
 
 // Note: PLATFORMS will be imported lazily to avoid circular dependencies
-import { AuthorizationCode } from 'simple-oauth2';
+import { OAuth2Client } from '@badgateway/oauth2-client';
 import { normalizeTokenResponse } from './token-manager.js';
 import { extractPlatformUserId } from './user-info-extractor.js';
 
@@ -24,41 +24,27 @@ export async function generateConsentUrl(platform, userApp, apiKey, state, baseU
     const requiredScopes = platformConfig.requiredScopes || [];
     const userScopes = userApp.scopes || [];
     const allScopes = [...new Set([...requiredScopes, ...userScopes])];
-    const scopeString = allScopes.join(platformConfig.scopeDelimiter || ' ');
 
-    // Parse URLs properly for simple-oauth2
-    const tokenUrl = new URL(platformConfig.tokenUrl);
-    const authUrl = new URL(platformConfig.authUrl);
+    // Build base URL from request
+    if (!baseUrl.endsWith('/')) baseUrl += '/';
 
-    // Create simple-oauth2 client config
-    const clientConfig = {
-      client: {
-        id: userApp.clientId,
-        secret: userApp.clientSecret
-      },
-      auth: {
-        tokenHost: tokenUrl.origin, // Use full origin instead of just host
-        tokenPath: tokenUrl.pathname,
-        authorizeHost: authUrl.origin, // Use full origin instead of just host
-        authorizePath: authUrl.pathname
-      },
-      options: {
-        // Remove useBasicAuthorizationHeader as it's not allowed
-      }
-    };
+    // Create OAuth2 client with @badgateway/oauth2-client
+    const client = new OAuth2Client({
+      clientId: userApp.clientId,
+      clientSecret: userApp.clientSecret,
+      authorizationEndpoint: platformConfig.authUrl,
+      tokenEndpoint: platformConfig.tokenUrl
+    });
 
-    const client = new AuthorizationCode(clientConfig);
-
-    const authUrlOptions = {
-      redirect_uri: `${baseUrl}/callback`,
-      scope: scopeString, // Back to string - simple-oauth2 expects string
+    // Generate authorization URL
+    const authUrl = client.authorizationCode.getAuthorizeUri({
+      redirectUri: `${baseUrl}/callback`,
+      scope: allScopes, // Pass as array
       state: state,
       ...platformConfig.additionalParams
-    };
+    });
 
-    const authorizationUri = client.authorizeURL(authUrlOptions);
-
-    return authorizationUri; // Caller (router) can access if needed
+    return authUrl;
   } catch (error) {
     throw new Error(`[${platform}] Failed to generate consent URL: ${error.message}`);
   }
@@ -67,7 +53,7 @@ export async function generateConsentUrl(platform, userApp, apiKey, state, baseU
 /**
  * Exchange authorization code for access token with platform-specific handling
  */
-export async function exchangeCodeForToken(platform, code, userApp) {
+export async function exchangeCodeForToken(platform, code, userApp, redirectUri = 'https://oauth-hub.com/callback') {
   const { PLATFORMS } = await import('../index.js');
   const platformConfig = PLATFORMS[platform.toLowerCase()];
   if (!platformConfig) {
@@ -75,49 +61,28 @@ export async function exchangeCodeForToken(platform, code, userApp) {
   }
 
   try {
-    // Parse URLs properly for simple-oauth2
-    const tokenUrl = new URL(platformConfig.tokenUrl);
-    const authUrl = new URL(platformConfig.authUrl);
+    // Create OAuth2 client with @badgateway/oauth2-client
+    const client = new OAuth2Client({
+      clientId: userApp.clientId,
+      clientSecret: userApp.clientSecret,
+      authorizationEndpoint: platformConfig.authUrl,
+      tokenEndpoint: platformConfig.tokenUrl
+    });
 
-    const clientConfig = {
-      client: {
-        id: userApp.clientId,
-        secret: userApp.clientSecret
-      },
-      auth: {
-        tokenHost: tokenUrl.origin, // Use full origin instead of just host
-        tokenPath: tokenUrl.pathname,
-        authorizeHost: authUrl.origin, // Use full origin instead of just host
-        authorizePath: authUrl.pathname
-      },
-      options: {
-        // Remove useBasicAuthorizationHeader as it's not allowed
-      }
-    };
+    // Exchange code for token
+    const token = await client.authorizationCode.getToken({
+      code: code,
+      redirectUri: redirectUri
+    });
 
-    // Platform-specific options - simplified for now
-    // TODO: Add platform-specific options back after fixing basic config
-
-    const client = new AuthorizationCode(clientConfig);
-
-    const tokenOptions = {
-      code,
-      redirect_uri: 'https://oauth-hub.com/callback'
-    };
-
-    // PKCE verifier is handled internally by simple-oauth2
-
-    const result = await client.getToken(tokenOptions);
-    const token = result.token;
-
-    // Use package normalization, add expiresAt
+    // Normalize token response
     const normalized = {
-      accessToken: token.access_token,
-      refreshToken: token.refresh_token,
-      tokenType: token.token_type || 'Bearer',
-      expiresIn: token.expires_in,
-      expiresAt: token.expires_in ? Date.now() + (token.expires_in * 1000) : null,
-      scope: token.scope
+      accessToken: token.accessToken,
+      refreshToken: token.refreshToken,
+      tokenType: token.tokenType || 'Bearer',
+      expiresIn: token.expiresIn,
+      expiresAt: token.expiresIn ? Date.now() + (token.expiresIn * 1000) : null,
+      scope: Array.isArray(token.scope) ? token.scope.join(' ') : token.scope
     };
 
     return normalized;
@@ -233,35 +198,25 @@ export async function refreshAccessToken(platform, refreshToken, userApp) {
   }
 
   try {
-    const clientConfig = {
-      client: {
-        id: userApp.clientId,
-        secret: userApp.clientSecret
-      },
-      auth: {
-        tokenHost: new URL(platformConfig.tokenUrl).host,
-        tokenPath: new URL(platformConfig.tokenUrl).pathname
-      },
-      options: {
-        useBasicAuthorizationHeader: true
-      }
-    };
-
-    const client = new AuthorizationCode(clientConfig);
-
-    const result = await client.getToken({
-      refresh_token: refreshToken
+    // Create OAuth2 client with @badgateway/oauth2-client
+    const client = new OAuth2Client({
+      clientId: userApp.clientId,
+      clientSecret: userApp.clientSecret,
+      authorizationEndpoint: platformConfig.authUrl,
+      tokenEndpoint: platformConfig.tokenUrl
     });
 
-    const token = result.token;
+    // Refresh token
+    const token = await client.refreshToken(refreshToken);
 
+    // Normalize token response
     return {
-      accessToken: token.access_token,
-      refreshToken: token.refresh_token || refreshToken, // Keep old if not new
-      tokenType: token.token_type || 'Bearer',
-      expiresIn: token.expires_in,
-      expiresAt: token.expires_in ? Date.now() + (token.expires_in * 1000) : null,
-      scope: token.scope
+      accessToken: token.accessToken,
+      refreshToken: token.refreshToken || refreshToken, // Keep old if not new
+      tokenType: token.tokenType || 'Bearer',
+      expiresIn: token.expiresIn,
+      expiresAt: token.expiresIn ? Date.now() + (token.expiresIn * 1000) : null,
+      scope: Array.isArray(token.scope) ? token.scope.join(' ') : token.scope
     };
   } catch (error) {
     throw new Error(`[${platform}] Token refresh failed: ${error.message}`);
@@ -271,16 +226,20 @@ export async function refreshAccessToken(platform, refreshToken, userApp) {
 export async function revokeToken(platform, accessToken, userApp, env) {
   const { PLATFORMS } = await import('../index.js');
   const platformConfig = PLATFORMS[platform.toLowerCase()];
-  
-  const clientConfig = {
-    client: { id: userApp.clientId, secret: userApp.clientSecret },
-    auth: { 
-      tokenHost: new URL(platformConfig.tokenUrl).host, 
-      tokenPath: new URL(platformConfig.tokenUrl).pathname + '/revoke' // Or specific revoke URL if different
-    },
-    options: { useBasicAuthorizationHeader: true }
-  };
-  
-  const client = new AuthorizationCode(clientConfig);
-  await client.revokeToken({ token: accessToken });
+
+  try {
+    // Create OAuth2 client with @badgateway/oauth2-client
+    const client = new OAuth2Client({
+      clientId: userApp.clientId,
+      clientSecret: userApp.clientSecret,
+      authorizationEndpoint: platformConfig.authUrl,
+      tokenEndpoint: platformConfig.tokenUrl
+    });
+
+    // Revoke token (if supported by platform)
+    await client.revokeToken(accessToken);
+  } catch (error) {
+    // Some platforms don't support revocation, log but don't throw
+    console.warn(`[${platform}] Token revocation not supported or failed: ${error.message}`);
+  }
 }
