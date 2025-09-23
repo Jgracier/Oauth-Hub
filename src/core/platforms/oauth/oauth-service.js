@@ -8,7 +8,6 @@
 import { AuthorizationCode } from 'simple-oauth2';
 import { normalizeTokenResponse } from './token-manager.js';
 import { extractPlatformUserId } from './user-info-extractor.js';
-import { generateCodeVerifier, generateCodeChallenge } from './utils.js';
 
 /**
  * Generate OAuth consent URL with required scopes automatically included
@@ -47,24 +46,14 @@ export async function generateConsentUrl(platform, userApp, apiKey, state, baseU
 
     const client = new AuthorizationCode(clientConfig);
 
-    // PKCE always (expand security)
-    const codeVerifier = generateCodeVerifier();
-    const codeChallenge = await generateCodeChallenge(codeVerifier);
-
     const authUrlOptions = {
       redirect_uri: `${baseUrl}/callback`,
       scope: scopeString,
       state: state,
-      code_challenge: codeChallenge,
-      code_challenge_method: 'S256',
       ...platformConfig.additionalParams
     };
 
     const authorizationUri = client.authorizeURL(authUrlOptions);
-
-    // Store verifier temporarily if needed (e.g., in KV with state as key, TTL 10min)
-    // For now, return it or assume callback handles
-    await env.OAUTH_TOKENS.put(`pkce-${state}`, JSON.stringify({verifier: codeVerifier}), { expirationTtl: 600 });
 
     return authorizationUri; // Caller (router) can access if needed
   } catch (error) {
@@ -75,7 +64,7 @@ export async function generateConsentUrl(platform, userApp, apiKey, state, baseU
 /**
  * Exchange authorization code for access token with platform-specific handling
  */
-export async function exchangeCodeForToken(platform, code, userApp, state, env) {
+export async function exchangeCodeForToken(platform, code, userApp) {
   const { PLATFORMS } = await import('../index.js');
   const platformConfig = PLATFORMS[platform.toLowerCase()];
   if (!platformConfig) {
@@ -123,15 +112,7 @@ export async function exchangeCodeForToken(platform, code, userApp, state, env) 
       redirect_uri: 'https://oauth-hub.com/callback'
     };
 
-    if (state) {
-      const pkceKey = `pkce-${state}`;
-      const pkceData = await env.OAUTH_TOKENS.get(pkceKey);
-      if (pkceData) {
-        const { verifier } = JSON.parse(pkceData);
-        tokenOptions.code_verifier = verifier;
-        await env.OAUTH_TOKENS.delete(pkceKey); // Cleanup
-      }
-    }
+    // PKCE verifier is handled internally by simple-oauth2
 
     const result = await client.getToken(tokenOptions);
     const token = result.token;
