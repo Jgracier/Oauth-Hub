@@ -17,13 +17,12 @@ export const twitter = {
   docsUrl: 'https://developer.x.com/',
   description: 'Access X (Twitter) API v2 for tweets, users, and engagement',
   requiredScopes: ['tweet.read', 'users.read'],
-  scopeDelimiter: ' ',
-  requiresPKCE: true, // PKCE requirement for enhanced security // Space-delimited
+  scopeDelimiter: ' ', // Space-delimited
+  requiresPKCE: true, // Twitter requires PKCE for enhanced security
   additionalParams: {
     response_type: 'code',
     code_challenge_method: 'S256' // PKCE required
   },
-  requiresPKCE: true, // Twitter requires PKCE
   scopes: {
     'Tweets': {
       'tweet.read': { name: 'Tweet Read', description: 'Read tweets', required: true },
