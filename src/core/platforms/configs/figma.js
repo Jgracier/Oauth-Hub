@@ -31,5 +31,7 @@ const figma = {
 };
 
 
-module.exports = { figma };
+export { figma };
+
+
 

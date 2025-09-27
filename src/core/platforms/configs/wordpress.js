@@ -31,5 +31,7 @@ const wordpress = {
 };
 
 
-module.exports = { wordpress };
+export { wordpress };
+
+
 

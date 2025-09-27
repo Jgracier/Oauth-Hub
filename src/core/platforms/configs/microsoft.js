@@ -93,5 +93,7 @@ const microsoft = {
 };
 
 
-module.exports = { microsoft };
+export { microsoft };
+
+
 

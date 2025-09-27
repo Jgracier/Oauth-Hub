@@ -36,5 +36,7 @@ const unsplash = {
 };
 
 
-module.exports = { unsplash };
+export { unsplash };
+
+
 

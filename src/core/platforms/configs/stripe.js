@@ -29,5 +29,7 @@ const stripe = {
 };
 
 
-module.exports = { stripe };
+export { stripe };
+
+
 

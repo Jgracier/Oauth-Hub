@@ -96,5 +96,7 @@ const shopify = {
 };
 
 
-module.exports = { shopify };
+export { shopify };
+
+
 

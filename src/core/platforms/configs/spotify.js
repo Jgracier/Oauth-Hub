@@ -44,5 +44,7 @@ const spotify = {
 };
 
 
-module.exports = { spotify };
+export { spotify };
+
+
 

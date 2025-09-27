@@ -26,20 +26,20 @@ export const GLOBAL_INIT_SCRIPT = `
     // Apply profile data immediately to prevent blinking (mutually exclusive)
     if (cachedProfilePic) {
       // Show profile picture only
-      document.documentElement.style.setProperty('--cached-profile-pic', `url(${cachedProfilePic})`);
+      document.documentElement.style.setProperty('--cached-profile-pic', \`url(\${cachedProfilePic})\`);
       document.documentElement.style.removeProperty('--cached-initials');
       document.documentElement.classList.add('has-profile-pic');
       document.documentElement.classList.remove('has-initials');
     } else if (cachedInitials) {
       // Show initials only
-      document.documentElement.style.setProperty('--cached-initials', `"${cachedInitials}"`);
+      document.documentElement.style.setProperty('--cached-initials', \`"\${cachedInitials}"\`);
       document.documentElement.style.removeProperty('--cached-profile-pic');
       document.documentElement.classList.add('has-initials');
       document.documentElement.classList.remove('has-profile-pic');
     } else if (cachedUserName) {
       // Generate and show initials only
       const initials = cachedUserName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-      document.documentElement.style.setProperty('--cached-initials', `"${initials}"`);
+      document.documentElement.style.setProperty('--cached-initials', \`"\${initials}"\`);
       document.documentElement.style.removeProperty('--cached-profile-pic');
       document.documentElement.classList.add('has-initials');
       document.documentElement.classList.remove('has-profile-pic');
@@ -67,7 +67,7 @@ export const GLOBAL_INIT_SCRIPT = `
       
       if (cachedProfilePic) {
         avatarElements.forEach(el => {
-          el.innerHTML = `<img src="${cachedProfilePic}" alt="Profile" style="width: 100%; height: 100%; border-radius: inherit; object-fit: cover;">`;
+          el.innerHTML = \`<img src="\${cachedProfilePic}" alt="Profile" style="width: 100%; height: 100%; border-radius: inherit; object-fit: cover;">\`;
         });
       } else if (cachedInitials) {
         avatarElements.forEach(el => {
@@ -136,7 +136,7 @@ export const GLOBAL_INIT_SCRIPT = `
             
             // Apply globally via CSS custom properties (immediate)
             if (profilePicture) {
-              document.documentElement.style.setProperty('--cached-profile-pic', `url(${profilePicture})`);
+              document.documentElement.style.setProperty('--cached-profile-pic', \`url(\${profilePicture})\`);
               document.documentElement.classList.add('has-profile-pic');
               document.documentElement.classList.remove('has-initials');
             }

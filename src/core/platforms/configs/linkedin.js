@@ -60,5 +60,7 @@ const linkedin = {
 };
 
 
-module.exports = { linkedin };
+export { linkedin };
+
+
 

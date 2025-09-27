@@ -48,5 +48,7 @@ const pinterest = {
 };
 
 
-module.exports = { pinterest };
+export { pinterest };
+
+
 

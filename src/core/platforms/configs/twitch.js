@@ -75,5 +75,7 @@ const twitch = {
 };
 
 
-module.exports = { twitch };
+export { twitch };
+
+
 

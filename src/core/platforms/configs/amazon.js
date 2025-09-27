@@ -32,5 +32,7 @@ const amazon = {
 };
 
 
-module.exports = { amazon };
+export { amazon };
+
+
 

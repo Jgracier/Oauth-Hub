@@ -73,5 +73,7 @@ const coinbase = {
 };
 
 
-module.exports = { coinbase };
+export { coinbase };
+
+
 

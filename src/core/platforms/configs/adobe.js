@@ -37,5 +37,7 @@ const adobe = {
 };
 
 
-module.exports = { adobe };
+export { adobe };
+
+
 

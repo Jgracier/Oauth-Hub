@@ -28,5 +28,7 @@ const netflix = {
 };
 
 
-module.exports = { netflix };
+export { netflix };
+
+
 

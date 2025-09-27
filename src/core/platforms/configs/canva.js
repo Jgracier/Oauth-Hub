@@ -33,5 +33,7 @@ const canva = {
 };
 
 
-module.exports = { canva };
+export { canva };
+
+
 

@@ -4,8 +4,12 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import path from 'path';
 import crypto from 'crypto';
+import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Import the existing modular OAuth system
 import { PLATFORMS, generateConsentUrl, exchangeCodeForToken, getUserInfo, refreshAccessToken } from './src/core/platforms/index.js';
@@ -16,7 +20,6 @@ import { getModernDashboardPage } from './src/ui/pages/dashboard.js';
 import { getModernAppsPage } from './src/ui/pages/apps.js';
 import { getModernApiKeysPage } from './src/ui/pages/api-keys.js';
 import { getModernAnalyticsPage } from './src/ui/pages/analytics.js';
-import { getModernLayout } from './src/ui/navigation.js';
 
 const app = express();
 const port = process.env.PORT || 3000;

@@ -85,5 +85,7 @@ const github = {
 };
 
 
-module.exports = { github };
+export { github };
+
+
 

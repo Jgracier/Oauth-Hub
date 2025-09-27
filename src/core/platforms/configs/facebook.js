@@ -78,5 +78,7 @@ const facebook = {
 };
 
 
-module.exports = { facebook };
+export { facebook };
+
+
 

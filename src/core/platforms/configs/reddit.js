@@ -61,5 +61,7 @@ const reddit = {
 };
 
 
-module.exports = { reddit };
+export { reddit };
+
+
 

@@ -307,17 +307,17 @@ export function getModernAnalyticsPage() {
           const percentage = ((count / total) * 100).toFixed(1);
           const color = platformColors[platform.toLowerCase()] || platformColors.default;
           
-          html += `
+          html += \`
             <div>
               <div class="flex justify-between mb-2">
-                <span class="text-small font-medium capitalize">${platform}</span>
-                <span class="text-small text-muted">${percentage}%</span>
+                <span class="text-small font-medium capitalize">\${platform}</span>
+                <span class="text-small text-muted">\${percentage}%</span>
               </div>
               <div class="w-full bg-tertiary rounded-full h-2">
-                <div class="h-2 rounded-full" style="width: ${percentage}%; background: ${color};"></div>
+                <div class="h-2 rounded-full" style="width: \${percentage}%; background: \${color};"></div>
               </div>
             </div>
-          `;
+          \`;
         });
         
         container.innerHTML = html;
@@ -339,20 +339,20 @@ export function getModernAnalyticsPage() {
           const badgeClass = activity.status === 'success' ? 'badge-success' : 'badge-danger';
           const statusText = activity.status === 'success' ? 'Success' : 'Failed';
           
-          html += `
+          html += \`
             <tr>
-              <td class="text-small">${timestamp}</td>
+              <td class="text-small">\${timestamp}</td>
               <td>
                 <div class="flex items-center gap-2">
-                  <span class="capitalize">${activity.platform}</span>
+                  <span class="capitalize">\${activity.platform}</span>
                 </div>
               </td>
-              <td class="font-mono text-small">${activity.endpoint}</td>
-              <td class="text-small">***${Math.random().toString(36).substr(2, 4)}</td>
-              <td><span class="badge ${badgeClass}">${statusText}</span></td>
-              <td class="text-small">${activity.time}</td>
+              <td class="font-mono text-small">\${activity.endpoint}</td>
+              <td class="text-small">***\${Math.random().toString(36).substr(2, 4)}</td>
+              <td><span class="badge \${badgeClass}">\${statusText}</span></td>
+              <td class="text-small">\${activity.time}</td>
             </tr>
-          `;
+          \`;
         });
         
         tbody.innerHTML = html;

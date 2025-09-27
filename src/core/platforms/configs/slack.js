@@ -97,5 +97,7 @@ const slack = {
 };
 
 
-module.exports = { slack };
+export { slack };
+
+
 

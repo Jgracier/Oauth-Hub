@@ -29,5 +29,7 @@ const mailchimp = {
 };
 
 
-module.exports = { mailchimp };
+export { mailchimp };
+
+
 

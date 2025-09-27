@@ -597,7 +597,7 @@ export function getModernSubscriptionPage() {
             if (!currentUser?.email) return;
 
             try {
-                const response = await fetch(`/subscription/status?email=${encodeURIComponent(currentUser.email)}`, {
+                const response = await fetch(\`/subscription/status?email=\${encodeURIComponent(currentUser.email)}\`, {
                     credentials: 'include'
                 });
 
@@ -622,10 +622,10 @@ export function getModernSubscriptionPage() {
             // Update status
             const statusEl = document.getElementById('plan-status');
             if (hasAccess) {
-                statusEl.innerHTML = `${MODERN_ICONS.check} Active`;
+                statusEl.innerHTML = \`\${MODERN_ICONS.check} Active\`;
                 statusEl.className = 'plan-status';
             } else {
-                statusEl.innerHTML = `${MODERN_ICONS.x} Inactive`;
+                statusEl.innerHTML = \`\${MODERN_ICONS.x} Inactive\`;
                 statusEl.className = 'plan-status inactive';
             }
 
@@ -667,10 +667,10 @@ export function getModernSubscriptionPage() {
             document.getElementById('api-calls-value').textContent = 
                 usage.apiCalls.current.toLocaleString();
             document.getElementById('api-calls-limit').textContent = 
-                `of ${usage.apiCalls.limit === -1 ? 'unlimited' : usage.apiCalls.limit.toLocaleString()} this month`;
+                \`of \${usage.apiCalls.limit === -1 ? 'unlimited' : usage.apiCalls.limit.toLocaleString()} this month\`;
             
             const apiCallsProgress = document.getElementById('api-calls-progress');
-            apiCallsProgress.style.width = `${Math.min(usage.apiCalls.percentage, 100)}%`;
+            apiCallsProgress.style.width = \`\${Math.min(usage.apiCalls.percentage, 100)}%\`;
             if (usage.apiCalls.percentage > 80) {
                 apiCallsProgress.className = 'usage-progress danger';
             } else if (usage.apiCalls.percentage > 60) {
@@ -680,18 +680,18 @@ export function getModernSubscriptionPage() {
             // API Keys
             document.getElementById('api-keys-value').textContent = usage.apiKeys.current;
             document.getElementById('api-keys-limit').textContent = 
-                `of ${usage.apiKeys.limit === -1 ? 'unlimited' : usage.apiKeys.limit} allowed`;
+                \`of \${usage.apiKeys.limit === -1 ? 'unlimited' : usage.apiKeys.limit} allowed\`;
             
             const apiKeysProgress = document.getElementById('api-keys-progress');
-            apiKeysProgress.style.width = `${Math.min(usage.apiKeys.percentage, 100)}%`;
+            apiKeysProgress.style.width = \`\${Math.min(usage.apiKeys.percentage, 100)}%\`;
 
             // OAuth Apps
             document.getElementById('oauth-apps-value').textContent = usage.oauthApps.current;
             document.getElementById('oauth-apps-limit').textContent = 
-                `of ${usage.oauthApps.limit === -1 ? 'unlimited' : usage.oauthApps.limit} allowed`;
+                \`of \${usage.oauthApps.limit === -1 ? 'unlimited' : usage.oauthApps.limit} allowed\`;
             
             const oauthAppsProgress = document.getElementById('oauth-apps-progress');
-            oauthAppsProgress.style.width = `${Math.min(usage.oauthApps.percentage, 100)}%`;
+            oauthAppsProgress.style.width = \`\${Math.min(usage.oauthApps.percentage, 100)}%\`;
         }
 
         async function loadPlans() {
@@ -711,27 +711,27 @@ export function getModernSubscriptionPage() {
             const grid = document.getElementById('plans-grid');
             const currentPlan = currentSubscription?.plan || 'free';
             
-            grid.innerHTML = plans.map(plan => `
-                <div class="plan-card ${plan.id === 'pro' ? 'recommended' : ''}">
-                    <div class="plan-name">${plan.name}</div>
+            grid.innerHTML = plans.map(plan => \`
+                <div class="plan-card \${plan.id === 'pro' ? 'recommended' : ''}">
+                    <div class="plan-name">\${plan.name}</div>
                     <div class="plan-price">
                         <span class="plan-currency">$</span>
-                        <span class="plan-amount">${plan.price}</span>
-                        <span class="plan-interval">/${plan.interval}</span>
+                        <span class="plan-amount">\${plan.price}</span>
+                        <span class="plan-interval">/\${plan.interval}</span>
                     </div>
                     <ul class="plan-features">
-                        ${plan.features.map(feature => `<li>${feature}</li>`).join('')}
+                        \${plan.features.map(feature => \`<li>\${feature}</li>\`).join('')}
                     </ul>
                     <button 
-                        class="plan-button ${currentPlan === plan.id ? 'current' : ''}" 
-                        onclick="selectPlan('${plan.id}')"
-                        ${currentPlan === plan.id ? 'disabled' : ''}
+                        class="plan-button \${currentPlan === plan.id ? 'current' : ''}" 
+                        onclick="selectPlan('\${plan.id}')"
+                        \${currentPlan === plan.id ? 'disabled' : ''}
                     >
-                        ${currentPlan === plan.id ? 'Current Plan' : 
+                        \${currentPlan === plan.id ? 'Current Plan' : 
                           plan.price === 0 ? 'Downgrade' : 'Upgrade'}
                     </button>
                 </div>
-            `).join('');
+            \`).join('');
         }
 
         async function selectPlan(planId) {

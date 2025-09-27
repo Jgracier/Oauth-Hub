@@ -38,5 +38,7 @@ const discord = {
 };
 
 
-module.exports = { discord };
+export { discord };
+
+
 

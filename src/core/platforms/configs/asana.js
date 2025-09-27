@@ -28,5 +28,7 @@ const asana = {
 };
 
 
-module.exports = { asana };
+export { asana };
+
+
 

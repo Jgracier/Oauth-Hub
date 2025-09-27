@@ -239,7 +239,7 @@ export function getModernApiKeysPage() {
           const email = localStorage.getItem('userEmail');
           if (!email) return;
           
-          const response = await fetch(`/user-keys?email=${encodeURIComponent(email)}`);
+          const response = await fetch(\`/user-keys?email=\${encodeURIComponent(email)}\`);
           if (response.ok) {
             const data = await response.json();
             apiKeys = data.keys || [];
@@ -270,45 +270,45 @@ export function getModernApiKeysPage() {
           const lastUsed = key.lastUsed ? new Date(key.lastUsed).toLocaleDateString() : 'Never';
           const isActive = key.status === 'active';
           
-          return `
+          return \`
             <tr>
               <td>
-                <div class="font-semibold">${key.keyName}</div>
+                <div class="font-semibold">\${key.keyName}</div>
               </td>
               <td>
                 <div class="key-display">
-                  <span class="key-value key-hidden" id="key-${key.keyId}">${key.apiKey}</span>
-                  <button class="btn btn-ghost btn-small" onclick="toggleKeyVisibility('${key.keyId}')">
+                  <span class="key-value key-hidden" id="key-\${key.keyId}">\${key.apiKey}</span>
+                  <button class="btn btn-ghost btn-small" onclick="toggleKeyVisibility('\${key.keyId}')">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                       <circle cx="12" cy="12" r="3"></circle>
                     </svg>
                   </button>
-                  <button class="btn btn-ghost btn-small" onclick="copyKey('${key.apiKey}')">
+                  <button class="btn btn-ghost btn-small" onclick="copyKey('\${key.apiKey}')">
                     ${MODERN_ICONS.copy}
                   </button>
                 </div>
               </td>
-              <td>${createdDate}</td>
-              <td>${lastUsed}</td>
+              <td>\${createdDate}</td>
+              <td>\${lastUsed}</td>
               <td>
-                <span class="badge ${isActive ? 'badge-success' : 'badge-neutral'}">
-                  ${isActive ? 'Active' : 'Inactive'}
+                <span class="badge \${isActive ? 'badge-success' : 'badge-neutral'}">
+                  \${isActive ? 'Active' : 'Inactive'}
                 </span>
               </td>
               <td>
-                <button class="btn btn-ghost btn-small text-danger" onclick="deleteKey('${key.keyId}', '${key.keyName}')">
+                <button class="btn btn-ghost btn-small text-danger" onclick="deleteKey('\${key.keyId}', '\${key.keyName}')">
                   ${MODERN_ICONS.trash}
                 </button>
               </td>
             </tr>
-          `;
+          \`;
         }).join('');
       }
       
       // Toggle key visibility
       function toggleKeyVisibility(keyId) {
-        const keyElement = document.getElementById(`key-${keyId}`);
+        const keyElement = document.getElementById(\`key-\${keyId}\`);
         keyElement.classList.toggle('key-hidden');
       }
       
@@ -403,7 +403,7 @@ export function getModernApiKeysPage() {
       
       // Delete key
       async function deleteKey(keyId, keyName) {
-        if (!confirm(`Are you sure you want to delete "${keyName}"?`)) return;
+        if (!confirm(\`Are you sure you want to delete "\${keyName}"?\`)) return;
         
         const email = localStorage.getItem('userEmail');
         

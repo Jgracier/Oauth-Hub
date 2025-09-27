@@ -85,5 +85,7 @@ const hubspot = {
 };
 
 
-module.exports = { hubspot };
+export { hubspot };
+
+
 

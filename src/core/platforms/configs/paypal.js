@@ -39,5 +39,7 @@ const paypal = {
 };
 
 
-module.exports = { paypal };
+export { paypal };
+
+
 

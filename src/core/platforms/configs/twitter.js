@@ -63,5 +63,7 @@ const twitter = {
 };
 
 
-module.exports = { twitter };
+export { twitter };
+
+
 

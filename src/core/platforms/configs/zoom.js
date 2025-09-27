@@ -78,5 +78,7 @@ const zoom = {
 };
 
 
-module.exports = { zoom };
+export { zoom };
+
+
 

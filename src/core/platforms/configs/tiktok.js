@@ -39,5 +39,7 @@ const tiktok = {
 };
 
 
-module.exports = { tiktok };
+export { tiktok };
+
+
 

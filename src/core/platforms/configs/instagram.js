@@ -31,5 +31,7 @@ const instagram = {
 };
 
 
-module.exports = { instagram };
+export { instagram };
+
+
 

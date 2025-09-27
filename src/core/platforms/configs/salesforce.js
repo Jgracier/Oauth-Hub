@@ -38,5 +38,7 @@ const salesforce = {
 };
 
 
-module.exports = { salesforce };
+export { salesforce };
+
+
 
