@@ -424,7 +424,7 @@ curl "https://oauth-hub.com/consent/google/your_api_key"</code></pre>
             </div>
             <div class="code-examples" id="token-example">
               <pre class="code-block active" data-lang="javascript"><code>// JavaScript/Node.js
-const response = await fetch(`https://oauth-hub.com/token/\${platformUserId}/\${apiKey}`);
+const response = await fetch(`https://oauth-hub.com/token/${platformUserId}/${apiKey}`);
 const data = await response.json();
 console.log('Access token:', data.access_token);</code></pre>
               <pre class="code-block" data-lang="python"><code># Python
@@ -560,7 +560,7 @@ class OAuthHubClient {
 
   // Step 1: Generate consent URL
   async generateConsentUrl(platform) {
-    const response = await fetch(`\${this.baseUrl}/consent/\${platform}/\${this.apiKey}`);
+    const response = await fetch(`${this.baseUrl}/consent/${platform}/${this.apiKey}`);
     const data = await response.json();
     return data.consentURL;
   }
@@ -592,7 +592,7 @@ class OAuthHubClient {
 
   // Step 3: Get access token
   async getAccessToken(platformUserId) {
-    const response = await fetch(`\${this.baseUrl}/token/\${platformUserId}/\${this.apiKey}`);
+    const response = await fetch(`${this.baseUrl}/token/${platformUserId}/${this.apiKey}`);
     const data = await response.json();
     return data.access_token;
   }
@@ -601,7 +601,7 @@ class OAuthHubClient {
   async makeApiCall(accessToken, apiUrl) {
     const response = await fetch(apiUrl, {
       headers: {
-        'Authorization': `Bearer \${accessToken}`
+        'Authorization': `Bearer ${accessToken}`
       }
     });
     return response.json();
@@ -1670,7 +1670,7 @@ public class OAuthHubClient
         });
         
         // Show selected language block
-        const targetBlock = container.querySelector(`[data-lang="\${selectedLang}"]`);
+        const targetBlock = container.querySelector(`[data-lang="${selectedLang}"]`);
         if (targetBlock) {
           targetBlock.classList.add('active');
         }

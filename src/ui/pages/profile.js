@@ -254,9 +254,9 @@ export function getModernProfilePage() {
       function updateUI() {
         // Update profile card
         document.getElementById('profile-email').textContent = userData.email;
-        document.getElementById('profile-name').textContent = `\${userData.firstName} \${userData.lastName}`.trim() || 'User';
+        document.getElementById('profile-name').textContent = `${userData.firstName} ${userData.lastName}`.trim() || 'User';
         
-        const initials = `\${userData.firstName[0] || ''}\${userData.lastName[0] || ''}`.toUpperCase() || 'U';
+        const initials = `${userData.firstName[0] || ''}${userData.lastName[0] || ''}`.toUpperCase() || 'U';
         
         // Handle profile picture from OAuth data
         let profilePicture = null;
@@ -267,18 +267,18 @@ export function getModernProfilePage() {
         }
         
         if (profilePicture) {
-          document.getElementById('profile-initials').innerHTML = `<img src="\${profilePicture}" alt="Profile" style="width: 100%; height: 100%; border-radius: inherit; object-fit: cover;">`;
+          document.getElementById('profile-initials').innerHTML = `<img src="${profilePicture}" alt="Profile" style="width: 100%; height: 100%; border-radius: inherit; object-fit: cover;">`;
         } else {
           document.getElementById('profile-initials').textContent = initials;
         }
         
         // Update navigation with profile picture
         document.querySelectorAll('.profile-email').forEach(el => el.textContent = userData.email);
-        document.querySelectorAll('.profile-name').forEach(el => el.textContent = `\${userData.firstName} \${userData.lastName}`.trim());
+        document.querySelectorAll('.profile-name').forEach(el => el.textContent = `${userData.firstName} ${userData.lastName}`.trim());
         
         if (profilePicture) {
           document.querySelectorAll('.profile-avatar').forEach(el => {
-            el.innerHTML = `<img src="\${profilePicture}" alt="Profile" style="width: 100%; height: 100%; border-radius: inherit; object-fit: cover;">`;
+            el.innerHTML = `<img src="${profilePicture}" alt="Profile" style="width: 100%; height: 100%; border-radius: inherit; object-fit: cover;">`;
           });
         } else {
           document.querySelectorAll('.profile-avatar').forEach(el => el.textContent = initials);
@@ -313,7 +313,7 @@ export function getModernProfilePage() {
         userData.bio = formData.get('bio');
         
         // Update localStorage
-        localStorage.setItem('userName', `\${userData.firstName} \${userData.lastName}`.trim());
+        localStorage.setItem('userName', `${userData.firstName} ${userData.lastName}`.trim());
         
         // TODO: Save to API
         

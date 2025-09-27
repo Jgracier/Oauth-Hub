@@ -889,7 +889,7 @@ export function getModernAppsPage() {
             try {
           const email = localStorage.getItem('userEmail');
           if (!email) return;
-          const response = await fetch(`/user-apps?email=\${encodeURIComponent(email)}`);
+          const response = await fetch(`/user-apps?email=${encodeURIComponent(email)}`);
                 if (response.ok) {
                     const data = await response.json();
             apps = data.apps || [];
@@ -944,23 +944,23 @@ export function getModernAppsPage() {
           return `
             <div class="app-card">
               <div class="app-header">
-                <div class="app-icon" style="background: \${iconColor}20; color: \${iconColor};">
-                  <span>\${platform.icon || '🔗'}</span>
+                <div class="app-icon" style="background: ${iconColor}20; color: ${iconColor};">
+                  <span>${platform.icon || '🔗'}</span>
                                 </div>
                 <div class="app-info">
-                  <div class="app-name">\${platformName}</div>
-                  <div class="app-scopes" title="\${scopeDisplay}">
-                    <span class="scope-text">\${truncatedScopes}</span>
+                  <div class="app-name">${platformName}</div>
+                  <div class="app-scopes" title="${scopeDisplay}">
+                    <span class="scope-text">${truncatedScopes}</span>
                                 </div>
                             </div>
                 <div class="app-controls">
-                  <button class="edit-btn" onclick='editApp(\${JSON.stringify(app)})' title="Edit app">
+                  <button class="edit-btn" onclick='editApp(${JSON.stringify(app)})' title="Edit app">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                       <path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                     </svg>
                   </button>
-                  <button class="delete-btn" onclick="deleteApp('\${app.platform}', '\${platformName}')" title="Delete app">
+                  <button class="delete-btn" onclick="deleteApp('${app.platform}', '${platformName}')" title="Delete app">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <line x1="18" y1="6" x2="6" y2="18"></line>
                       <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -972,7 +972,7 @@ export function getModernAppsPage() {
               <div class="app-details">
                 <div class="app-detail">
                   <span class="app-detail-label">Client ID:</span>
-                  <span class="app-detail-value">\${app.clientId}</span>
+                  <span class="app-detail-value">${app.clientId}</span>
                         </div>
                     </div>
                 </div>
@@ -1107,33 +1107,33 @@ export function getModernAppsPage() {
             </div>
           </div>
           <div class="scope-list" id="scope-list">
-            \${Object.entries(filteredScopes).map(([category, categoryScopes]) => `
-              <div class="scope-group" data-category="\${category}">
+            ${Object.entries(filteredScopes).map(([category, categoryScopes]) => `
+              <div class="scope-group" data-category="${category}">
                 <div class="scope-group-header">
-                  <h4 class="scope-group-title">\${category}</h4>
-                  <span class="scope-group-count">\${Object.keys(categoryScopes).length} scopes</span>
+                  <h4 class="scope-group-title">${category}</h4>
+                  <span class="scope-group-count">${Object.keys(categoryScopes).length} scopes</span>
                 </div>
                 <div class="scope-items">
-                  \${Object.entries(categoryScopes).map(([scopeKey, scopeInfo]) => {
+                  ${Object.entries(categoryScopes).map(([scopeKey, scopeInfo]) => {
                     return `
                       <label class="scope-item" 
-                             data-scope="\${scopeKey}" 
-                             data-name="\${scopeInfo.name.toLowerCase()}" 
-                             data-description="\${scopeInfo.description.toLowerCase()}"
-                             data-category="\${category.toLowerCase()}">
+                             data-scope="${scopeKey}" 
+                             data-name="${scopeInfo.name.toLowerCase()}" 
+                             data-description="${scopeInfo.description.toLowerCase()}"
+                             data-category="${category.toLowerCase()}">
                         <div class="scope-checkbox-wrapper">
                           <input 
                             type="checkbox" 
                             class="scope-checkbox" 
-                            value="\${scopeKey}"
-                            onchange="toggleScope('\${scopeKey}', this)"
+                            value="${scopeKey}"
+                            onchange="toggleScope('${scopeKey}', this)"
                           >
                           <div class="checkbox-custom"></div>
                         </div>
                         <div class="scope-content">
-                          <div class="scope-name">\${scopeInfo.name}</div>
-                          <div class="scope-description">\${scopeInfo.description}</div>
-                          <div class="scope-key">\${scopeKey}</div>
+                          <div class="scope-name">${scopeInfo.name}</div>
+                          <div class="scope-description">${scopeInfo.description}</div>
+                          <div class="scope-key">${scopeKey}</div>
                         </div>
                       </label>
                     `;
@@ -1240,12 +1240,12 @@ export function getModernAppsPage() {
       
       // Delete app
       async function deleteApp(platform, name) {
-        if (!confirm(`Are you sure you want to delete "\${name}"?`)) return;
+        if (!confirm(`Are you sure you want to delete "${name}"?`)) return;
         
         const email = localStorage.getItem('userEmail');
         
         try {
-          const response = await fetch(`/delete-app/\${platform}?email=\${encodeURIComponent(email)}`, {
+          const response = await fetch(`/delete-app/${platform}?email=${encodeURIComponent(email)}`, {
             method: 'DELETE'
                     });
                     
