@@ -40,6 +40,20 @@ scp_file() {
 
 echo -e "${YELLOW}🔧 Setting up deployment environment...${NC}"
 
+# Create temporary SSH key file
+SSH_KEY_FILE=$(mktemp)
+echo "$SSH_KEY" > "$SSH_KEY_FILE"
+chmod 600 "$SSH_KEY_FILE"
+
+# Update SSH functions to use the key file
+ssh_cmd() {
+    ssh -i "$SSH_KEY_FILE" -o StrictHostKeyChecking=no "$SSH_USER@$SERVER_IP" "$1"
+}
+
+scp_file() {
+    scp -i "$SSH_KEY_FILE" -o StrictHostKeyChecking=no "$1" "$SSH_USER@$SERVER_IP:$2"
+}
+
 # Create deployment directory on server
 ssh_cmd "mkdir -p $DEPLOY_PATH"
 ssh_cmd "cd $DEPLOY_PATH && pwd"
@@ -154,5 +168,8 @@ else
     ssh_cmd "pm2 logs oauth-hub --lines 20"
     exit 1
 fi
+
+# Cleanup temporary files
+rm -f "$SSH_KEY_FILE"
 
 echo -e "${GREEN}🎉 OAuth Hub deployment to Oracle Cloud completed successfully!${NC}"
