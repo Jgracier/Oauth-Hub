@@ -1,21 +1,22 @@
-const express = require('express');
-const cors = require('cors');
-const helmet = require('helmet');
-const morgan = require('morgan');
-const path = require('path');
-const crypto = require('crypto');
-require('dotenv').config();
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import morgan from 'morgan';
+import path from 'path';
+import crypto from 'crypto';
+import dotenv from 'dotenv';
+dotenv.config();
 
 // Import the existing modular OAuth system
-const { PLATFORMS, generateConsentUrl, exchangeCodeForToken, getUserInfo, refreshAccessToken } = require('./src/core/platforms/index.js');
+import { PLATFORMS, generateConsentUrl, exchangeCodeForToken, getUserInfo, refreshAccessToken } from './src/core/platforms/index.js';
 
 // Import UI components
-const { getModernAuthPage } = require('./src/ui/pages/auth.js');
-const { getModernDashboardPage } = require('./src/ui/pages/dashboard.js');
-const { getModernAppsPage } = require('./src/ui/pages/apps.js');
-const { getModernApiKeysPage } = require('./src/ui/pages/api-keys.js');
-const { getModernAnalyticsPage } = require('./src/ui/pages/analytics.js');
-const { getModernLayout } = require('./src/ui/navigation.js');
+import { getModernAuthPage } from './src/ui/pages/auth.js';
+import { getModernDashboardPage } from './src/ui/pages/dashboard.js';
+import { getModernAppsPage } from './src/ui/pages/apps.js';
+import { getModernApiKeysPage } from './src/ui/pages/api-keys.js';
+import { getModernAnalyticsPage } from './src/ui/pages/analytics.js';
+import { getModernLayout } from './src/ui/navigation.js';
 
 const app = express();
 const port = process.env.PORT || 3000;
