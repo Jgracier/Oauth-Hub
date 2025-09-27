@@ -3,19 +3,23 @@ name: Deploy to Oracle Cloud Infrastructure
 # Following OCI DevOps best practices
 # Reference: https://docs.oracle.com/en/solutions/cicd-pipe-oci-devops/index.html
 
+# Only deploy on main branch pushes - following OCI DevOps best practices
 on:
   push:
     branches: [ main ]
     paths-ignore:
       - '*.md'
+      - 'README.md'
       - '.gitignore'
       - 'LICENSE'
-  pull_request:
-    branches: [ main ]
-    paths-ignore:
-      - '*.md'
-      - '.gitignore'
-      - 'LICENSE'
+      - 'ADMIN_DOCUMENTATION.md'
+      - 'PLATFORM_ARCHITECTURE.md'
+      - 'DEPLOYMENT.md'
+
+# Prevent multiple deployments from running simultaneously
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 # OCI environment configuration
 env:

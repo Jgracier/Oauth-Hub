@@ -216,8 +216,8 @@ echo -e "${YELLOW}🚀 Starting OAuth Hub with PM2...${NC}"
 # Stop existing application if running
 ssh_cmd "pm2 delete ${PROJECT_NAME} 2>/dev/null || true"
 
-# Start new application
-ssh_cmd "cd ${DEPLOY_PATH} && pm2 start server.js --name ${PROJECT_NAME} --env production"
+# Start new application with explicit environment
+ssh_cmd "cd ${DEPLOY_PATH} && NODE_ENV=${NODE_ENV} PORT=${PORT} OCI_REGION=${OCI_REGION} pm2 start server.js --name ${PROJECT_NAME}"
 
 # Save PM2 configuration
 ssh_cmd "pm2 save"
@@ -241,7 +241,8 @@ sleep 15
 
 HEALTH_CHECK=$(ssh_cmd "curl -s --max-time 10 http://localhost:${PORT}/health 2>/dev/null || echo 'failed'")
 
-if [[ "${HEALTH_CHECK}" == *"OK"* ]]; then
+# Check if health response contains "OK" status
+if [[ "${HEALTH_CHECK}" == *"\"status\":\"OK\""* ]] || [[ "${HEALTH_CHECK}" == *"status": "OK"* ]]; then
     echo -e "${GREEN}✅ OAuth Hub deployment successful!${NC}"
     echo -e "${GREEN}🌐 Application is running at: http://${SERVER_IP}:${PORT}${NC}"
     echo ""
