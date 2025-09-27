@@ -1,51 +1,31 @@
-# OAuth Hub - Complete Modular Platform
+# OAuth Hub - Complete OAuth2 Provider Backend
 
-A comprehensive, modular OAuth management platform built with Cloudflare Workers. Features modern UI, user authentication, API key management, OAuth app credentials, and complete OAuth flow handling for 37+ platforms.
+A comprehensive OAuth2 authorization server built with Node.js and oauth2-server. Provides developers with standardized consent and token endpoints for seamless integration with 37+ OAuth platforms.
 
-## 🚀 Live URL
-https://oauth-hub.com
+## 🚀 Architecture
+
+- **Backend**: Node.js + Express + oauth2-server (RFC 6749/OAuth2.1 compliant)
+- **Frontend**: React SPA served by Express static middleware
+- **Database**: Oracle Autonomous Database (production) / In-memory (development)
+- **Deployment**: Oracle Cloud Infrastructure (OCI) with Docker/Kubernetes
 
 ## 🔄 Auto-Deployment
-✅ **GitHub Actions Enabled** - Automatic deployment on every push to main branch!
+✅ **GitHub Actions Enabled** - Automatic deployment to Oracle Cloud on every push to main branch!
 
 ## 📁 Project Structure
 
 ```
-oauth-worker/
-├── src/
-│   ├── index.js                    # Main entry point
-│   ├── core/                       # Core system files
-│   │   ├── router.js              # Request routing & API endpoints
-│   │   └── platforms.js           # OAuth platform configurations & handlers
-│   ├── api/                        # API handlers
-│   │   └── handlers/
-│   │       ├── auth.handler.js     # User authentication
-│   │       ├── apikey.handler.js   # API key management
-│   │       ├── app.handler.js      # OAuth app management
-│   │       ├── google-auth.handler.js  # Google OAuth login
-│   │       ├── github-auth.handler.js  # GitHub OAuth login
-│   │       └── base.handler.js     # Base handler class
-│   ├── ui/                         # User interface
-│   │   ├── pages/                  # Page components
-│   │   │   ├── auth.js            # Login/Signup page
-│   │   │   ├── dashboard.js       # Main dashboard
-│   │   │   ├── api-keys.js        # API key management
-│   │   │   ├── apps.js            # OAuth app credentials
-│   │   │   ├── docs.js            # API documentation
-│   │   │   ├── analytics.js       # Usage analytics
-│   │   │   ├── settings.js        # User settings
-│   │   │   └── profile.js         # User profile
-│   │   ├── navigation.js          # Navigation component
-│   │   └── styles.js              # Modern CSS design system
-│   └── lib/                        # Libraries & utilities
-│       ├── auth/                   # Authentication utilities
-│       │   ├── client-auth.js     # Client-side auth
-│       │   └── session.js         # Session management
-│       ├── services/               # Service layer
-│       │   └── auth.service.js    # Authentication service
-│       └── utils/                  # Utility functions
-│           └── helpers.js         # Common helpers
-├── wrangler.toml                   # Cloudflare Workers config
+oauth-hub/
+├── server.js                       # Main Express server with oauth2-server
+├── models/
+│   └── oauth-model.js              # OAuth2 storage model (tokens, clients, users)
+├── public/                         # Static frontend files (React SPA)
+├── src/                            # Legacy platform configurations (for reference)
+│   └── core/
+│       └── platforms/              # 37+ OAuth platform configs
+├── Dockerfile                      # Oracle Cloud deployment
+├── deploy-to-oracle.sh             # Oracle deployment script
+├── .env                            # Environment configuration
 ├── package.json                    # Node.js dependencies
 └── README.md                       # This file
 ```
@@ -94,10 +74,41 @@ oauth-worker/
 npm install
 
 # Run locally
-npx wrangler dev
+npm run dev
 
-# Deploy to Cloudflare
-npx wrangler deploy
+# Build for production
+npm run build
+
+# Deploy to Oracle Cloud
+./deploy-to-oracle.sh
+```
+
+## 🚀 Oracle Cloud Deployment
+
+### Prerequisites
+- Oracle Cloud account with OCI enabled
+- Oracle Container Registry access
+- Oracle Kubernetes Engine (OKE) or Functions
+
+### Environment Variables
+```bash
+PORT=3000
+NODE_ENV=production
+DB_USER=your_oracle_db_user
+DB_PASSWORD=your_oracle_db_password
+DB_CONNECT_STRING=your_oci_autonomous_db_connection
+JWT_SECRET=your_jwt_secret
+```
+
+### GitHub Secrets (for CI/CD)
+```
+OCI_REGION=us-ashburn-1
+OCI_TENANCY_NAMESPACE=your-tenancy-namespace
+OCI_USERNAME=your-oci-username
+OCI_AUTH_TOKEN=your-oci-auth-token
+OCI_COMPARTMENT_ID=your-compartment-id
+OCI_SUBNET_ID=your-subnet-id
+OCI_VCN_ID=your-vcn-id
 ```
 
 ## 🔄 Complete OAuth Flow - Direct & Simple!

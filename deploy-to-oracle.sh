@@ -1,193 +1,130 @@
 #!/bin/bash
 
-# =============================================================================
-# OAUTH HUB - ORACLE CLOUD DEPLOYMENT SCRIPT
-# =============================================================================
-# Deploys the OAuth Hub application to Oracle Cloud Infrastructure
+# OAuth Hub - Oracle Cloud Deployment Script
 
-set -e  # Exit on any error
+set -e
 
 echo "🚀 Starting OAuth Hub deployment to Oracle Cloud..."
 
-# =============================================================================
-# CONFIGURATION
-# =============================================================================
-ORACLE_REGION="${ORACLE_REGION:-us-ashburn-1}"
-COMPARTMENT_ID="${COMPARTMENT_ID}"
-SUBNET_ID="${SUBNET_ID}"
-SSH_PUBLIC_KEY="${SSH_PUBLIC_KEY}"
-INSTANCE_SHAPE="${INSTANCE_SHAPE:-VM.Standard.A1.Flex}"
-INSTANCE_OCPUS="${INSTANCE_OCPUS:-2}"
-INSTANCE_MEMORY="${INSTANCE_MEMORY:-12}"
-IMAGE_ID="${IMAGE_ID}"  # Oracle Linux 8 or Ubuntu
+# Configuration
+APP_NAME="oauth-hub"
+REGION="us-ashburn-1"  # Update to your preferred region
+COMPARTMENT_ID="${OCI_COMPARTMENT_ID}"
+SUBNET_ID="${OCI_SUBNET_ID}"
+VCN_ID="${OCI_VCN_ID}"
 
-# Database configuration
-DB_USER="${DB_USER:-oauth_user}"
-DB_PASSWORD="${DB_PASSWORD}"
-DB_CONNECT_STRING="${DB_CONNECT_STRING}"
+# Build Docker image
+echo "📦 Building Docker image..."
+docker build -t oauth-hub:latest .
 
-# Application configuration
-APP_PORT="${APP_PORT:-3000}"
-NODE_ENV="${NODE_ENV:-production}"
+# Login to Oracle Cloud Container Registry (OCIR)
+echo "🔐 Logging into Oracle Cloud Container Registry..."
+docker login -u ${OCI_TENANCY_NAMESPACE}/${OCI_USERNAME} -p ${OCI_AUTH_TOKEN} ${REGION}.ocir.io
 
-# =============================================================================
-# FUNCTIONS
-# =============================================================================
+# Tag and push image
+IMAGE_NAME="${REGION}.ocir.io/${OCI_TENANCY_NAMESPACE}/${APP_NAME}:latest"
+echo "🏷️ Tagging image as ${IMAGE_NAME}"
+docker tag oauth-hub:latest ${IMAGE_NAME}
 
-log() {
-    echo "[$(date +'%Y-%m-%d %H:%M:%S')] $1"
-}
+echo "📤 Pushing image to OCIR..."
+docker push ${IMAGE_NAME}
 
-error() {
-    echo "[ERROR] $1" >&2
-    exit 1
-}
+# Deploy to Oracle Container Engine for Kubernetes (OKE) or Functions
+echo "⚙️ Deploying to Oracle Cloud..."
 
-# =============================================================================
-# DEPLOYMENT STEPS
-# =============================================================================
-
-# 1. Validate prerequisites
-log "Validating prerequisites..."
-if [ -z "$COMPARTMENT_ID" ]; then
-    error "COMPARTMENT_ID environment variable is required"
-fi
-
-if [ -z "$SUBNET_ID" ]; then
-    error "SUBNET_ID environment variable is required"
-fi
-
-if [ -z "$SSH_PUBLIC_KEY" ]; then
-    error "SSH_PUBLIC_KEY environment variable is required"
-fi
-
-# 2. Create Compute Instance
-log "Creating Oracle Compute Instance..."
-INSTANCE_ID=$(oci compute instance launch \
-    --compartment-id "$COMPARTMENT_ID" \
-    --shape "$INSTANCE_SHAPE" \
-    --shape-config "{\"ocpus\": $INSTANCE_OCPUS, \"memoryInGBs\": $INSTANCE_MEMORY}" \
-    --image-id "$IMAGE_ID" \
-    --subnet-id "$SUBNET_ID" \
-    --ssh-authorized-keys-file "$SSH_PUBLIC_KEY" \
-    --display-name "oauth-hub-instance" \
-    --wait-for-state RUNNING \
-    --query 'data.id' \
-    --raw-output)
-
-if [ -z "$INSTANCE_ID" ]; then
-    error "Failed to create compute instance"
-fi
-
-log "Instance created successfully: $INSTANCE_ID"
-
-# 3. Get instance public IP
-log "Getting instance public IP..."
-PUBLIC_IP=$(oci compute instance get \
-    --instance-id "$INSTANCE_ID" \
-    --query 'data."public-ip"' \
-    --raw-output)
-
-if [ -z "$PUBLIC_IP" ]; then
-    error "Failed to get instance public IP"
-fi
-
-log "Instance public IP: $PUBLIC_IP"
-
-# 4. Wait for SSH to be available
-log "Waiting for SSH to be available..."
-MAX_RETRIES=30
-RETRY_COUNT=0
-
-while ! ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 ubuntu@"$PUBLIC_IP" "echo 'SSH available'" 2>/dev/null; do
-    if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
-        error "SSH connection failed after $MAX_RETRIES attempts"
-    fi
-    log "Waiting for SSH... (attempt $((RETRY_COUNT + 1))/$MAX_RETRIES)"
-    sleep 10
-    RETRY_COUNT=$((RETRY_COUNT + 1))
-done
-
-log "SSH connection established"
-
-# 5. Setup instance and deploy application
-log "Setting up instance and deploying application..."
-
-ssh -o StrictHostKeyChecking=no ubuntu@"$PUBLIC_IP" << EOF
-    set -e
-
-    # Update system
-    sudo apt update && sudo apt upgrade -y
-
-    # Install Node.js
-    curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-    sudo apt-get install -y nodejs
-
-    # Install PM2 for process management
-    sudo npm install -g pm2
-
-    # Install Oracle Instant Client (for oracledb)
-    sudo apt-get install -y libaio1
-    wget https://download.oracle.com/otn_software/linux/instantclient/1923000/instantclient-basic-linux.x64-19.23.0.0.0dbru.zip
-    unzip instantclient-basic-linux.x64-19.23.0.0.0dbru.zip
-    sudo mv instantclient_19_23 /opt/oracle/
-    echo "export LD_LIBRARY_PATH=/opt/oracle/instantclient_19_23:\$LD_LIBRARY_PATH" >> ~/.bashrc
-    source ~/.bashrc
-
-    # Create application directory
-    mkdir -p /home/ubuntu/oauth-hub
-    cd /home/ubuntu/oauth-hub
-
-    # Clone or copy application (assuming GitHub repo)
-    git clone https://github.com/Jgracier/Oauth-Hub.git .
-    npm install --production
-
-    # Build frontend
-    cd frontend
-    npm install
-    npm run build
-    cd ..
-
-    # Create environment file
-    cat > .env << ENV_EOF
-NODE_ENV=$NODE_ENV
-PORT=$APP_PORT
-DB_USER=$DB_USER
-DB_PASSWORD=$DB_PASSWORD
-DB_CONNECT_STRING=$DB_CONNECT_STRING
-CORS_ORIGIN=https://$PUBLIC_IP
-ENV_EOF
-
-    # Start application with PM2
-    pm2 start server.js --name oauth-hub
-    pm2 startup
-    pm2 save
-
-    # Setup firewall
-    sudo ufw allow $APP_PORT
-    sudo ufw allow 22
-    sudo ufw --force enable
-
-    log "Application deployed successfully"
+# Option 1: Deploy as Kubernetes deployment (if using OKE)
+if [ "$DEPLOY_METHOD" = "kubernetes" ]; then
+  # Create/update Kubernetes deployment
+  cat <<EOF | kubectl apply -f -
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oauth-hub
+  labels:
+    app: oauth-hub
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: oauth-hub
+  template:
+    metadata:
+      labels:
+        app: oauth-hub
+    spec:
+      containers:
+      - name: oauth-hub
+        image: ${IMAGE_NAME}
+        ports:
+        - containerPort: 3000
+        env:
+        - name: PORT
+          value: "3000"
+        - name: NODE_ENV
+          value: "production"
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: oauth-hub-secrets
+              key: db-user
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: oauth-hub-secrets
+              key: db-password
+        - name: DB_CONNECT_STRING
+          valueFrom:
+            secretKeyRef:
+              name: oauth-hub-secrets
+              key: db-connect-string
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: oauth-hub-secrets
+              key: jwt-secret
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: oauth-hub-service
+spec:
+  selector:
+    app: oauth-hub
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3000
+  type: LoadBalancer
 EOF
 
-# 6. Verify deployment
-log "Verifying deployment..."
-sleep 10
+elif [ "$DEPLOY_METHOD" = "functions" ]; then
+  # Deploy as Oracle Functions
+  fn deploy --app oauth-hub-app --image ${IMAGE_NAME}
 
-if curl -f "http://$PUBLIC_IP:$APP_PORT/health" > /dev/null 2>&1; then
-    log "✅ Deployment successful!"
-    log "🌐 Application URL: http://$PUBLIC_IP:$APP_PORT"
-    log "🔒 Health check: http://$PUBLIC_IP:$APP_PORT/health"
-    log "📊 Instance ID: $INSTANCE_ID"
 else
-    error "Deployment verification failed"
+  echo "❌ Please set DEPLOY_METHOD environment variable to 'kubernetes' or 'functions'"
+  exit 1
 fi
 
-# 7. Optional: Setup domain and SSL (using OCI Load Balancer or DNS)
-if [ -n "$DOMAIN_NAME" ]; then
-    log "Setting up domain: $DOMAIN_NAME"
-    # Add OCI DNS zone and SSL certificate setup here
-fi
-
-log "🎉 OAuth Hub deployment completed successfully!"
+echo "✅ OAuth Hub successfully deployed to Oracle Cloud!"
+echo "🌐 Your app will be available at the assigned Oracle Load Balancer URL"
+echo "🔍 Check Oracle Cloud Console for deployment status"

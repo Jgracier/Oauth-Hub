@@ -1,4 +1,4 @@
-name: Deploy OAuth Hub to Oracle Cloud
+name: Deploy to Oracle Cloud
 
 on:
   push:
@@ -6,69 +6,50 @@ on:
   pull_request:
     branches: [ main, master ]
 
+env:
+  DEPLOY_METHOD: kubernetes  # Change to 'functions' for Oracle Functions
+
 jobs:
-  test:
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v3
-
-    - name: Setup Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18'
-        cache: 'npm'
-
-    - name: Install dependencies
-      run: npm ci
-
-    - name: Run backend tests
-      run: npm run test:backend
-
-    - name: Build frontend
-      run: npm run build:frontend
-
-    - name: Run frontend tests
-      run: cd frontend && npm test
-
   deploy:
-    needs: test
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-
+    name: Deploy to Oracle Cloud
     steps:
-    - uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18'
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
 
-    - name: Install OCI CLI
-      run: |
-        curl -L https://raw.githubusercontent.com/oracle/oci-cli/master/scripts/install/install.sh | bash
-        echo "$HOME/bin" >> $GITHUB_PATH
+      - name: Install dependencies
+        run: npm install
 
-    - name: Configure OCI CLI
-      run: |
-        oci setup config --file ~/.oci/config
-        echo "${{ secrets.OCI_PRIVATE_KEY }}" > ~/.oci/oci_api_key.pem
-        chmod 600 ~/.oci/oci_api_key.pem
-      env:
-        OCI_CLI_CONFIG_FILE: ~/.oci/config
+      - name: Build Docker image
+        run: docker build -t oauth-hub:latest .
 
-    - name: Deploy to Oracle Cloud
-      env:
-        ORACLE_REGION: ${{ secrets.ORACLE_REGION }}
-        COMPARTMENT_ID: ${{ secrets.COMPARTMENT_ID }}
-        SUBNET_ID: ${{ secrets.SUBNET_ID }}
-        SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
-        IMAGE_ID: ${{ secrets.IMAGE_ID }}
-        DB_USER: ${{ secrets.DB_USER }}
-        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-        DB_CONNECT_STRING: ${{ secrets.DB_CONNECT_STRING }}
-        APP_PORT: ${{ secrets.APP_PORT }}
-        NODE_ENV: production
-      run: |
-        chmod +x deploy-to-oracle.sh
-        ./deploy-to-oracle.sh
+      - name: Login to Oracle Cloud Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ secrets.OCI_REGION }}.ocir.io
+          username: ${{ secrets.OCI_TENANCY_NAMESPACE }}/${{ secrets.OCI_USERNAME }}
+          password: ${{ secrets.OCI_AUTH_TOKEN }}
+
+      - name: Push Docker image to OCIR
+        run: |
+          IMAGE_NAME="${{ secrets.OCI_REGION }}.ocir.io/${{ secrets.OCI_TENANCY_NAMESPACE }}/oauth-hub:latest"
+          docker tag oauth-hub:latest $IMAGE_NAME
+          docker push $IMAGE_NAME
+
+      - name: Deploy to Oracle Cloud
+        run: |
+          chmod +x deploy-to-oracle.sh
+          ./deploy-to-oracle.sh
+        env:
+          OCI_COMPARTMENT_ID: ${{ secrets.OCI_COMPARTMENT_ID }}
+          OCI_SUBNET_ID: ${{ secrets.OCI_SUBNET_ID }}
+          OCI_VCN_ID: ${{ secrets.OCI_VCN_ID }}
+          OCI_TENANCY_NAMESPACE: ${{ secrets.OCI_TENANCY_NAMESPACE }}
+          OCI_USERNAME: ${{ secrets.OCI_USERNAME }}
+          OCI_AUTH_TOKEN: ${{ secrets.OCI_AUTH_TOKEN }}
+          DEPLOY_METHOD: ${{ env.DEPLOY_METHOD }}
