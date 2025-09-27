@@ -20,6 +20,10 @@ import { getModernDashboardPage } from './src/ui/pages/dashboard.js';
 import { getModernAppsPage } from './src/ui/pages/apps.js';
 import { getModernApiKeysPage } from './src/ui/pages/api-keys.js';
 import { getModernAnalyticsPage } from './src/ui/pages/analytics.js';
+import { getModernProfilePage } from './src/ui/pages/profile.js';
+import { getModernSettingsPage } from './src/ui/pages/settings.js';
+import { getModernDocsPage } from './src/ui/pages/docs.js';
+import { getModernSubscriptionPage } from './src/ui/pages/subscription.js';
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -375,6 +379,111 @@ app.get('/analytics', (req, res) => {
   }
 });
 
+// Subscription routes
+app.get('/subscription/status', (req, res) => {
+  try {
+    const { email } = req.query;
+    // Mock subscription status for demo
+    res.json({
+      plan: 'free',
+      status: 'active',
+      usage: {
+        apiCalls: { current: 1250, limit: 5000, percentage: 25 },
+        apiKeys: { current: 2, limit: 5, percentage: 40 },
+        oauthApps: { current: 1, limit: 3, percentage: 33 }
+      },
+      billingCycle: 'monthly'
+    });
+  } catch (error) {
+    console.error('Subscription status error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.get('/subscription/plans', (req, res) => {
+  try {
+    res.json({
+      plans: [
+        {
+          id: 'free',
+          name: 'Free',
+          price: 0,
+          interval: 'month',
+          features: ['5 API keys', '3 OAuth apps', '5,000 API calls/month']
+        },
+        {
+          id: 'pro',
+          name: 'Pro',
+          price: 29,
+          interval: 'month',
+          features: ['25 API keys', '15 OAuth apps', '50,000 API calls/month', 'Priority support']
+        },
+        {
+          id: 'enterprise',
+          name: 'Enterprise',
+          price: 99,
+          interval: 'month',
+          features: ['Unlimited API keys', 'Unlimited OAuth apps', '500,000 API calls/month', 'Dedicated support']
+        }
+      ]
+    });
+  } catch (error) {
+    console.error('Subscription plans error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.post('/subscription/checkout', (req, res) => {
+  try {
+    const { planId, email } = req.body;
+    // Mock checkout process
+    res.json({
+      success: true,
+      message: `Successfully upgraded to ${planId} plan`,
+      redirectUrl: '/dashboard'
+    });
+  } catch (error) {
+    console.error('Subscription checkout error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.post('/subscription/promo', (req, res) => {
+  try {
+    const { code, email } = req.body;
+    // Mock promo code validation
+    if (code === 'WELCOME20') {
+      res.json({
+        valid: true,
+        discount: 20,
+        message: '20% discount applied!'
+      });
+    } else {
+      res.json({
+        valid: false,
+        message: 'Invalid promo code'
+      });
+    }
+  } catch (error) {
+    console.error('Promo code error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.post('/subscription/cancel', (req, res) => {
+  try {
+    const { email } = req.body;
+    // Mock subscription cancellation
+    res.json({
+      success: true,
+      message: 'Subscription cancelled successfully'
+    });
+  } catch (error) {
+    console.error('Subscription cancel error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Serve web pages
 app.get('/', (req, res) => {
   res.redirect('/dashboard');
@@ -406,6 +515,38 @@ app.get('/api-keys', (req, res) => {
     return res.redirect('/auth');
   }
   res.send(getModernApiKeysPage());
+});
+
+app.get('/profile', (req, res) => {
+  const { sessionId } = req.query;
+  if (!sessionId || !sessions.has(sessionId)) {
+    return res.redirect('/auth');
+  }
+  res.send(getModernProfilePage());
+});
+
+app.get('/settings', (req, res) => {
+  const { sessionId } = req.query;
+  if (!sessionId || !sessions.has(sessionId)) {
+    return res.redirect('/auth');
+  }
+  res.send(getModernSettingsPage());
+});
+
+app.get('/docs', (req, res) => {
+  const { sessionId } = req.query;
+  if (!sessionId || !sessions.has(sessionId)) {
+    return res.redirect('/auth');
+  }
+  res.send(getModernDocsPage());
+});
+
+app.get('/subscription', (req, res) => {
+  const { sessionId } = req.query;
+  if (!sessionId || !sessions.has(sessionId)) {
+    return res.redirect('/auth');
+  }
+  res.send(getModernSubscriptionPage());
 });
 
 // Start server
