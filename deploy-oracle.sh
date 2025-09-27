@@ -132,7 +132,8 @@ echo -e "${YELLOW}🚀 Starting OAuth Hub application...${NC}"
 ssh_cmd "cd $DEPLOY_PATH && pm2 delete oauth-hub 2>/dev/null || true"
 ssh_cmd "cd $DEPLOY_PATH && pm2 start server.js --name oauth-hub --env production"
 ssh_cmd "cd $DEPLOY_PATH && pm2 save"
-ssh_cmd "cd $DEPLOY_PATH && pm2 startup"
+# Note: pm2 startup requires root access and interactive confirmation, skipping for automated deployment
+# ssh_cmd "cd $DEPLOY_PATH && pm2 startup"  # Commented out - requires root and interactive
 ssh_cmd "cd $DEPLOY_PATH && pm2 status"
 
 # Setup firewall
