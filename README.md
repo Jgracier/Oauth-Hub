@@ -90,30 +90,30 @@ npm run build
 ## 🚀 Oracle Cloud Deployment
 
 ### Prerequisites
-- Oracle Cloud account with OCI enabled
-- Oracle Container Registry access
-- Oracle Kubernetes Engine (OKE) or Functions
+- Oracle Cloud server (Compute instance) with SSH access
+- Node.js installed on the server
+- PM2 process manager (recommended)
 
-### Environment Variables
+### Environment Variables (set on server)
 ```bash
-PORT=3000
+DATABASE_URL=your_oracle_database_connection_string
 NODE_ENV=production
-DB_USER=your_oracle_db_user
-DB_PASSWORD=your_oracle_db_password
-DB_CONNECT_STRING=your_oci_autonomous_db_connection
-JWT_SECRET=your_jwt_secret
+PORT=3000
 ```
 
-### GitHub Secrets (for CI/CD)
+### GitHub Secrets (already configured)
 ```
-OCI_REGION=us-ashburn-1
-OCI_TENANCY_NAMESPACE=your-tenancy-namespace
-OCI_USERNAME=your-oci-username
-OCI_AUTH_TOKEN=your-oci-auth-token
-OCI_COMPARTMENT_ID=your-compartment-id
-OCI_SUBNET_ID=your-subnet-id
-OCI_VCN_ID=your-vcn-id
+CRM_SERVER_IP=your_oracle_server_ip
+CRM_SERVER_USER=your_ssh_username
+CRM_SERVER_SSH_PRIVATE_KEY=your_ssh_private_key
+CRM_DATABASE_URL=your_database_connection_string
 ```
+
+### Deployment Process
+1. **Automatic**: GitHub Actions deploys on every push to main
+2. **SSH Connection**: Connects to your Oracle server
+3. **Code Update**: Pulls latest changes and installs dependencies
+4. **App Restart**: Uses PM2 to restart the application
 
 ## 🔄 Complete OAuth Flow - Direct & Simple!
 
