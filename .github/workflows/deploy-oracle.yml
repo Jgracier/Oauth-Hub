@@ -58,7 +58,8 @@ jobs:
     - name: Generate OCI deployment version
       id: version
       run: |
-        VERSION=$(date +%Y%m%d%H%M%S)-${{ github.sha::7 }}
+        SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
+        VERSION=$(date +%Y%m%d%H%M%S)-${SHORT_SHA}
         echo "version=$VERSION" >> $GITHUB_OUTPUT
         echo "OCI Deployment Version: $VERSION"
 
