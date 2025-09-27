@@ -1,10 +1,9 @@
 name: Deploy to Cloudflare Workers
 
+# DISABLED: Oracle Cloud Infrastructure deployment is now the primary deployment target
+# This workflow is disabled to prevent dual deployments
 on:
-  push:
-    branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
+  workflow_dispatch: # Manual trigger only - disabled automatic deployment
 
 jobs:
   deploy:
