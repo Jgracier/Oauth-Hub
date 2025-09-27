@@ -11,7 +11,11 @@
     "health": "curl https://oauth-hub.com/health",
     "test:local": "node examples/backend-integration.js",
     "docs:serve": "python -m http.server 8000",
-    "version": "echo $npm_package_version"
+    "version": "echo $npm_package_version",
+    "start": "node server.js",
+    "dev:node": "nodemon server.js",
+    "build": "echo 'No build step needed for Node.js backend'",
+    "deploy:oci": "echo 'Deploy to Oracle Cloud - use OCI CLI or Docker'"
   },
   "keywords": [
     "oauth",
@@ -48,7 +52,11 @@
     "wrangler": "^3.84.1"
   },
   "dependencies": {
-    "express": "^4.18.2",
+    "@node-oauth/oauth2-server": "^5.2.1",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "helmet": "^8.1.0",
+    "morgan": "^1.10.1",
     "node-fetch": "^2.6.7",
     "oauth4webapi": "^3.8.1"
   },

@@ -1,6 +1,6 @@
 # OAuth Hub - Complete Modular Platform
 
-A comprehensive, modular OAuth management platform built with Cloudflare Workers. Features modern UI, user authentication, API key management, OAuth app credentials, and complete OAuth flow handling for 37+ platforms.
+A comprehensive, modular OAuth management platform built with **Cloudflare Workers** (UI/API proxy) and **Node.js/Express** (OAuth2 backend via `@node-oauth/oauth2-server`). Features modern UI, user authentication, API key management, OAuth app credentials, and complete OAuth flow handling for 37+ platforms. Now supports full OAuth2.1 compliance, client registration, token introspection, and revocation.
 
 ## 🚀 Live URL
 https://oauth-hub.com
@@ -12,42 +12,23 @@ https://oauth-hub.com
 
 ```
 oauth-worker/
-├── src/
-│   ├── index.js                    # Main entry point
-│   ├── core/                       # Core system files
-│   │   ├── router.js              # Request routing & API endpoints
-│   │   └── platforms.js           # OAuth platform configurations & handlers
-│   ├── api/                        # API handlers
-│   │   └── handlers/
-│   │       ├── auth.handler.js     # User authentication
-│   │       ├── apikey.handler.js   # API key management
-│   │       ├── app.handler.js      # OAuth app management
-│   │       ├── google-auth.handler.js  # Google OAuth login
-│   │       ├── github-auth.handler.js  # GitHub OAuth login
-│   │       └── base.handler.js     # Base handler class
-│   ├── ui/                         # User interface
-│   │   ├── pages/                  # Page components
-│   │   │   ├── auth.js            # Login/Signup page
-│   │   │   ├── dashboard.js       # Main dashboard
-│   │   │   ├── api-keys.js        # API key management
-│   │   │   ├── apps.js            # OAuth app credentials
-│   │   │   ├── docs.js            # API documentation
-│   │   │   ├── analytics.js       # Usage analytics
-│   │   │   ├── settings.js        # User settings
-│   │   │   └── profile.js         # User profile
-│   │   ├── navigation.js          # Navigation component
-│   │   └── styles.js              # Modern CSS design system
-│   └── lib/                        # Libraries & utilities
-│       ├── auth/                   # Authentication utilities
-│       │   ├── client-auth.js     # Client-side auth
-│       │   └── session.js         # Session management
-│       ├── services/               # Service layer
-│       │   └── auth.service.js    # Authentication service
-│       └── utils/                  # Utility functions
-│           └── helpers.js         # Common helpers
-├── wrangler.toml                   # Cloudflare Workers config
-├── package.json                    # Node.js dependencies
-└── README.md                       # This file
+├── src/                           # Cloudflare Workers (UI/API proxy)
+│   ├── index.js                   # Workers entry point
+│   ├── core/                      # Platform configurations
+│   │   └── platforms/             # 37+ OAuth platform configs
+│   ├── ui/                        # User interface
+│   │   ├── pages/                 # UI components
+│   │   ├── navigation.js          # Navigation
+│   │   └── styles.js              # CSS design system
+│   └── lib/                       # Shared utilities
+│       ├── auth/                  # Auth helpers
+│       └── utils/                 # Common helpers
+├── server.js                      # Node.js Express OAuth2 backend
+├── models/                        # OAuth2 server models
+│   └── oauth-model.js             # Storage & logic for oauth2-server
+├── wrangler.toml                  # Cloudflare Workers config
+├── package.json                   # Node.js dependencies
+└── README.md                      # This file
 ```
 
 ## ✨ Features
@@ -58,7 +39,7 @@ oauth-worker/
 - **Secure Sessions**: JWT-based session management with HttpOnly cookies
 - **User Profiles**: Rich user profiles with OAuth provider data
 
-### 🔑 **Advanced API Key Management** 
+### 🔑 **Advanced API Key Management**
 - **Multiple Keys**: Generate unlimited API keys per user
 - **Named Keys**: Organize keys with custom names
 - **Secure Storage**: Keys stored with O(1) lookup patterns
@@ -78,7 +59,7 @@ oauth-worker/
 
 ### 📖 **Complete API Documentation**
 - **Interactive Docs**: Live API reference with examples
-- **Multiple Languages**: Code examples in JavaScript and Python  
+- **Multiple Languages**: Code examples in JavaScript and Python
 - **Real-time Testing**: Test endpoints directly from docs
 
 ### 📊 **Advanced Analytics & Monitoring**
@@ -87,17 +68,38 @@ oauth-worker/
 - **Token Management**: Monitor active tokens and refresh status
 - **Success Rates**: Track OAuth flow success metrics
 
+### ⚡ **Full OAuth2.1 Backend (NEW)**
+- **OAuth2 Server**: Complete `@node-oauth/oauth2-server` implementation
+- **PKCE Support**: Proof Key for Code Exchange for enhanced security
+- **Client Registration**: Dynamic client registration (RFC 7591)
+- **Token Introspection**: Validate active tokens (`/oauth/introspect`)
+- **Token Revocation**: Revoke access/refresh tokens (`/oauth/revoke`)
+- **Auto-Discovery**: OAuth metadata endpoint (RFC 8414)
+- **Backward Compatible**: Original consent/tokens endpoints preserved
+- **Database Ready**: Models designed for Oracle DB migration
+
 ## 🛠️ Development
 
+### **Cloudflare Workers (UI/API Proxy)**
 ```bash
-# Install dependencies
-npm install
-
-# Run locally
+# Run Workers locally (UI/API proxy)
 npx wrangler dev
-
 # Deploy to Cloudflare
 npx wrangler deploy
+```
+
+### **Node.js OAuth2 Backend**
+```bash
+# Install dependencies (includes oauth2-server)
+npm install
+
+# Run OAuth2 backend locally
+npm start
+# Or with auto-reload
+npm run dev:node
+
+# Deploy to Oracle Cloud
+npm run deploy:oci
 ```
 
 ## 🔄 Complete OAuth Flow - Direct & Simple!
@@ -288,12 +290,14 @@ POST https://oauth-hub.com/refresh/{platformUserId}/{apiKey}
 
 ## 📝 Architecture
 
-- **🏗️ Modular Design**: Clean separation of concerns with layered architecture
-- **🔐 Scalable Security**: O(1) API key lookups, secure session management
-- **⚡ Edge Performance**: Built on Cloudflare Workers global network  
+- **🏗️ Dual Architecture**: Cloudflare Workers (UI/API proxy) + Node.js/Express (OAuth2 backend)
+- **🔐 Full OAuth2.1 Compliance**: `@node-oauth/oauth2-server` with PKCE, introspection, revocation
+- **⚡ Edge Performance**: Workers for global UI/API proxy, Express for OAuth logic
 - **🎨 Modern UI/UX**: Tesla/Apple-inspired design with responsive layouts
 - **📱 Mobile-First**: Optimized for all screen sizes and devices
 - **🔄 Real-time Updates**: Live data updates without page refreshes
+- **🗄️ Database Ready**: Models designed for Oracle DB migration (production)
+- **🔒 Backward Compatible**: Original endpoints preserved for existing developers
 
 ## 🚦 Current Status
 
@@ -310,6 +314,15 @@ POST https://oauth-hub.com/refresh/{platformUserId}/{apiKey}
 - ✅ Automatic token refresh and management
 - ✅ Scalable KV storage architecture
 
+✅ **OAuth2.1 Backend Features (NEW)**:
+- ✅ Full `@node-oauth/oauth2-server` implementation
+- ✅ PKCE (Proof Key for Code Exchange) support
+- ✅ Dynamic client registration (RFC 7591)
+- ✅ Token introspection and revocation
+- ✅ OAuth auto-discovery metadata (RFC 8414)
+- ✅ Backward compatible consent/tokens endpoints
+- ✅ Database-ready models for Oracle Cloud
+
 ✅ **Enterprise Features**:
 - ✅ Multi-platform OAuth support
 - ✅ Comprehensive scope management
@@ -320,27 +333,34 @@ POST https://oauth-hub.com/refresh/{platformUserId}/{apiKey}
 
 ## 🔧 API Endpoints
 
-### **Authentication**
+### **OAuth2 Standard Endpoints (NEW)**
+- `GET /oauth/authorize` - Authorization endpoint (PKCE, scopes, state)
+- `POST /oauth/token` - Token exchange (code, refresh, client_credentials)
+- `POST /oauth/register` - Client registration (RFC 7591)
+- `POST /oauth/introspect` - Token introspection (validate active tokens)
+- `POST /oauth/revoke` - Token revocation (revoke access/refresh tokens)
+- `GET /.well-known/oauth-authorization-server` - Auto-discovery metadata
+
+### **Backward Compatible Endpoints**
+- `GET /consent/{platform}/{apiKey}` - Generate consent URL (maps to /oauth/authorize)
+- `GET /tokens/{platformUserId}/{apiKey}` - Get user tokens (maps to custom retrieval)
+- `POST /refresh/{platformUserId}/{apiKey}` - Refresh tokens (uses oauth2-server)
+
+### **Legacy Authentication** (Cloudflare Workers)
 - `POST /auth` - User login/signup
 - `POST /google-auth` - Google OAuth login
 - `POST /github-auth` - GitHub OAuth login
 - `GET /validate-session` - Session validation
 
-### **API Keys**
+### **API Keys** (Cloudflare Workers)
 - `POST /generate-key` - Generate new API key
 - `GET /user-keys` - List user's API keys
 - `DELETE /delete-key/{keyId}` - Delete API key
 
-### **OAuth Apps**
+### **OAuth Apps** (Cloudflare Workers)
 - `POST /save-app` - Save OAuth app credentials
 - `GET /user-apps` - List user's OAuth apps
 - `DELETE /delete-app/{platform}` - Delete OAuth app
-
-### **OAuth Flow**
-- `GET /consent/{platform}/{apiKey}` - Generate consent URL
-- `GET /callback` - OAuth callback handler
-- `GET /tokens/{platformUserId}/{apiKey}` - Get user tokens
-- `POST /refresh/{platformUserId}/{apiKey}` - Refresh tokens
 
 ### **System**
 - `GET /health` - System health check
