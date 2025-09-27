@@ -239,7 +239,7 @@ export function getModernApiKeysPage() {
           const email = localStorage.getItem('userEmail');
           if (!email) return;
           
-          const response = await fetch(\`/user-keys?email=\${encodeURIComponent(email)}\`);
+          const response = await fetch(`/user-keys?email=\${encodeURIComponent(email)}`);
           if (response.ok) {
             const data = await response.json();
             apiKeys = data.keys || [];
@@ -270,7 +270,7 @@ export function getModernApiKeysPage() {
           const lastUsed = key.lastUsed ? new Date(key.lastUsed).toLocaleDateString() : 'Never';
           const isActive = key.status === 'active';
           
-          return \`
+          return `
             <tr>
               <td>
                 <div class="font-semibold">\${key.keyName}</div>
@@ -302,13 +302,13 @@ export function getModernApiKeysPage() {
                 </button>
               </td>
             </tr>
-          \`;
+          `;
         }).join('');
       }
       
       // Toggle key visibility
       function toggleKeyVisibility(keyId) {
-        const keyElement = document.getElementById(\`key-\${keyId}\`);
+        const keyElement = document.getElementById(`key-\${keyId}`);
         keyElement.classList.toggle('key-hidden');
       }
       
@@ -403,7 +403,7 @@ export function getModernApiKeysPage() {
       
       // Delete key
       async function deleteKey(keyId, keyName) {
-        if (!confirm(\`Are you sure you want to delete "\${keyName}"?\`)) return;
+        if (!confirm(`Are you sure you want to delete "\${keyName}"?`)) return;
         
         const email = localStorage.getItem('userEmail');
         

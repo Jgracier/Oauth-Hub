@@ -889,7 +889,7 @@ export function getModernAppsPage() {
             try {
           const email = localStorage.getItem('userEmail');
           if (!email) return;
-          const response = await fetch(\`/user-apps?email=\${encodeURIComponent(email)}\`);
+          const response = await fetch(`/user-apps?email=\${encodeURIComponent(email)}`);
                 if (response.ok) {
                     const data = await response.json();
             apps = data.apps || [];
@@ -941,7 +941,7 @@ export function getModernAppsPage() {
           const scopeDisplay = scopeNames.length > 0 ? scopeNames.join(', ') : 'No scopes';
           const truncatedScopes = scopeDisplay.length > 40 ? scopeDisplay.substring(0, 40) + '...' : scopeDisplay;
           
-          return \`
+          return `
             <div class="app-card">
               <div class="app-header">
                 <div class="app-icon" style="background: \${iconColor}20; color: \${iconColor};">
@@ -976,7 +976,7 @@ export function getModernAppsPage() {
                         </div>
                     </div>
                 </div>
-          \`;
+          `;
         }).join('');
       }
       
@@ -1086,15 +1086,15 @@ export function getModernAppsPage() {
         });
         
         if (Object.keys(filteredScopes).length === 0) {
-          container.innerHTML = \`
+          container.innerHTML = `
             <div class="scope-info-message">
               <p class="text-muted text-small">This platform only requires basic authentication scopes, which are automatically included.</p>
             </div>
-          \`;
+          `;
           return;
         }
         
-        container.innerHTML = \`
+        container.innerHTML = `
           <div class="scope-header">
             <input 
               type="text" 
@@ -1107,7 +1107,7 @@ export function getModernAppsPage() {
             </div>
           </div>
           <div class="scope-list" id="scope-list">
-            \${Object.entries(filteredScopes).map(([category, categoryScopes]) => \`
+            \${Object.entries(filteredScopes).map(([category, categoryScopes]) => `
               <div class="scope-group" data-category="\${category}">
                 <div class="scope-group-header">
                   <h4 class="scope-group-title">\${category}</h4>
@@ -1115,7 +1115,7 @@ export function getModernAppsPage() {
                 </div>
                 <div class="scope-items">
                   \${Object.entries(categoryScopes).map(([scopeKey, scopeInfo]) => {
-                    return \`
+                    return `
                       <label class="scope-item" 
                              data-scope="\${scopeKey}" 
                              data-name="\${scopeInfo.name.toLowerCase()}" 
@@ -1136,13 +1136,13 @@ export function getModernAppsPage() {
                           <div class="scope-key">\${scopeKey}</div>
                         </div>
                       </label>
-                    \`;
+                    `;
                   }).join('')}
                 </div>
               </div>
-            \`).join('')}
+            `).join('')}
           </div>
-        \`;
+        `;
         
         updateScopeCount();
       }
@@ -1240,12 +1240,12 @@ export function getModernAppsPage() {
       
       // Delete app
       async function deleteApp(platform, name) {
-        if (!confirm(\`Are you sure you want to delete "\${name}"?\`)) return;
+        if (!confirm(`Are you sure you want to delete "\${name}"?`)) return;
         
         const email = localStorage.getItem('userEmail');
         
         try {
-          const response = await fetch(\`/delete-app/\${platform}?email=\${encodeURIComponent(email)}\`, {
+          const response = await fetch(`/delete-app/\${platform}?email=\${encodeURIComponent(email)}`, {
             method: 'DELETE'
                     });
                     

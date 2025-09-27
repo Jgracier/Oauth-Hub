@@ -285,13 +285,13 @@ export function getModernDocsPage() {
           <p class="text-secondary mb-3">Request a consent URL for the user to authorize access:</p>
           
           <div class="code-block-container mb-4">
-            <button class="copy-button" onclick="copyToClipboard(this, \`GET /consent/{platform}/{api_key}
+            <button class="copy-button" onclick="copyToClipboard(this, `GET /consent/{platform}/{api_key}
 
 Response:
 {
   \"consentURL\": \"https://accounts.google.com/o/oauth2/v2/auth?...\",
   \"Platform\": \"facebook\"
-}\`)">
+}`)">
               ${MODERN_ICONS.copy}
             </button>
             <pre class="code-block"><code>GET /consent/{platform}/{api_key}
@@ -375,13 +375,13 @@ curl "https://oauth-hub.com/consent/google/your_api_key"</code></pre>
           <p class="text-secondary mb-3">After authorization, the OAuth provider redirects to <code>https://oauth-hub.com/callback</code>. OAuth Hub processes this callback and communicates the results back to your application via postMessage:</p>
           
           <div class="code-block-container">
-            <button class="copy-button" onclick="copyToClipboard(this, \`// Your application receives:
+            <button class="copy-button" onclick="copyToClipboard(this, `// Your application receives:
 {
   \"platform\": \"google\",
   \"platformUserId\": \"user_12345\"
 }
 
-// Data flows directly to your app - no webhooks needed!\`)">
+// Data flows directly to your app - no webhooks needed!`)">
               ${MODERN_ICONS.copy}
             </button>
             <pre class="code-block"><code>// Your application receives:
@@ -424,7 +424,7 @@ curl "https://oauth-hub.com/consent/google/your_api_key"</code></pre>
             </div>
             <div class="code-examples" id="token-example">
               <pre class="code-block active" data-lang="javascript"><code>// JavaScript/Node.js
-const response = await fetch(\`https://oauth-hub.com/token/\${platformUserId}/\${apiKey}\`);
+const response = await fetch(`https://oauth-hub.com/token/\${platformUserId}/\${apiKey}`);
 const data = await response.json();
 console.log('Access token:', data.access_token);</code></pre>
               <pre class="code-block" data-lang="python"><code># Python
@@ -501,12 +501,12 @@ curl "https://oauth-hub.com/token/user_12345/your_api_key"</code></pre>
           </div>
           
           <div class="code-block-container mb-4">
-            <button class="copy-button" onclick="copyToClipboard(this, \`Response:
+            <button class="copy-button" onclick="copyToClipboard(this, `Response:
 {
   \"access_token\": \"ya29.a0AfH6SMBx...\",
   \"token_type\": \"Bearer\",
   \"expires_in\": 3599
-}\`)">
+}`)">
               ${MODERN_ICONS.copy}
             </button>
             <pre class="code-block"><code>Response:
@@ -560,7 +560,7 @@ class OAuthHubClient {
 
   // Step 1: Generate consent URL
   async generateConsentUrl(platform) {
-    const response = await fetch(\`\${this.baseUrl}/consent/\${platform}/\${this.apiKey}\`);
+    const response = await fetch(`\${this.baseUrl}/consent/\${platform}/\${this.apiKey}`);
     const data = await response.json();
     return data.consentURL;
   }
@@ -592,7 +592,7 @@ class OAuthHubClient {
 
   // Step 3: Get access token
   async getAccessToken(platformUserId) {
-    const response = await fetch(\`\${this.baseUrl}/token/\${platformUserId}/\${this.apiKey}\`);
+    const response = await fetch(`\${this.baseUrl}/token/\${platformUserId}/\${this.apiKey}`);
     const data = await response.json();
     return data.access_token;
   }
@@ -601,7 +601,7 @@ class OAuthHubClient {
   async makeApiCall(accessToken, apiUrl) {
     const response = await fetch(apiUrl, {
       headers: {
-        'Authorization': \`Bearer \${accessToken}\`
+        'Authorization': `Bearer \${accessToken}`
       }
     });
     return response.json();
@@ -875,14 +875,14 @@ type OAuthHubClient struct {
 }
 
 type ConsentResponse struct {
-    ConsentURL string \`json:"consentURL"\`
-    Platform   string \`json:"Platform"\`
+    ConsentURL string `json:"consentURL"`
+    Platform   string `json:"Platform"`
 }
 
 type TokenResponse struct {
-    AccessToken string \`json:"access_token"\`
-    TokenType   string \`json:"token_type"\`
-    ExpiresIn   int    \`json:"expires_in"\`
+    AccessToken string `json:"access_token"`
+    TokenType   string `json:"token_type"`
+    ExpiresIn   int    `json:"expires_in"`
 }
 
 func NewOAuthHubClient(apiKey string) *OAuthHubClient {
@@ -1670,7 +1670,7 @@ public class OAuthHubClient
         });
         
         // Show selected language block
-        const targetBlock = container.querySelector(\`[data-lang="\${selectedLang}"]\`);
+        const targetBlock = container.querySelector(`[data-lang="\${selectedLang}"]`);
         if (targetBlock) {
           targetBlock.classList.add('active');
         }

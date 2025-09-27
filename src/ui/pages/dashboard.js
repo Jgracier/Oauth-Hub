@@ -194,8 +194,8 @@ export function getModernDashboardPage() {
 
           // Load data in parallel
           const [keysResponse, appsResponse] = await Promise.all([
-            fetch(\`/user-keys?email=\${encodeURIComponent(email)}\`).catch(() => null),
-            fetch(\`/user-apps?email=\${encodeURIComponent(email)}\`).catch(() => null)
+            fetch(`/user-keys?email=\${encodeURIComponent(email)}`).catch(() => null),
+            fetch(`/user-apps?email=\${encodeURIComponent(email)}`).catch(() => null)
           ]);
 
           let apiKeysCount = 0;
@@ -253,7 +253,7 @@ export function getModernDashboardPage() {
         
         container.innerHTML = platforms.map(platform => {
           const isConfigured = configuredPlatforms.includes(platform.id);
-          return \`
+          return `
             <div class="flex items-center gap-3 p-3 rounded-lg border \${isConfigured ? 'border-green-200 bg-green-50' : 'border-gray-200'}" style="background: \${isConfigured ? 'rgba(52, 199, 89, 0.05)' : 'var(--bg-secondary)'};">
               <div style="width: 40px; height: 40px; background: \${isConfigured ? platform.color + '20' : 'var(--bg-tertiary)'}; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
                 \${platform.icon}
@@ -264,7 +264,7 @@ export function getModernDashboardPage() {
               </div>
               \${isConfigured ? '<span style="color: var(--brand-success);">${MODERN_ICONS.check}</span>' : ''}
             </div>
-          \`;
+          `;
         }).join('');
       }
       

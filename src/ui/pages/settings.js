@@ -302,7 +302,7 @@ export function getModernSettingsPage() {
         });
         
         // Show feedback
-        showNotification(\`Theme changed to \${theme} mode\`);
+        showNotification(`Theme changed to \${theme} mode`);
       }
       
       // Show notification
