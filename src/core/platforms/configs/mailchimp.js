@@ -3,7 +3,7 @@
  * Complete OAuth configuration for Mailchimp API
  */
 
-export const mailchimp = {
+const mailchimp = {
   name: 'Mailchimp',
   displayName: 'Mailchimp',
   icon: '🐵',
@@ -27,3 +27,7 @@ export const mailchimp = {
     }
   }
 };
+
+
+module.exports = { mailchimp };
+

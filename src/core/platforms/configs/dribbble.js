@@ -3,7 +3,7 @@
  * Complete OAuth configuration for Dribbble API
  */
 
-export const dribbble = {
+const dribbble = {
   name: 'Dribbble',
   displayName: 'Dribbble',
   icon: '🏀',
@@ -29,3 +29,7 @@ export const dribbble = {
     }
   }
 };
+
+
+module.exports = { dribbble };
+

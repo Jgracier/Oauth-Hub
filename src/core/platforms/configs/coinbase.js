@@ -3,7 +3,7 @@
  * Complete OAuth configuration for Coinbase API
  */
 
-export const coinbase = {
+const coinbase = {
   name: 'Coinbase',
   displayName: 'Coinbase',
   icon: '₿',
@@ -71,3 +71,7 @@ export const coinbase = {
     }
   }
 };
+
+
+module.exports = { coinbase };
+

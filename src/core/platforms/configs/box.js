@@ -3,7 +3,7 @@
  * Complete OAuth configuration for Box API
  */
 
-export const box = {
+const box = {
   name: 'Box',
   displayName: 'Box',
   icon: '📁',
@@ -27,3 +27,7 @@ export const box = {
     }
   }
 };
+
+
+module.exports = { box };
+

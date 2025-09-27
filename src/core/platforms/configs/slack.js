@@ -3,7 +3,7 @@
  * Complete OAuth configuration for Slack API
  */
 
-export const slack = {
+const slack = {
   name: 'Slack',
   displayName: 'Slack',
   icon: '💬',
@@ -95,3 +95,7 @@ export const slack = {
     }
   }
 };
+
+
+module.exports = { slack };
+

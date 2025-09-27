@@ -3,7 +3,7 @@
  * Complete OAuth configuration for LinkedIn APIs
  */
 
-export const linkedin = {
+const linkedin = {
   name: 'LinkedIn',
   displayName: 'LinkedIn',
   icon: '💼',
@@ -58,3 +58,7 @@ export const linkedin = {
     }
   }
 };
+
+
+module.exports = { linkedin };
+

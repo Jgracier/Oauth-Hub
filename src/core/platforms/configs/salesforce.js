@@ -3,7 +3,7 @@
  * Complete OAuth configuration for Salesforce APIs
  */
 
-export const salesforce = {
+const salesforce = {
   name: 'Salesforce',
   displayName: 'Salesforce',
   icon: '☁️',
@@ -36,3 +36,7 @@ export const salesforce = {
     }
   }
 };
+
+
+module.exports = { salesforce };
+

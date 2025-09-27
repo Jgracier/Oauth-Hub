@@ -3,7 +3,7 @@
  * Complete OAuth configuration for Amazon Login
  */
 
-export const amazon = {
+const amazon = {
   name: 'Amazon',
   displayName: 'Amazon',
   icon: '📦',
@@ -30,3 +30,7 @@ export const amazon = {
     }
   }
 };
+
+
+module.exports = { amazon };
+

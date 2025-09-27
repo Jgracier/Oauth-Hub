@@ -3,7 +3,7 @@
  * Complete OAuth configuration for Spotify Web API
  */
 
-export const spotify = {
+const spotify = {
   name: 'Spotify',
   displayName: 'Spotify',
   icon: '🎵',
@@ -42,3 +42,7 @@ export const spotify = {
     }
   }
 };
+
+
+module.exports = { spotify };
+

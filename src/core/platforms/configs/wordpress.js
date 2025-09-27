@@ -3,7 +3,7 @@
  * Complete OAuth configuration for WordPress.com API
  */
 
-export const wordpress = {
+const wordpress = {
   name: 'WordPress',
   displayName: 'WordPress.com',
   icon: '📝',
@@ -29,3 +29,7 @@ export const wordpress = {
     }
   }
 };
+
+
+module.exports = { wordpress };
+

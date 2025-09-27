@@ -3,7 +3,7 @@
  * Complete OAuth configuration for Asana API
  */
 
-export const asana = {
+const asana = {
   name: 'Asana',
   displayName: 'Asana',
   icon: '✅',
@@ -26,3 +26,7 @@ export const asana = {
     }
   }
 };
+
+
+module.exports = { asana };
+

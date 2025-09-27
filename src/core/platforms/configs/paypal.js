@@ -3,7 +3,7 @@
  * Complete OAuth configuration for PayPal APIs
  */
 
-export const paypal = {
+const paypal = {
   name: 'PayPal',
   displayName: 'PayPal',
   icon: '💰',
@@ -37,3 +37,7 @@ export const paypal = {
     }
   }
 };
+
+
+module.exports = { paypal };
+

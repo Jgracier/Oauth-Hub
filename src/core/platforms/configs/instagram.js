@@ -3,7 +3,7 @@
  * Complete OAuth configuration for Instagram Basic Display API
  */
 
-export const instagram = {
+const instagram = {
   name: 'Instagram',
   displayName: 'Instagram',
   icon: '📷',
@@ -29,3 +29,7 @@ export const instagram = {
     }
   }
 };
+
+
+module.exports = { instagram };
+

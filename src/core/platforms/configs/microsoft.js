@@ -3,7 +3,7 @@
  * Complete OAuth configuration for Microsoft Graph API
  */
 
-export const microsoft = {
+const microsoft = {
   name: 'Microsoft',
   displayName: 'Microsoft',
   icon: '🏢',
@@ -91,3 +91,7 @@ export const microsoft = {
     }
   }
 };
+
+
+module.exports = { microsoft };
+

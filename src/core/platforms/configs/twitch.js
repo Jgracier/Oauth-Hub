@@ -3,7 +3,7 @@
  * Complete OAuth configuration for Twitch API
  */
 
-export const twitch = {
+const twitch = {
   name: 'Twitch',
   displayName: 'Twitch',
   icon: '🎮',
@@ -73,3 +73,7 @@ export const twitch = {
     }
   }
 };
+
+
+module.exports = { twitch };
+

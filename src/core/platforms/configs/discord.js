@@ -3,7 +3,7 @@
  * Complete OAuth configuration for Discord API
  */
 
-export const discord = {
+const discord = {
   name: 'Discord',
   displayName: 'Discord',
   icon: '🎮',
@@ -36,3 +36,7 @@ export const discord = {
     }
   }
 };
+
+
+module.exports = { discord };
+

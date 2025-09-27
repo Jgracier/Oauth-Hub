@@ -11,63 +11,63 @@
  * - Utilities from ./utils/
  */
 
-// Import all platform configurations
+// Require all platform configurations
 // Note: Each platform is now in its own dedicated file for better maintainability
-import { google } from './configs/google.js';
-import { facebook } from './configs/facebook.js';
-import { instagram } from './configs/instagram.js';
-import { twitter } from './configs/twitter.js';
-import { linkedin } from './configs/linkedin.js';
-import { apple } from './configs/apple.js';
-import { microsoft } from './configs/microsoft.js';
-import { github } from './configs/github.js';
-import { spotify } from './configs/spotify.js';
-import { discord } from './configs/discord.js';
-import { twitch } from './configs/twitch.js';
-import { slack } from './configs/slack.js';
-import { pinterest } from './configs/pinterest.js';
-import { tiktok } from './configs/tiktok.js';
-import { reddit } from './configs/reddit.js';
-import { wordpress } from './configs/wordpress.js';
-import { shopify } from './configs/shopify.js';
-import { stripe } from './configs/stripe.js';
-import { paypal } from './configs/paypal.js';
-import { amazon } from './configs/amazon.js';
-import { salesforce } from './configs/salesforce.js';
-import { hubspot } from './configs/hubspot.js';
-import { zoom } from './configs/zoom.js';
-import { trello } from './configs/trello.js';
-import { asana } from './configs/asana.js';
-import { notion } from './configs/notion.js';
-import { adobe } from './configs/adobe.js';
-import { figma } from './configs/figma.js';
-import { canva } from './configs/canva.js';
-import { dribbble } from './configs/dribbble.js';
-import { unsplash } from './configs/unsplash.js';
-import { dropbox } from './configs/dropbox.js';
-import { box } from './configs/box.js';
-import { netflix } from './configs/netflix.js';
-import { steam } from './configs/steam.js';
-import { coinbase } from './configs/coinbase.js';
-import { mailchimp } from './configs/mailchimp.js';
+const { google } = require('./configs/google.js');
+const { facebook } = require('./configs/facebook.js');
+const { instagram } = require('./configs/instagram.js');
+const { twitter } = require('./configs/twitter.js');
+const { linkedin } = require('./configs/linkedin.js');
+const { apple } = require('./configs/apple.js');
+const { microsoft } = require('./configs/microsoft.js');
+const { github } = require('./configs/github.js');
+const { spotify } = require('./configs/spotify.js');
+const { discord } = require('./configs/discord.js');
+const { twitch } = require('./configs/twitch.js');
+const { slack } = require('./configs/slack.js');
+const { pinterest } = require('./configs/pinterest.js');
+const { tiktok } = require('./configs/tiktok.js');
+const { reddit } = require('./configs/reddit.js');
+const { wordpress } = require('./configs/wordpress.js');
+const { shopify } = require('./configs/shopify.js');
+const { stripe } = require('./configs/stripe.js');
+const { paypal } = require('./configs/paypal.js');
+const { amazon } = require('./configs/amazon.js');
+const { salesforce } = require('./configs/salesforce.js');
+const { hubspot } = require('./configs/hubspot.js');
+const { zoom } = require('./configs/zoom.js');
+const { trello } = require('./configs/trello.js');
+const { asana } = require('./configs/asana.js');
+const { notion } = require('./configs/notion.js');
+const { adobe } = require('./configs/adobe.js');
+const { figma } = require('./configs/figma.js');
+const { canva } = require('./configs/canva.js');
+const { dribbble } = require('./configs/dribbble.js');
+const { unsplash } = require('./configs/unsplash.js');
+const { dropbox } = require('./configs/dropbox.js');
+const { box } = require('./configs/box.js');
+const { netflix } = require('./configs/netflix.js');
+const { steam } = require('./configs/steam.js');
+const { coinbase } = require('./configs/coinbase.js');
+const { mailchimp } = require('./configs/mailchimp.js');
 
 // Note: All 37 platforms are now fully implemented in individual config files
 
-// Import OAuth handlers
-import { 
-  generateConsentUrl, 
-  exchangeCodeForToken, 
-  getUserInfo, 
-  refreshAccessToken 
-} from './oauth/oauth-service.js';
+// Require OAuth handlers
+const {
+  generateConsentUrl,
+  exchangeCodeForToken,
+  getUserInfo,
+  refreshAccessToken
+} = require('./oauth/oauth-service.js');
 
-// Import utilities
-import { 
-  getPlatform, 
-  getAllPlatforms, 
-  getPlatformNames, 
-  getPlatformScopes 
-} from './utils/platform-utils.js';
+// Require utilities
+const {
+  getPlatform,
+  getAllPlatforms,
+  getPlatformNames,
+  getPlatformScopes
+} = require('./utils/platform-utils.js');
 
 // ============================================================================
 // 🌐 UNIFIED PLATFORM REGISTRY
@@ -75,7 +75,7 @@ import {
 // ============================================================================
 
 // All platform configurations (fully implemented)
-export const PLATFORMS = {
+const PLATFORMS = {
   // Tier 1 American Platforms (7)
   google,
   facebook,
@@ -139,25 +139,11 @@ export const PLATFORMS = {
 // Maintain backward compatibility with existing imports
 // ============================================================================
 
-export {
-  // OAuth Flow Functions
-  generateConsentUrl,
-  exchangeCodeForToken,
-  getUserInfo,
-  refreshAccessToken,
-  
-  // Utility Functions
-  getPlatform,
-  getAllPlatforms,
-  getPlatformNames,
-  getPlatformScopes
-};
-
 // ============================================================================
 // 📊 PLATFORM STATISTICS & INFO
 // ============================================================================
 
-export const PLATFORM_STATS = {
+const PLATFORM_STATS = {
   totalPlatforms: 37,
   categories: {
     'Tier 1 American': ['google', 'facebook', 'instagram', 'twitter', 'linkedin', 'apple', 'microsoft'],
@@ -198,5 +184,27 @@ Object.entries(PLATFORMS).forEach(([name, config]) => {
     throw error; // Re-throw to prevent loading invalid platforms
   }
 });
+
+// ============================================================================
+// 🔧 EXPORTS - Maintain backward compatibility
+// ============================================================================
+
+module.exports = {
+  // Main exports
+  PLATFORMS,
+  PLATFORM_STATS,
+
+  // OAuth Flow Functions
+  generateConsentUrl,
+  exchangeCodeForToken,
+  getUserInfo,
+  refreshAccessToken,
+
+  // Utility Functions
+  getPlatform,
+  getAllPlatforms,
+  getPlatformNames,
+  getPlatformScopes
+};
 
 console.log(`✅ Loaded ${Object.keys(PLATFORMS).length} OAuth platforms successfully`);

@@ -3,7 +3,7 @@
  * Complete OAuth configuration for X (Twitter) API v2
  */
 
-export const twitter = {
+const twitter = {
   name: 'Twitter',
   displayName: 'X (Twitter)',
   icon: '🐦',
@@ -61,3 +61,7 @@ export const twitter = {
     }
   }
 };
+
+
+module.exports = { twitter };
+

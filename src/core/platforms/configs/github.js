@@ -3,7 +3,7 @@
  * Complete OAuth configuration for GitHub API
  */
 
-export const github = {
+const github = {
   name: 'GitHub',
   displayName: 'GitHub',
   icon: '🐙',
@@ -83,3 +83,7 @@ export const github = {
     }
   }
 };
+
+
+module.exports = { github };
+

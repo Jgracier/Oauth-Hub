@@ -3,7 +3,7 @@
  * Complete OAuth configuration for Facebook Graph API
  */
 
-export const facebook = {
+const facebook = {
   name: 'Facebook',
   displayName: 'Facebook',
   icon: '📘',
@@ -76,3 +76,7 @@ export const facebook = {
     }
   }
 };
+
+
+module.exports = { facebook };
+

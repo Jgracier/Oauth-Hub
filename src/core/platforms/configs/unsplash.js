@@ -3,7 +3,7 @@
  * Complete OAuth configuration for Unsplash API
  */
 
-export const unsplash = {
+const unsplash = {
   name: 'Unsplash',
   displayName: 'Unsplash',
   icon: '📸',
@@ -34,3 +34,7 @@ export const unsplash = {
     }
   }
 };
+
+
+module.exports = { unsplash };
+

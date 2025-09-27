@@ -3,7 +3,7 @@
  * Complete OAuth configuration for Netflix API (OAuth 1.0a)
  */
 
-export const netflix = {
+const netflix = {
   name: 'Netflix',
   displayName: 'Netflix',
   icon: '🎬',
@@ -26,3 +26,7 @@ export const netflix = {
     }
   }
 };
+
+
+module.exports = { netflix };
+

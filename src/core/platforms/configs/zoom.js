@@ -3,7 +3,7 @@
  * Complete OAuth configuration for Zoom APIs
  */
 
-export const zoom = {
+const zoom = {
   name: 'Zoom',
   displayName: 'Zoom',
   icon: '📹',
@@ -76,3 +76,7 @@ export const zoom = {
     }
   }
 };
+
+
+module.exports = { zoom };
+

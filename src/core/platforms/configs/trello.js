@@ -3,7 +3,7 @@
  * Complete OAuth configuration for Trello API (OAuth 1.0a)
  */
 
-export const trello = {
+const trello = {
   name: 'Trello',
   displayName: 'Trello',
   icon: '📋',
@@ -31,3 +31,7 @@ export const trello = {
     }
   }
 };
+
+
+module.exports = { trello };
+

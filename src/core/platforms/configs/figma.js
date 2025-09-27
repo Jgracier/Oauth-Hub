@@ -3,7 +3,7 @@
  * Complete OAuth configuration for Figma API
  */
 
-export const figma = {
+const figma = {
   name: 'Figma',
   displayName: 'Figma',
   icon: '🎯',
@@ -29,3 +29,7 @@ export const figma = {
     }
   }
 };
+
+
+module.exports = { figma };
+

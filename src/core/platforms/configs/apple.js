@@ -3,7 +3,7 @@
  * Complete OAuth configuration for Apple Sign In
  */
 
-export const apple = {
+const apple = {
   name: 'Apple',
   displayName: 'Apple',
   icon: '🍎',
@@ -33,3 +33,7 @@ export const apple = {
     }
   }
 };
+
+
+module.exports = { apple };
+

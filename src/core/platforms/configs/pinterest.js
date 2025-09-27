@@ -3,7 +3,7 @@
  * Complete OAuth configuration for Pinterest API
  */
 
-export const pinterest = {
+const pinterest = {
   name: 'Pinterest',
   displayName: 'Pinterest',
   icon: '📌',
@@ -46,3 +46,7 @@ export const pinterest = {
     }
   }
 };
+
+
+module.exports = { pinterest };
+

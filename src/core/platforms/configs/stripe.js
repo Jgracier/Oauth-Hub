@@ -3,7 +3,7 @@
  * Complete OAuth configuration for Stripe Connect
  */
 
-export const stripe = {
+const stripe = {
   name: 'Stripe',
   displayName: 'Stripe',
   icon: '💳',
@@ -27,3 +27,7 @@ export const stripe = {
     }
   }
 };
+
+
+module.exports = { stripe };
+

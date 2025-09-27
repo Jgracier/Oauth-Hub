@@ -3,7 +3,7 @@
  * Complete OAuth configuration for Google services
  */
 
-export const google = {
+const google = {
   name: 'Google',
   displayName: 'Google',
   icon: '🔍',
@@ -112,3 +112,7 @@ export const google = {
     }
   }
 };
+
+
+module.exports = { google };
+

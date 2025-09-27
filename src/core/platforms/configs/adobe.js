@@ -3,7 +3,7 @@
  * Complete OAuth configuration for Adobe Creative Cloud
  */
 
-export const adobe = {
+const adobe = {
   name: 'Adobe',
   displayName: 'Adobe Creative Cloud',
   icon: '🎨',
@@ -35,3 +35,7 @@ export const adobe = {
     }
   }
 };
+
+
+module.exports = { adobe };
+

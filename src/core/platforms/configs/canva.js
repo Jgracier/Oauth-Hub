@@ -3,7 +3,7 @@
  * Complete OAuth configuration for Canva API
  */
 
-export const canva = {
+const canva = {
   name: 'Canva',
   displayName: 'Canva',
   icon: '🖌️',
@@ -31,3 +31,7 @@ export const canva = {
     }
   }
 };
+
+
+module.exports = { canva };
+

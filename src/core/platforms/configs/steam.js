@@ -3,7 +3,7 @@
  * Complete OAuth configuration for Steam OpenID
  */
 
-export const steam = {
+const steam = {
   name: 'Steam',
   displayName: 'Steam',
   icon: '🎮',
@@ -29,3 +29,7 @@ export const steam = {
     }
   }
 };
+
+
+module.exports = { steam };
+

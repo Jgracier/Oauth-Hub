@@ -3,7 +3,7 @@
  * Complete OAuth configuration for Shopify Admin API
  */
 
-export const shopify = {
+const shopify = {
   name: 'Shopify',
   displayName: 'Shopify',
   icon: '🛍️',
@@ -94,3 +94,7 @@ export const shopify = {
     }
   }
 };
+
+
+module.exports = { shopify };
+

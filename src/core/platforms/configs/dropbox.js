@@ -3,7 +3,7 @@
  * Complete OAuth configuration for Dropbox API
  */
 
-export const dropbox = {
+const dropbox = {
   name: 'Dropbox',
   displayName: 'Dropbox',
   icon: '📦',
@@ -39,3 +39,7 @@ export const dropbox = {
     }
   }
 };
+
+
+module.exports = { dropbox };
+

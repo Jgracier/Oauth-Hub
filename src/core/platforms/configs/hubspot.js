@@ -3,7 +3,7 @@
  * Complete OAuth configuration for HubSpot APIs
  */
 
-export const hubspot = {
+const hubspot = {
   name: 'HubSpot',
   displayName: 'HubSpot',
   icon: '🧲',
@@ -83,3 +83,7 @@ export const hubspot = {
     }
   }
 };
+
+
+module.exports = { hubspot };
+

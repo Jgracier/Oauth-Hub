@@ -3,7 +3,7 @@
  * Complete OAuth configuration for TikTok for Developers API
  */
 
-export const tiktok = {
+const tiktok = {
   name: 'TikTok',
   displayName: 'TikTok',
   icon: '🎵',
@@ -37,3 +37,7 @@ export const tiktok = {
     }
   }
 };
+
+
+module.exports = { tiktok };
+

@@ -3,7 +3,7 @@
  * Complete OAuth configuration for Notion API
  */
 
-export const notion = {
+const notion = {
   name: 'Notion',
   displayName: 'Notion',
   icon: '📝',
@@ -27,3 +27,7 @@ export const notion = {
     }
   }
 };
+
+
+module.exports = { notion };
+

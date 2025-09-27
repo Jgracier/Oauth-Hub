@@ -3,7 +3,7 @@
  * Complete OAuth configuration for Reddit API
  */
 
-export const reddit = {
+const reddit = {
   name: 'Reddit',
   displayName: 'Reddit',
   icon: '🤖',
@@ -59,3 +59,7 @@ export const reddit = {
     }
   }
 };
+
+
+module.exports = { reddit };
+
