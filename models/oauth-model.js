@@ -194,6 +194,32 @@ async function getRefreshTokenByUserId(platformUserId) {
   return null;
 }
 
+async function getRefreshToken(refreshToken) {
+  return refreshTokens.get(refreshToken) || false;
+}
+
+async function getAccessToken(token) {
+  return tokens.get(token) || false;
+}
+
+async function revokeToken(token) {
+  tokens.delete(token.accessToken);
+  if (token.refreshToken) {
+    refreshTokens.delete(token.refreshToken);
+  }
+}
+
+async function getClientByApiKey(apiKey) {
+  // Simple implementation - in production, query database
+  // This should validate API keys from your existing system
+  for (const [clientId, client] of clients) {
+    if (client.apiKey === apiKey) {
+      return client;
+    }
+  }
+  return null;
+}
+
 async function saveClientToDB(client) {
   // Placeholder for Oracle DB insert
   console.log('Saving client to DB:', client);
@@ -243,6 +269,7 @@ module.exports = {
   // Custom for platform
   getAccessTokenByUserId,
   getRefreshTokenByUserId,
+  getClientByApiKey,
   saveClientToDB,
   saveTokenToDB
 };

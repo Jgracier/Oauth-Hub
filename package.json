@@ -1,7 +1,7 @@
 {
-  "name": "universal-oauth-worker",
+  "name": "oauth-hub",
   "version": "2.0.0",
-  "description": "Universal OAuth 2.0 Cloudflare Worker with API key management for multiple platforms (YouTube, Facebook, Instagram, X, LinkedIn)",
+  "description": "OAuth Hub - Complete OAuth2.1 backend with 37+ platforms support, deployed on Oracle Cloud with auto-deployment CI/CD",
   "main": "oauth-worker.js",
   "scripts": {
     "dev": "wrangler dev",
@@ -20,32 +20,34 @@
   "keywords": [
     "oauth",
     "oauth2",
-    "cloudflare",
-    "worker",
-    "youtube",
-    "facebook",
-    "instagram",
-    "twitter",
-    "x",
-    "linkedin",
-    "social-media",
+    "oauth2-server",
+    "oracle-cloud",
+    "auto-deployment",
     "api",
     "authentication",
     "tokens",
-    "api-keys",
-    "dashboard",
-    "user-management"
+    "pkce",
+    "openid-connect",
+    "social-media",
+    "google",
+    "facebook",
+    "instagram",
+    "twitter",
+    "linkedin",
+    "platforms",
+    "express",
+    "node.js"
   ],
   "author": "Gracier Digital",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/gracier-digital/universal-oauth-worker"
+    "url": "https://github.com/Jgracier/Oauth-Hub"
   },
   "bugs": {
-    "url": "https://github.com/gracier-digital/universal-oauth-worker/issues"
+    "url": "https://github.com/Jgracier/Oauth-Hub/issues"
   },
-  "homepage": "https://github.com/gracier-digital/universal-oauth-worker#readme",
+  "homepage": "https://github.com/Jgracier/Oauth-Hub#readme",
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20241011.0",
     "playwright": "^1.55.0",
@@ -54,6 +56,7 @@
   "dependencies": {
     "@node-oauth/oauth2-server": "^5.2.1",
     "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
     "express": "^4.21.2",
     "helmet": "^8.1.0",
     "morgan": "^1.10.1",

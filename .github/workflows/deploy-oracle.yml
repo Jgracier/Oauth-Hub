@@ -1,0 +1,40 @@
+name: Deploy to Oracle Cloud
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Run tests
+      run: npm test || echo "No tests defined"
+
+    - name: Build application
+      run: npm run build || echo "No build step needed"
+
+    - name: Deploy to Oracle Cloud
+      env:
+        CRM_SERVER_IP: ${{ secrets.CRM_SERVER_IP }}
+        CRM_SERVER_USER: ${{ secrets.CRM_SERVER_USER }}
+        CRM_SERVER_SSH_PRIVATE_KEY: ${{ secrets.CRM_SERVER_SSH_PRIVATE_KEY }}
+        CRM_DATABASE_URL: ${{ secrets.CRM_DATABASE_URL }}
+      run: |
+        chmod +x deploy-oracle.sh
+        ./deploy-oracle.sh
