@@ -70,11 +70,17 @@ ssh_cmd "which pm2 || (sudo npm install -g pm2)"
 echo -e "${YELLOW}📤 Copying application files...${NC}"
 
 # Create temporary deployment package
+# Use --ignore-failed-read to handle files that change during archiving
 tar -czf oauth-hub-deploy.tar.gz \
     --exclude='node_modules' \
     --exclude='.git' \
     --exclude='*.log' \
     --exclude='.env' \
+    --exclude='.DS_Store' \
+    --exclude='*.tmp' \
+    --exclude='*.swp' \
+    --exclude='*.bak' \
+    --ignore-failed-read \
     .
 
 # Copy deployment package to server
