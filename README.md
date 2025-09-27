@@ -5,7 +5,7 @@ A comprehensive OAuth2 authorization server built with Node.js and oauth2-server
 ## 🚀 Architecture
 
 - **Backend**: Node.js + Express + oauth2-server (RFC 6749/OAuth2.1 compliant)
-- **Frontend**: React SPA served by Express static middleware
+- **Frontend**: Server-side rendered UI with modern components
 - **Database**: Oracle Autonomous Database (production) / In-memory (development)
 - **Deployment**: Oracle Cloud Infrastructure (OCI) with Docker/Kubernetes
 
@@ -19,10 +19,14 @@ oauth-hub/
 ├── server.js                       # Main Express server with oauth2-server
 ├── models/
 │   └── oauth-model.js              # OAuth2 storage model (tokens, clients, users)
-├── public/                         # Static frontend files (React SPA)
-├── src/                            # Legacy platform configurations (for reference)
-│   └── core/
-│       └── platforms/              # 37+ OAuth platform configs
+├── src/                            # Core application code
+│   ├── core/
+│   │   └── platforms/              # 37+ OAuth platform configurations
+│   ├── ui/                         # Server-side rendered UI components
+│   │   ├── pages/                  # Page components (dashboard, settings, etc.)
+│   │   ├── navigation.js           # Navigation and layout
+│   │   └── styles.js               # CSS and theming
+│   └── lib/                        # Utilities and services
 ├── Dockerfile                      # Oracle Cloud deployment
 ├── deploy-to-oracle.sh             # Oracle deployment script
 ├── .env                            # Environment configuration
