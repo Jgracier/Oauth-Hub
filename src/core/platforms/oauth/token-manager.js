@@ -7,7 +7,7 @@
 /**
  * Normalize token response format across all platforms
  */
-export function normalizeTokenResponse(platform, tokenResponse) {
+function normalizeTokenResponse(platform, tokenResponse) {
   const normalized = {
     accessToken: null,
     refreshToken: null,
@@ -268,3 +268,8 @@ export function normalizeTokenResponse(platform, tokenResponse) {
     throw new Error(`[${platform}] Failed to normalize token response: ${error.message}`);
   }
 }
+
+// Export the function
+module.exports = {
+  normalizeTokenResponse
+};

@@ -9,13 +9,13 @@
 /**
  * Get platform configuration by name
  */
-export async function getPlatform(platformName, platforms) {
+function getPlatform(platformName, platforms) {
   if (!platforms) {
-    // Lazy import to avoid circular dependency
-    const { PLATFORMS } = await import('../index.js');
+    // Lazy require to avoid circular dependency
+    const { PLATFORMS } = require('../index.js');
     platforms = PLATFORMS;
   }
-  
+
   const platform = platforms[platformName.toLowerCase()];
   if (!platform) {
     throw new Error(`Unsupported platform: ${platformName}`);
@@ -26,26 +26,26 @@ export async function getPlatform(platformName, platforms) {
 /**
  * Get all available platform names
  */
-export async function getAllPlatforms(platforms) {
+function getAllPlatforms(platforms) {
   if (!platforms) {
-    // Lazy import to avoid circular dependency
-    const { PLATFORMS } = await import('../index.js');
+    // Lazy require to avoid circular dependency
+    const { PLATFORMS } = require('../index.js');
     platforms = PLATFORMS;
   }
-  
+
   return Object.keys(platforms);
 }
 
 /**
  * Get platform names with display information
  */
-export async function getPlatformNames(platforms) {
+function getPlatformNames(platforms) {
   if (!platforms) {
-    // Lazy import to avoid circular dependency
-    const { PLATFORMS } = await import('../index.js');
+    // Lazy require to avoid circular dependency
+    const { PLATFORMS } = require('../index.js');
     platforms = PLATFORMS;
   }
-  
+
   return Object.keys(platforms).map(key => ({
     key,
     name: platforms[key].name,
@@ -58,18 +58,18 @@ export async function getPlatformNames(platforms) {
 /**
  * Get platform scopes organized by category
  */
-export async function getPlatformScopes(platformName, platforms) {
-  const platform = await getPlatform(platformName, platforms);
+function getPlatformScopes(platformName, platforms) {
+  const platform = getPlatform(platformName, platforms);
   return platform.scopes || {};
 }
 
 /**
  * Get flattened list of all scopes for a platform
  */
-export function getFlatPlatformScopes(platformName) {
-  const scopes = getPlatformScopes(platformName);
+function getFlatPlatformScopes(platformName, platforms) {
+  const scopes = getPlatformScopes(platformName, platforms);
   const flatScopes = [];
-  
+
   for (const [category, categoryScopes] of Object.entries(scopes)) {
     for (const [scopeId, scopeInfo] of Object.entries(categoryScopes)) {
       flatScopes.push({
@@ -81,42 +81,43 @@ export function getFlatPlatformScopes(platformName) {
       });
     }
   }
-  
+
   return flatScopes;
 }
 
 /**
  * Get required scopes for a platform
  */
-export function getRequiredScopes(platformName) {
-  const platform = getPlatform(platformName);
+function getRequiredScopes(platformName, platforms) {
+  const platform = getPlatform(platformName, platforms);
   return platform.requiredScopes || [];
 }
 
 /**
  * Validate that all required scopes are included in user selection
  */
-export function validateRequiredScopes(platformName, userScopes) {
-  const requiredScopes = getRequiredScopes(platformName);
+function validateRequiredScopes(platformName, userScopes, platforms) {
+  const requiredScopes = getRequiredScopes(platformName, platforms);
   const missing = requiredScopes.filter(scope => !userScopes.includes(scope));
-  
+
   if (missing.length > 0) {
     throw new Error(`Missing required scopes for ${platformName}: ${missing.join(', ')}`);
   }
-  
+
   return true;
 }
 
 /**
  * Get platform by category
  */
-export function getPlatformsByCategory() {
+function getPlatformsByCategory() {
+  const { PLATFORMS } = require('../index.js');
   const categories = {};
-  
+
   for (const [key, platform] of Object.entries(PLATFORMS)) {
     // Determine category based on platform characteristics
     let category = 'Other';
-    
+
     if (['google', 'facebook', 'instagram', 'twitter', 'linkedin', 'tiktok', 'pinterest', 'reddit'].includes(key)) {
       category = 'Social Media';
     } else if (['microsoft', 'salesforce', 'hubspot', 'zoom', 'slack', 'trello', 'asana', 'notion'].includes(key)) {
@@ -138,34 +139,35 @@ export function getPlatformsByCategory() {
     } else if (['apple'].includes(key)) {
       category = 'Apple Ecosystem';
     }
-    
+
     if (!categories[category]) {
       categories[category] = [];
     }
-    
+
     categories[category].push({
       key,
       ...platform
     });
   }
-  
+
   return categories;
 }
 
 /**
  * Search platforms by name or description
  */
-export function searchPlatforms(query) {
+function searchPlatforms(query) {
+  const { PLATFORMS } = require('../index.js');
   const lowerQuery = query.toLowerCase();
   const results = [];
-  
+
   for (const [key, platform] of Object.entries(PLATFORMS)) {
     const searchableText = [
       platform.name,
       platform.displayName,
       platform.description
     ].join(' ').toLowerCase();
-    
+
     if (searchableText.includes(lowerQuery)) {
       results.push({
         key,
@@ -174,7 +176,7 @@ export function searchPlatforms(query) {
       });
     }
   }
-  
+
   return results.sort((a, b) => b.relevance - a.relevance);
 }
 
@@ -183,16 +185,16 @@ export function searchPlatforms(query) {
  */
 function calculateRelevance(query, text) {
   let score = 0;
-  
+
   // Exact match in name gets highest score
   if (text.includes(query)) {
     score += 100;
   }
-  
+
   // Word matches
   const queryWords = query.split(' ');
   const textWords = text.split(' ');
-  
+
   for (const queryWord of queryWords) {
     for (const textWord of textWords) {
       if (textWord.includes(queryWord)) {
@@ -200,17 +202,18 @@ function calculateRelevance(query, text) {
       }
     }
   }
-  
+
   return score;
 }
 
 /**
  * Get platform statistics
  */
-export function getPlatformStats() {
+function getPlatformStats() {
+  const { PLATFORMS } = require('../index.js');
   const platforms = Object.entries(PLATFORMS);
   const categories = getPlatformsByCategory();
-  
+
   return {
     totalPlatforms: platforms.length,
     categoryCounts: Object.entries(categories).reduce((acc, [category, platformList]) => {
@@ -236,7 +239,7 @@ export function getPlatformStats() {
 /**
  * Check if platform supports refresh tokens
  */
-export function supportsRefreshTokens(platformName) {
+function supportsRefreshTokens(platformName) {
   const noRefreshPlatforms = ['github', 'shopify', 'trello', 'notion', 'dribbble', 'unsplash', 'netflix', 'steam'];
   return !noRefreshPlatforms.includes(platformName.toLowerCase());
 }
@@ -244,15 +247,41 @@ export function supportsRefreshTokens(platformName) {
 /**
  * Get platform documentation URL
  */
-export function getPlatformDocsUrl(platformName) {
-  const platform = getPlatform(platformName);
+function getPlatformDocsUrl(platformName) {
+  const { PLATFORMS } = require('../index.js');
+  const platform = PLATFORMS[platformName.toLowerCase()];
+  if (!platform) {
+    throw new Error(`Unsupported platform: ${platformName}`);
+  }
   return platform.docsUrl;
 }
 
 /**
  * Check if platform requires PKCE
  */
-export function requiresPKCE(platformName) {
-  const platform = getPlatform(platformName);
+function requiresPKCE(platformName) {
+  const { PLATFORMS } = require('../index.js');
+  const platform = PLATFORMS[platformName.toLowerCase()];
+  if (!platform) {
+    throw new Error(`Unsupported platform: ${platformName}`);
+  }
   return platform.requiresPKCE || false;
 }
+
+// Export all functions
+module.exports = {
+  getPlatform,
+  getAllPlatforms,
+  getPlatformNames,
+  getPlatformScopes,
+  getFlatPlatformScopes,
+  getRequiredScopes,
+  validateRequiredScopes,
+  getPlatformsByCategory,
+  searchPlatforms,
+  calculateRelevance,
+  getPlatformStats,
+  supportsRefreshTokens,
+  getPlatformDocsUrl,
+  requiresPKCE
+};

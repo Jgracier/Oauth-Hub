@@ -7,7 +7,7 @@
 /**
  * Extract platform user ID from user info response
  */
-export function extractPlatformUserId(platform, userInfo, platformConfig) {
+function extractPlatformUserId(platform, userInfo, platformConfig) {
   const userIdField = platformConfig.userIdField;
   
   try {
@@ -144,3 +144,8 @@ export function extractPlatformUserId(platform, userInfo, platformConfig) {
     throw new Error(`[${platform}] Failed to extract user ID: ${error.message}`);
   }
 }
+
+// Export the function
+module.exports = {
+  extractPlatformUserId
+};

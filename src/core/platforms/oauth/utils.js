@@ -6,7 +6,7 @@
 /**
  * Generate a cryptographically secure code verifier for PKCE
  */
-export function generateCodeVerifier() {
+function generateCodeVerifier() {
   const array = new Uint8Array(32);
   crypto.getRandomValues(array);
   return btoa(String.fromCharCode.apply(null, array))
@@ -18,7 +18,7 @@ export function generateCodeVerifier() {
 /**
  * Generate code challenge from code verifier using SHA256
  */
-export async function generateCodeChallenge(codeVerifier) {
+async function generateCodeChallenge(codeVerifier) {
   const encoder = new TextEncoder();
   const data = encoder.encode(codeVerifier);
   const digest = await crypto.subtle.digest('SHA-256', data);
@@ -31,7 +31,7 @@ export async function generateCodeChallenge(codeVerifier) {
 /**
  * Generate a secure state parameter for OAuth flows
  */
-export function generateState(platform, apiKey) {
+function generateState(platform, apiKey) {
   const timestamp = Date.now();
   const uuid = crypto.randomUUID();
   return `${platform}_${apiKey}_${timestamp}_${uuid}`;
@@ -40,7 +40,7 @@ export function generateState(platform, apiKey) {
 /**
  * Parse state parameter back to components
  */
-export function parseState(state) {
+function parseState(state) {
   const parts = state.split('_');
   if (parts.length < 4) {
     throw new Error('Invalid state parameter format');
@@ -57,7 +57,7 @@ export function parseState(state) {
 /**
  * Validate OAuth response and extract error information
  */
-export function validateOAuthResponse(searchParams) {
+function validateOAuthResponse(searchParams) {
   const error = searchParams.get('error');
   const code = searchParams.get('code');
   const state = searchParams.get('state');
@@ -93,7 +93,7 @@ export function validateOAuthResponse(searchParams) {
 /**
  * Check if a token is expired or will expire soon
  */
-export function isTokenExpired(expiresAt, bufferSeconds = 300) {
+function isTokenExpired(expiresAt, bufferSeconds = 300) {
   if (!expiresAt) return false; // No expiration set
   
   const now = Date.now();
@@ -105,7 +105,7 @@ export function isTokenExpired(expiresAt, bufferSeconds = 300) {
 /**
  * Format scopes for display in UI
  */
-export function formatScopeForDisplay(scope, platformConfig) {
+function formatScopeForDisplay(scope, platformConfig) {
   // Find the scope in platform configuration
   for (const category of Object.values(platformConfig.scopes || {})) {
     if (category[scope]) {
@@ -128,7 +128,7 @@ export function formatScopeForDisplay(scope, platformConfig) {
 /**
  * Build user-friendly error messages
  */
-export function buildErrorMessage(platform, operation, error) {
+function buildErrorMessage(platform, operation, error) {
   const errorMessages = {
     consent_url: `Failed to generate authorization URL for ${platform}`,
     token_exchange: `Failed to exchange authorization code for ${platform} tokens`,
@@ -148,7 +148,7 @@ export function buildErrorMessage(platform, operation, error) {
 /**
  * Sanitize sensitive data for logging
  */
-export function sanitizeForLogging(data, sensitiveFields = ['access_token', 'refresh_token', 'client_secret', 'code']) {
+function sanitizeForLogging(data, sensitiveFields = ['access_token', 'refresh_token', 'client_secret', 'code']) {
   if (typeof data !== 'object' || data === null) {
     return data;
   }
@@ -168,3 +168,16 @@ export function sanitizeForLogging(data, sensitiveFields = ['access_token', 'ref
   
   return sanitized;
 }
+
+// Export all functions
+module.exports = {
+  generateCodeVerifier,
+  generateCodeChallenge,
+  generateState,
+  parseState,
+  validateOAuthResponse,
+  isTokenExpired,
+  formatScopeForDisplay,
+  buildErrorMessage,
+  sanitizeForLogging
+};
