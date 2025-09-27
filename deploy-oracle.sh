@@ -241,8 +241,8 @@ sleep 15
 
 HEALTH_CHECK=$(ssh_cmd "curl -s --max-time 10 http://localhost:${PORT}/health 2>/dev/null || echo 'failed'")
 
-# Check if health response contains "OK" status
-if [[ "${HEALTH_CHECK}" == *"\"status\":\"OK\""* ]] || [[ "${HEALTH_CHECK}" == *"status": "OK"* ]]; then
+# Check if health response contains "OK" status (simplified)
+if echo "${HEALTH_CHECK}" | grep -q '"status":"OK"' || echo "${HEALTH_CHECK}" | grep -q '"status": "OK"'; then
     echo -e "${GREEN}✅ OAuth Hub deployment successful!${NC}"
     echo -e "${GREEN}🌐 Application is running at: http://${SERVER_IP}:${PORT}${NC}"
     echo ""
