@@ -70,7 +70,7 @@ ssh_cmd "which pm2 || (sudo npm install -g pm2)"
 echo -e "${YELLOW}📤 Copying application files...${NC}"
 
 # Create temporary deployment package
-tar -czf /tmp/oauth-hub-deploy.tar.gz \
+tar -czf oauth-hub-deploy.tar.gz \
     --exclude='node_modules' \
     --exclude='.git' \
     --exclude='*.log' \
@@ -78,7 +78,7 @@ tar -czf /tmp/oauth-hub-deploy.tar.gz \
     .
 
 # Copy deployment package to server
-scp_file "/tmp/oauth-hub-deploy.tar.gz" "$DEPLOY_PATH/"
+scp_file "oauth-hub-deploy.tar.gz" "$DEPLOY_PATH/"
 
 # Extract and setup on server
 ssh_cmd "cd $DEPLOY_PATH && rm -rf * && tar -xzf oauth-hub-deploy.tar.gz && rm oauth-hub-deploy.tar.gz"
