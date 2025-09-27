@@ -114,5 +114,4 @@ const google = {
 };
 
 
-module.exports = { google };
-
+module.exports = {  };

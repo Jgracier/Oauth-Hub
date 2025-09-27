@@ -144,8 +144,3 @@ function extractPlatformUserId(platform, userInfo, platformConfig) {
     throw new Error(`[${platform}] Failed to extract user ID: ${error.message}`);
   }
 }
-
-// Export the function
-module.exports = {
-  extractPlatformUserId
-};

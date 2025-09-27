@@ -268,8 +268,3 @@ function normalizeTokenResponse(platform, tokenResponse) {
     throw new Error(`[${platform}] Failed to normalize token response: ${error.message}`);
   }
 }
-
-// Export the function
-module.exports = {
-  normalizeTokenResponse
-};
