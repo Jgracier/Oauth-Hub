@@ -7,7 +7,7 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const https = require('https');
 const fs = require('fs');
-const { OAuth2Server } = require('@node-oauth/oauth2-server');
+const OAuth2Server = require('@node-oauth/oauth2-server');
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -92,38 +92,23 @@ const oauth = new OAuth2Server({
 // Consent/Authorization Endpoint (/oauth/authorize) - Generates URL with scopes, redirect, PKCE
 app.get('/oauth/authorize', async (req, res, next) => {
   try {
-    const request = {
-      responseType: req.query.response_type || 'code',
-      clientId: req.query.client_id,
-      redirectUri: req.query.redirect_uri,
-      scope: req.query.scope,  // e.g., 'read:google write:facebook' - maps to 37+ platforms
-      state: req.query.state,
-      codeChallenge: req.query.code_challenge,
-      codeChallengeMethod: req.query.code_challenge_method || 'S256'
-    };
+    // Wrap Express request in oauth2-server Request
+    const oauthRequest = new OAuth2Server.Request(req);
+    const oauthResponse = new OAuth2Server.Response(res);
 
     // Authorize and generate consent (handles validation, PKCE, scopes)
-    const authResult = await oauth.authorize(request, async (token) => {
-      // Custom consent logic: In production, render UI; here, auto-approve for demo
-      // Integrate with existing src/ui/ for custom consent page
-      const userId = 'platform-user-123';  // From session or DB
-      token.userId = userId;  // Attach platform user ID
-      // Parse scopes to external platforms (reuse src/core/platforms/)
-      token.platformScopes = parseScopesToPlatforms(request.scope);
-      return true;  // Grant consent
+    const authResult = await oauth.authorize(oauthRequest, oauthResponse, {
+      authenticateHandler: async (request) => {
+        // Custom consent logic: In production, render UI; here, auto-approve for demo
+        // Integrate with existing src/ui/ for custom consent page
+        const userId = 'platform-user-123';  // From session or DB
+        return { id: userId, platformUserId: userId };
+      }
     });
 
-    if (authResult.error) {
-      return res.status(400).json({ error: authResult.error });
-    }
+    // The oauth2-server handles the response automatically
+    // Don't send additional response here
 
-    // Return consent URL or redirect
-    res.json({
-      success: true,
-      consentUrl: authResult.url,  // Full authorization URL
-      requiresConsent: true,  // Flag for UI integration
-      scopes: request.scope
-    });
   } catch (error) {
     next(error);
   }
@@ -132,26 +117,21 @@ app.get('/oauth/authorize', async (req, res, next) => {
 // Tokens Endpoint (/oauth/token) - Exchange code/refresh, return token by platform user ID
 app.post('/oauth/token', async (req, res, next) => {
   try {
-    await oauth.token(req, res, async (token) => {
-      // Custom token logic: Proxy to external platform if needed
-      const platformUserId = req.body.platformUserId || token.userId;
-      if (!platformUserId) {
-        throw new Error('Platform user ID required');
-      }
+    // Wrap Express request in oauth2-server Request
+    const oauthRequest = new OAuth2Server.Request(req);
+    const oauthResponse = new OAuth2Server.Response(res);
 
-      // Reuse existing oauth4webapi for external token exchange (from src/core/platforms/)
-      if (req.body.code) {
-        const externalToken = await exchangeExternalToken(req.body.code, token.scope);
-        token.externalAccessToken = externalToken.access_token;
+    const token = await oauth.token(oauthRequest, oauthResponse, {
+      accessTokenLifetime: 3600, // 1 hour
+      refreshTokenLifetime: 1209600, // 2 weeks
+      requireClientAuthentication: {
+        authorization_code: false,
+        refresh_token: true
       }
-
-      // Persist token (model handles storage - Oracle DB or KV)
-      token.platformUserId = platformUserId;
-      await saveToken(token);  // From model
-      return true;
     });
 
-    // Response already sent by oauth.token; enhance if needed
+    // The oauth2-server handles the response automatically
+
   } catch (error) {
     next(error);
   }
@@ -190,19 +170,14 @@ app.get('/tokens/:platformUserId', async (req, res, next) => {
 // Client Registration (/oauth/register) - For developers to register apps
 app.post('/oauth/register', async (req, res, next) => {
   try {
-    const client = await oauth.register(req.body, async (client, user) => {
-      // Save client (model handles DB/KV)
-      // Validate redirect_uris, scopes for your 37 platforms
-      client.supportedPlatforms = validateClientPlatforms(client.redirectUris, req.body.scopes);
-      await saveClient(client);
-      return client;
-    });
-    res.json({
-      success: true,
-      client_id: client.clientId,
-      client_secret: client.clientSecret,  // Only for confidential clients
-      redirect_uris: client.redirectUris
-    });
+    // Wrap Express request in oauth2-server Request
+    const oauthRequest = new OAuth2Server.Request(req);
+    const oauthResponse = new OAuth2Server.Response(res);
+
+    const client = await oauth.register(oauthRequest, oauthResponse);
+
+    // The oauth2-server handles the response automatically
+
   } catch (error) {
     next(error);
   }
@@ -222,31 +197,19 @@ app.get('/consent/:platform/:apiKey', async (req, res, next) => {
     // Map platform to scopes (reuse existing platforms/)
     const scopes = [`read:${platform}`, `write:${platform}`];  // Or dynamic from PLATFORMS[platform]
 
-    // Build standard OAuth request
-    const request = {
-      responseType: 'code',
-      clientId: client.id,
-      redirectUri: client.redirectUris[0],  // Default or from params
-      scope: scopes.join(' '),
-      state: generateState(),  // Random state
-      codeChallenge: generatePKCEChallenge(),  // PKCE
-      codeChallengeMethod: 'S256'
-    };
+    // Build standard OAuth request URL manually for backward compatibility
+    // Since this is a compatibility endpoint, we'll construct the URL directly
+    const baseUrl = `${req.protocol}://${req.get('host')}/oauth/authorize`;
+    const scopeParam = scopes.join(' ');
+    const state = generateState();
+    const codeChallenge = generatePKCEChallenge();
 
-    // Delegate to oauth.authorize for generation
-    const authResult = await oauth.authorize(request, async (token) => {
-      token.platformUserId = `${platform}-user-placeholder`;  // From API key/user
-      return true;
-    });
-
-    if (authResult.error) {
-      return res.status(400).json({ error: authResult.error });
-    }
+    const consentUrl = `${baseUrl}?response_type=code&client_id=${client.id}&redirect_uri=${encodeURIComponent(client.redirectUris[0])}&scope=${encodeURIComponent(scopeParam)}&state=${state}&code_challenge=${codeChallenge}&code_challenge_method=S256`;
 
     // Return original format: consent URL
     res.json({
       success: true,
-      consentUrl: authResult.url,
+      consentUrl: consentUrl,
       platform,
       apiKey,
       scopes
@@ -298,16 +261,14 @@ app.get('/tokens/:platformUserId/:apiKey', async (req, res, next) => {
 // Token Introspection (/oauth/introspect) - Validate active tokens
 app.post('/oauth/introspect', async (req, res, next) => {
   try {
-    const token = await oauth.introspect(req.body, async (token) => {
-      return await getAccessToken(token);  // From model
-    });
-    res.json({
-      active: !!token,
-      scope: token ? token.scope : undefined,
-      client_id: token ? token.client.id : undefined,
-      user_id: token ? token.user.id : undefined,
-      exp: token ? Math.floor(new Date(token.expiresAt).getTime() / 1000) : undefined
-    });
+    // Wrap Express request in oauth2-server Request
+    const oauthRequest = new OAuth2Server.Request(req);
+    const oauthResponse = new OAuth2Server.Response(res);
+
+    await oauth.introspect(oauthRequest, oauthResponse);
+
+    // The oauth2-server handles the response automatically
+
   } catch (error) {
     next(error);
   }
@@ -316,11 +277,14 @@ app.post('/oauth/introspect', async (req, res, next) => {
 // Token Revocation (/oauth/revoke) - Revoke tokens
 app.post('/oauth/revoke', async (req, res, next) => {
   try {
-    await oauth.revoke(req.body, async (token) => {
-      await revokeToken(token);  // From model
-      return true;
-    });
-    res.json({ success: true });
+    // Wrap Express request in oauth2-server Request
+    const oauthRequest = new OAuth2Server.Request(req);
+    const oauthResponse = new OAuth2Server.Response(res);
+
+    await oauth.revoke(oauthRequest, oauthResponse);
+
+    // The oauth2-server handles the response automatically
+
   } catch (error) {
     next(error);
   }

@@ -10,6 +10,7 @@ const clients = new Map();  // clientId -> client object
 const tokens = new Map();  // accessToken -> token object
 const refreshTokens = new Map();  // refreshToken -> token object
 const users = new Map();  // userId -> user object
+const authorizationCodes = new Map();  // authorizationCode -> code object
 
 // Generate unique IDs (simplified; use UUID in production)
 let idCounter = 0;
@@ -174,6 +175,64 @@ async function revokeRefreshToken(refreshToken) {
   refreshTokens.delete(refreshToken);
 }
 
+// Authorization Code Methods
+async function generateAuthorizationCode(client, user, scope) {
+  const authorizationCode = generateId();
+  const expiresAt = new Date(Date.now() + 600000); // 10 minutes
+
+  const code = {
+    authorizationCode,
+    expiresAt,
+    redirectUri: client.redirectUri,
+    scope,
+    client: { id: client.id },
+    user: { id: user.id }
+  };
+
+  authorizationCodes.set(authorizationCode, code);
+  return authorizationCode;
+}
+
+async function getAuthorizationCode(authorizationCode) {
+  const code = authorizationCodes.get(authorizationCode);
+  if (!code) return false;
+
+  // Check expiration
+  if (new Date(code.expiresAt) < new Date()) {
+    authorizationCodes.delete(authorizationCode);
+    return false;
+  }
+
+  return {
+    authorizationCode: code.authorizationCode,
+    expiresAt: code.expiresAt,
+    redirectUri: code.redirectUri,
+    scope: code.scope,
+    client: code.client,
+    user: code.user
+  };
+}
+
+async function saveAuthorizationCode(code, client, user) {
+  const expiresAt = new Date(Date.now() + 600000); // 10 minutes
+
+  const authCode = {
+    authorizationCode: code.authorizationCode,
+    expiresAt,
+    redirectUri: code.redirectUri,
+    scope: code.scope,
+    client: { id: client.id },
+    user: { id: user.id }
+  };
+
+  authorizationCodes.set(code.authorizationCode, authCode);
+  return authCode;
+}
+
+async function revokeAuthorizationCode(code) {
+  authorizationCodes.delete(code.authorizationCode);
+}
+
 // Custom Methods for Your Platform (simplifies token retrieval by platformUserId)
 async function getAccessTokenByUserId(platformUserId) {
   for (const [accessToken, token] of tokens) {
@@ -265,6 +324,10 @@ module.exports = {
   generateRefreshToken,
   getRefreshToken,
   revokeRefreshToken,
+  generateAuthorizationCode,
+  getAuthorizationCode,
+  saveAuthorizationCode,
+  revokeAuthorizationCode,
 
   // Custom for platform
   getAccessTokenByUserId,
