@@ -6,9 +6,6 @@ on:
   pull_request:
     branches: [ main, master ]
 
-env:
-  DEPLOY_METHOD: kubernetes  # Change to 'functions' for Oracle Functions
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -25,31 +22,40 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Build Docker image
-        run: docker build -t oauth-hub:latest .
-
-      - name: Login to Oracle Cloud Container Registry
-        uses: docker/login-action@v3
+      - name: Deploy to Oracle Server via SSH
+        uses: appleboy/ssh-action@v1.0.0
         with:
-          registry: ${{ secrets.OCI_REGION }}.ocir.io
-          username: ${{ secrets.OCI_TENANCY_NAMESPACE }}/${{ secrets.OCI_USERNAME }}
-          password: ${{ secrets.OCI_AUTH_TOKEN }}
+          host: ${{ secrets.CRM_SERVER_IP }}
+          username: ${{ secrets.CRM_SERVER_USER }}
+          key: ${{ secrets.CRM_SERVER_SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            # Navigate to app directory
+            cd /opt/oauth-hub || mkdir -p /opt/oauth-hub && cd /opt/oauth-hub
 
-      - name: Push Docker image to OCIR
-        run: |
-          IMAGE_NAME="${{ secrets.OCI_REGION }}.ocir.io/${{ secrets.OCI_TENANCY_NAMESPACE }}/oauth-hub:latest"
-          docker tag oauth-hub:latest $IMAGE_NAME
-          docker push $IMAGE_NAME
+            # Pull latest changes
+            if [ -d .git ]; then
+              git pull origin main
+            else
+              git clone https://github.com/Jgracier/Oauth-Hub.git .
+            fi
 
-      - name: Deploy to Oracle Cloud
-        run: |
-          chmod +x deploy-to-oracle.sh
-          ./deploy-to-oracle.sh
-        env:
-          OCI_COMPARTMENT_ID: ${{ secrets.OCI_COMPARTMENT_ID }}
-          OCI_SUBNET_ID: ${{ secrets.OCI_SUBNET_ID }}
-          OCI_VCN_ID: ${{ secrets.OCI_VCN_ID }}
-          OCI_TENANCY_NAMESPACE: ${{ secrets.OCI_TENANCY_NAMESPACE }}
-          OCI_USERNAME: ${{ secrets.OCI_USERNAME }}
-          OCI_AUTH_TOKEN: ${{ secrets.OCI_AUTH_TOKEN }}
-          DEPLOY_METHOD: ${{ env.DEPLOY_METHOD }}
+            # Install dependencies
+            npm install
+
+            # Set environment variables
+            export DATABASE_URL="${{ secrets.CRM_DATABASE_URL }}"
+            export NODE_ENV=production
+            export PORT=3000
+
+            # Restart application with PM2
+            if command -v pm2 &> /dev/null; then
+              pm2 restart oauth-hub || pm2 start server.js --name oauth-hub
+              pm2 save
+            else
+              # Fallback to direct node if PM2 not available
+              pkill -f "node server.js" || true
+              nohup node server.js > app.log 2>&1 &
+            fi
+
+            echo "✅ OAuth Hub deployed successfully!"
