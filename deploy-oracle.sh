@@ -155,9 +155,8 @@ ssh_cmd "mkdir -p ${DEPLOY_PATH}"
 # Use rsync for reliable file transfer (following OCI best practices)
 echo -e "${YELLOW}Using rsync for secure file transfer...${NC}"
 
-# Create a temporary tar file and transfer it securely
-TAR_FILE="${PROJECT_NAME}-${BACKUP_SUFFIX}.tar.gz"
-tar -czf "${TAR_FILE}" \
+# Direct rsync transfer over SSH - no intermediate archives needed
+rsync -avz \
     --exclude='node_modules' \
     --exclude='.git' \
     --exclude='*.log' \
@@ -167,19 +166,15 @@ tar -czf "${TAR_FILE}" \
     --exclude='*.swp' \
     --exclude='*.bak' \
     --exclude='.github' \
-    .
+    --exclude='deploy-oracle.sh' \
+    --exclude='create-repo.ps1' \
+    --exclude='test-validation.ps1' \
+    --exclude='env-example.txt' \
+    --delete \
+    -e "ssh -i ${SSH_KEY_FILE} -o StrictHostKeyChecking=no -o ConnectTimeout=30 -o LogLevel=ERROR" \
+    ./ "${SSH_USER}@${SERVER_IP}:${DEPLOY_PATH}/"
 
-# Transfer the archive securely
-scp_file "${TAR_FILE}" "/tmp/${TAR_FILE}"
-
-# Extract and setup on the OCI instance
-echo -e "${YELLOW}Extracting application on OCI instance...${NC}"
-ssh_cmd "cd ${DEPLOY_PATH} && sudo rm -rf *"
-ssh_cmd "sudo tar -xzf /tmp/${TAR_FILE} -C ${DEPLOY_PATH}"
-ssh_cmd "sudo rm /tmp/${TAR_FILE}"
-
-# Clean up local tar file
-rm -f "${TAR_FILE}"
+echo -e "${GREEN}✅ Files transferred successfully to OCI instance${NC}"
 
 # Install dependencies on OCI instance
 echo -e "${YELLOW}📦 Installing dependencies on OCI instance...${NC}"
