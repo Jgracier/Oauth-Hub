@@ -140,9 +140,10 @@ echo -e "${YELLOW}🔥 Configuring firewall...${NC}"
 ssh_cmd "sudo ufw allow 3001/tcp || true"
 ssh_cmd "sudo ufw --force enable || true"
 
-# Health check
+# Health check - wait for server to start up
 echo -e "${YELLOW}🏥 Running health check...${NC}"
-sleep 5
+echo -e "${YELLOW}Waiting 10 seconds for server to initialize...${NC}"
+sleep 10
 HEALTH_CHECK=$(ssh_cmd "curl -k -s https://localhost:3001/health || curl -s http://localhost:3001/health || echo 'failed'")
 
 if [[ "$HEALTH_CHECK" == *"OK"* ]]; then
