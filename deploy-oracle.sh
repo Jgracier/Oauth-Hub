@@ -69,25 +69,15 @@ ssh_cmd "which pm2 || (sudo npm install -g pm2)"
 # Copy application files
 echo -e "${YELLOW}📤 Copying application files...${NC}"
 
-# Create temporary deployment package
-# Use --ignore-failed-read to handle files that change during archiving
-tar -czf oauth-hub-deploy.tar.gz \
-    --exclude='node_modules' \
-    --exclude='.git' \
-    --exclude='*.log' \
-    --exclude='.env' \
-    --exclude='.DS_Store' \
-    --exclude='*.tmp' \
-    --exclude='*.swp' \
-    --exclude='*.bak' \
-    --ignore-failed-read \
-    .
+# Use rsync instead of tar to avoid file change issues
+echo -e "${YELLOW}Using rsync for file transfer...${NC}"
+rsync -avz --exclude='node_modules' --exclude='.git' --exclude='*.log' --exclude='.env' --exclude='.DS_Store' --exclude='*.tmp' --exclude='*.swp' --exclude='*.bak' -e "ssh -i $SSH_KEY_FILE -o StrictHostKeyChecking=no" . "$SSH_USER@$SERVER_IP:$DEPLOY_PATH/"
 
-# Copy deployment package to server
-scp_file "oauth-hub-deploy.tar.gz" "$DEPLOY_PATH/"
-
-# Extract and setup on server
-ssh_cmd "cd $DEPLOY_PATH && rm -rf * && tar -xzf oauth-hub-deploy.tar.gz && rm oauth-hub-deploy.tar.gz"
+# Alternative: Create deployment package with find to avoid changing files
+# echo -e "${YELLOW}Creating deployment package...${NC}"
+# find . -type f \( -name "*.js" -o -name "*.json" -o -name "*.md" -o -name "*.yml" -o -name "*.yaml" -o -name "*.sh" -o -name "Dockerfile*" -o -name ".dockerignore" \) -not -path "./node_modules/*" -not -path "./.git/*" -not -name "*.log" -print0 | xargs -0 tar -czf oauth-hub-deploy.tar.gz
+# scp_file "oauth-hub-deploy.tar.gz" "$DEPLOY_PATH/"
+# ssh_cmd "cd $DEPLOY_PATH && rm -rf * && tar -xzf oauth-hub-deploy.tar.gz && rm oauth-hub-deploy.tar.gz"
 
 # Install dependencies
 echo -e "${YELLOW}📦 Installing dependencies...${NC}"
