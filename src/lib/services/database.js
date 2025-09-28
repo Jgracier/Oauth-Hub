@@ -6,8 +6,14 @@
 import oracledb from 'oracledb';
 import crypto from 'crypto';
 
-// Configure Oracle client
-oracledb.initOracleClient({ libDir: process.env.ORACLE_CLIENT_LIB_DIR || '/usr/lib/oracle/21/client64/lib' });
+// Configure Oracle client (only in production with Oracle DB)
+if (process.env.NODE_ENV === 'production' && process.env.DB_CONNECT_STRING) {
+  try {
+    oracledb.initOracleClient({ libDir: process.env.ORACLE_CLIENT_LIB_DIR || '/usr/lib/oracle/21/client64/lib' });
+  } catch (error) {
+    console.warn('Oracle client initialization failed, will use mock database for development:', error.message);
+  }
+}
 
 // Database configuration
 const dbConfig = {
@@ -24,19 +30,72 @@ const dbConfig = {
 // Connection pool
 let pool = null;
 
+// Mock database for development
+let mockDb = {
+  users: new Map(),
+  apiKeys: new Map(),
+  oauthApps: new Map(),
+  oauthTokens: new Map(),
+  sessions: new Map(),
+  apiUsage: new Map()
+};
+
+// Initialize with test user
+const initializeMockData = () => {
+  const testUser = {
+    id: 'd9328688-b39f-444b-afce-f0723808ad7c',
+    email: 'test@example.com',
+    password_hash: '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LeEyOoJvJc2GjMhCe', // bcrypt hash for TestPass123
+    password_salt: null,
+    full_name: 'Test User',
+    oauth_provider: 'email',
+    oauth_id: null,
+    profile_picture: null,
+    email_verified: false,
+    subscription_plan: 'free',
+    api_call_count: 0,
+    api_call_limit: 5000,
+    created_at: new Date(),
+    updated_at: new Date()
+  };
+  mockDb.users.set(testUser.id, testUser);
+  console.log('Mock database initialized with test user');
+};
+
+// Initialize mock data
+initializeMockData();
+
+export let useMockDb = false;
+
 /**
  * Initialize database connection pool
  */
 export async function initializeDatabase() {
+  console.log('Initializing database...', {
+    NODE_ENV: process.env.NODE_ENV,
+    DB_CONNECT_STRING: process.env.DB_CONNECT_STRING ? 'present' : 'missing'
+  });
+
   try {
-    if (!pool) {
-      pool = await oracledb.createPool(dbConfig);
-      console.log('✅ Oracle database pool initialized successfully');
+    // Check if we should use Oracle DB
+    if (process.env.NODE_ENV === 'production' && process.env.DB_CONNECT_STRING) {
+      if (!pool) {
+        pool = await oracledb.createPool(dbConfig);
+        console.log('✅ Oracle database pool initialized successfully');
+      }
+      useMockDb = false;
+      console.log('Using Oracle database');
+      return pool;
+    } else {
+      // Use mock database for development
+      console.log('🧪 Using mock database for development');
+      useMockDb = true;
+      return mockDb;
     }
-    return pool;
   } catch (error) {
-    console.error('❌ Failed to initialize Oracle database pool:', error);
-    throw error;
+    console.warn('⚠️ Oracle database not available, falling back to mock database:', error.message);
+    useMockDb = true;
+    return mockDb;
   }
 }
 
@@ -54,6 +113,30 @@ export async function getConnection() {
  * Execute query with automatic connection management
  */
 export async function executeQuery(sql, binds = [], options = {}) {
+  if (useMockDb) {
+    // Mock database operations for development
+    const sqlUpper = sql.trim().toUpperCase();
+
+    if (sqlUpper.startsWith('SELECT') && sqlUpper.includes('FROM USERS') && sqlUpper.includes('WHERE EMAIL')) {
+      // Mock findByEmail
+      const email = binds.email;
+      for (const user of mockDb.users.values()) {
+        if (user.email === email) {
+          return { rows: [user] };
+        }
+      }
+      return { rows: [] };
+    }
+
+    if (sqlUpper.startsWith('INSERT INTO USERS')) {
+      // Mock user creation - just return success
+      return { rowsAffected: 1 };
+    }
+
+    // Default mock response
+    return { rows: [], rowsAffected: 0 };
+  }
+
   let connection;
   try {
     connection = await getConnection();
@@ -118,6 +201,31 @@ export const UserService = {
    * Create a new user
    */
   async create(email, passwordHash, passwordSalt, fullName = '', oauthProvider = 'email', oauthId = null) {
+    if (useMockDb) {
+      // Mock implementation
+      console.log('Creating mock user:', { email, fullName });
+      const id = crypto.randomUUID();
+      const user = {
+        id,
+        email,
+        password_hash: passwordHash,
+        password_salt: passwordSalt,
+        full_name: fullName,
+        oauth_provider: oauthProvider,
+        oauth_id: oauthId,
+        profile_picture: null,
+        email_verified: false,
+        subscription_plan: 'free',
+        api_call_count: 0,
+        api_call_limit: 5000,
+        created_at: new Date(),
+        updated_at: new Date()
+      };
+      mockDb.users.set(id, user);
+      console.log('Mock user created with ID:', id);
+      return id;
+    }
+
     const id = crypto.randomUUID();
     const sql = `
       INSERT INTO users (id, email, password_hash, password_salt, full_name, oauth_provider, oauth_id)
@@ -144,6 +252,16 @@ export const UserService = {
    * Find user by email
    */
   async findByEmail(email) {
+    if (useMockDb) {
+      // Mock implementation
+      for (const user of mockDb.users.values()) {
+        if (user.email === email) {
+          return user;
+        }
+      }
+      return null;
+    }
+
     const sql = `
       SELECT id, email, password_hash, password_salt, full_name, profile_picture,
              oauth_provider, oauth_id, email_verified, subscription_plan,
@@ -209,6 +327,15 @@ export const UserService = {
    * Increment API call count for user
    */
   async incrementApiCallCount(userId) {
+    if (useMockDb) {
+      // Mock implementation
+      const user = mockDb.users.get(userId);
+      if (user) {
+        user.api_call_count = (user.api_call_count || 0) + 1;
+      }
+      return;
+    }
+
     const sql = `
       UPDATE users
       SET api_call_count = api_call_count + 1

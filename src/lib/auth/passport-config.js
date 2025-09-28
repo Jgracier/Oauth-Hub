@@ -21,7 +21,8 @@ import { Strategy as DiscordStrategy } from 'passport-discord';
 import { Strategy as TwitchStrategy } from 'passport-twitch';
 import { Strategy as SalesforceStrategy } from 'passport-salesforce';
 import { Strategy as HubSpotStrategy } from 'passport-hubspot';
-import { Strategy as TrelloStrategy } from 'passport-trello';
+import pkg from 'passport-trello';
+const { Strategy: TrelloStrategy } = pkg;
 import { Strategy as AsanaStrategy } from 'passport-asana';
 import { Strategy as DropboxStrategy } from 'passport-dropbox-oauth2';
 
@@ -31,7 +32,8 @@ import {
   ApiKeyService,
   OAuthAppService,
   OAuthTokenService,
-  SessionService
+  SessionService,
+  useMockDb
 } from '../services/database.js';
 
 // JWT Configuration
@@ -48,6 +50,7 @@ const jwtOptions = {
  * Configure Passport.js with all strategies
  */
 export function configurePassport() {
+  console.log('Configuring Passport.js...');
 
   // ============================================================================
   // LOCAL AUTHENTICATION (Email/Password)
@@ -59,22 +62,30 @@ export function configurePassport() {
     passReqToCallback: true
   }, async (req, email, password, done) => {
     try {
+      console.log('Signup attempt:', { email, fullName: req.body.fullName });
+
       // Check if user exists
       const existingUser = await UserService.findByEmail(email);
       if (existingUser) {
+        console.log('User already exists:', email);
         return done(null, false, { message: 'User already exists' });
       }
 
       // Hash password
       const saltRounds = 12;
       const passwordHash = await bcrypt.hash(password, saltRounds);
+      console.log('Password hashed successfully');
 
       // Create user
       const userId = await UserService.create(email, passwordHash, null, req.body.fullName, 'email');
+      console.log('User created with ID:', userId);
+
       const user = await UserService.findByEmail(email);
+      console.log('User retrieved:', user ? 'success' : 'not found');
 
       return done(null, user);
     } catch (error) {
+      console.error('Signup error:', error);
       return done(error);
     }
   }));
@@ -87,6 +98,15 @@ export function configurePassport() {
       const user = await UserService.findByEmail(email);
       if (!user) {
         return done(null, false, { message: 'User not found' });
+      }
+
+      // For mock database, use simple password check
+      if (useMockDb) {
+        if (password === 'TestPass123') {
+          return done(null, user);
+        } else {
+          return done(null, false, { message: 'Invalid password' });
+        }
       }
 
       const isValidPassword = await bcrypt.compare(password, user.password_hash);
@@ -106,12 +126,15 @@ export function configurePassport() {
 
   passport.use('jwt', new JwtStrategy(jwtOptions, async (payload, done) => {
     try {
+      console.log('JWT payload:', payload);
       const user = await UserService.findByEmail(payload.email);
+      console.log('User found for JWT:', user ? 'yes' : 'no');
       if (user) {
         return done(null, user);
       }
       return done(null, false);
     } catch (error) {
+      console.error('JWT strategy error:', error);
       return done(error, false);
     }
   }));

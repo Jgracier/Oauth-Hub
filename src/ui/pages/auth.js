@@ -593,7 +593,7 @@ export function getModernAuthPage() {
       </div>
       
       <!-- Sign In Form -->
-      <form id="signin-form" class="auth-form active" onsubmit="handleSignIn(event)">
+      <form id="signin-form" class="auth-form active" method="post" onsubmit="handleSignIn(event)">
         <div class="form-group">
           <label class="form-label" for="signin-email">Work Email</label>
           <input 
@@ -639,7 +639,7 @@ export function getModernAuthPage() {
       </form>
       
       <!-- Sign Up Form -->
-      <form id="signup-form" class="auth-form" onsubmit="handleSignUp(event)">
+      <form id="signup-form" class="auth-form" method="post" onsubmit="handleSignUp(event)">
                         <div class="form-group">
           <label class="form-label" for="signup-name">Full name</label>
           <input 
@@ -770,31 +770,34 @@ export function getModernAuthPage() {
       async function handleSignIn(event) {
         event.preventDefault();
         hideMessages();
-        
+
         const email = document.getElementById('signin-email').value;
         const password = document.getElementById('signin-password').value;
         const button = event.target.querySelector('.submit-btn');
-        
+
         button.disabled = true;
         button.innerHTML = '<span class="loading"></span> Logging in...';
-        
+
         try {
-          const response = await fetch('/auth', {
+          const formData = new FormData();
+          formData.append('email', email);
+          formData.append('password', password);
+
+          const response = await fetch('/auth/login', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
-            body: JSON.stringify({ mode: 'login', email, password })
+            body: formData
           });
-          
+
           const result = await response.json();
-          
+
           if (response.ok) {
-            localStorage.setItem('userEmail', result.email);
-            localStorage.setItem('userName', result.name);
-            if (result.apiKey) {
-              localStorage.setItem('defaultApiKey', result.apiKey);
-            }
-            
+            // Store JWT token
+            localStorage.setItem('jwt_token', result.token);
+            localStorage.setItem('userEmail', result.user.email);
+            localStorage.setItem('userName', result.user.email); // Server doesn't provide name, use email as fallback
+            // Note: API key is generated separately after login
+
             showSuccess('Welcome back! Redirecting...');
             setTimeout(() => window.location.href = '/dashboard', 1000);
           } else {
@@ -827,28 +830,32 @@ export function getModernAuthPage() {
         button.disabled = true;
         button.innerHTML = '<span class="loading"></span> Creating account...';
             
-            try {
-                const response = await fetch('/auth', {
-                    method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+        try {
+          const formData = new FormData();
+          formData.append('email', email);
+          formData.append('password', password);
+          formData.append('fullName', name);
+
+          const response = await fetch('/auth/signup', {
+            method: 'POST',
             credentials: 'include',
-            body: JSON.stringify({ mode: 'signup', email, password, fullName: name })
-                });
+            body: formData
+          });
                 
-                const result = await response.json();
-                
-                if (response.ok) {
-                    localStorage.setItem('userEmail', result.email);
-                    localStorage.setItem('userName', result.name);
-                    if (result.apiKey) {
-                        localStorage.setItem('defaultApiKey', result.apiKey);
-                    }
-                    
+          const result = await response.json();
+
+          if (response.ok) {
+            // Store JWT token
+            localStorage.setItem('jwt_token', result.token);
+            localStorage.setItem('userEmail', result.user.email);
+            localStorage.setItem('userName', name); // Use the name from the form for signup
+            // Note: API key is generated separately after signup
+
             showSuccess('Account created! Redirecting...');
             setTimeout(() => window.location.href = '/dashboard', 1000);
-                } else {
+          } else {
             showError(result.error || 'Failed to create account');
-                }
+          }
             } catch (error) {
           showError('Network error. Please try again.');
         } finally {
@@ -860,7 +867,7 @@ export function getModernAuthPage() {
       // Handle Google auth
       function handleGoogleAuth() {
         hideMessages();
-        
+
         try {
           // Redirect to Google OAuth
           window.location.href = '/auth/google';
@@ -868,11 +875,11 @@ export function getModernAuthPage() {
           showError('Failed to initialize Google authentication');
         }
       }
-      
+
       // Handle GitHub auth
       function handleGitHubAuth() {
         hideMessages();
-        
+
         try {
           // Redirect to GitHub OAuth
           window.location.href = '/auth/github';

@@ -139,6 +139,11 @@ app.get('/health', async (req, res) => {
 
 // Local signup
 app.post('/auth/signup', (req, res, next) => {
+  console.log('Signup request received:', {
+    body: req.body,
+    headers: req.headers['content-type']
+  });
+
   passport.authenticate('local-signup', (err, user, info) => {
     if (err) {
       return res.status(500).json({ error: 'Signup failed' });
@@ -1017,7 +1022,7 @@ async function startServer() {
     console.log('✅ Database connection established');
 
     // Start the server
-    app.listen(port, '0.0.0.0', () => {
+app.listen(port, '0.0.0.0', () => {
       console.log(`🚀 OAuth Hub server running on port ${port}`);
       console.log(`📊 Using Oracle database for credential storage`);
     });
