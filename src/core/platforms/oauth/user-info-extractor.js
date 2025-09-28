@@ -7,7 +7,7 @@
 /**
  * Extract platform user ID from user info response
  */
-function extractPlatformUserId(platform, userInfo, platformConfig) {
+export function extractPlatformUserId(platform, userInfo, platformConfig) {
   const userIdField = platformConfig.userIdField;
   
   try {
