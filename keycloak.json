@@ -1,0 +1,12 @@
+{
+  "realm": "oauth-hub",
+  "auth-server-url": "http://localhost:8080",
+  "ssl-required": "external",
+  "resource": "oauth-hub-client",
+  "public-client": false,
+  "credentials": {
+    "secret": "your-client-secret"
+  },
+  "confidential-port": 0,
+  "policy-enforcer": {}
+}

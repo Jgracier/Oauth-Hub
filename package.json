@@ -4,6 +4,7 @@
   "description": "OAuth Hub backend",
   "type": "module",
   "main": "server.js",
+  "type": "module",
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
@@ -11,37 +12,14 @@
     "db:seed": "sequelize-cli db:seed:all"
   },
   "dependencies": {
-    "bcryptjs": "^2.4.3",
+    "@keycloak/keycloak-admin-client": "^26.3.5",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
-    "express-rate-limit": "^7.4.0",
     "express-session": "^1.18.2",
     "helmet": "^7.1.0",
-    "joi": "^17.13.3",
     "jsonwebtoken": "^9.0.2",
-    "morgan": "^1.10.0",
-    "oracledb": "^6.4.0",
-    "passport": "^0.7.0",
-    "passport-apple": "^2.0.2",
-    "passport-asana": "^0.0.1",
-    "passport-discord": "^0.1.4",
-    "passport-dropbox-oauth2": "^1.1.0",
-    "passport-facebook": "^3.0.0",
-    "passport-github2": "^0.1.12",
-    "passport-google-oauth20": "^2.0.0",
-    "passport-hubspot": "^0.1.0",
-    "passport-jwt": "^4.0.1",
-    "passport-linkedin-oauth2": "^2.0.0",
-    "passport-local": "^1.0.0",
-    "passport-microsoft": "^2.1.0",
-    "passport-oauth2": "^1.8.0",
-    "passport-salesforce": "^0.0.2",
-    "passport-spotify": "^2.0.0",
-    "passport-trello": "^1.1.0",
-    "passport-twitch": "^1.0.3",
-    "passport-twitter": "^1.0.4",
-    "sequelize": "^6.37.3",
-    "winston": "^3.14.2"
+    "keycloak-connect": "^26.1.1",
+    "morgan": "^1.10.0"
   }
 }

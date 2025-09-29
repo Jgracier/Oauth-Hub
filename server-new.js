@@ -11,13 +11,6 @@ import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 dotenv.config();
 
-// Import UI pages from oauth-worker
-import { getModernAuthPage } from './src/ui/pages/auth.js';
-import { getModernDashboardPage } from './src/ui/pages/dashboard.js';
-import { getModernAppsPage } from './src/ui/pages/apps.js';
-import { getModernApiKeysPage } from './src/ui/pages/api-keys.js';
-import { getModernSubscriptionPage } from './src/ui/pages/subscription.js';
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -223,19 +216,9 @@ app.post('/api/subscription/checkout', keycloak.protect(), async (req, res) => {
   res.json({ success: true });
 });
 
-
-// Logout
-app.get('/logout', keycloak.protect(), (req, res, next) => {
-  req.logout();
-  res.redirect(`${process.env.KEYCLOAK_URL || 'http://localhost:8080'}/realms/oauth-hub/protocol/openid-connect/logout?redirect_uri=${encodeURIComponent(process.env.FRONTEND_URL || 'http://localhost:3000')}/auth`);
-});
-
 // UI Routes
 app.get('/', (req, res) => res.redirect('/dashboard'));
-app.get('/auth', (req, res) => {
-  // Since using Keycloak, redirect to Keycloak login
-  res.redirect(`${process.env.KEYCLOAK_URL || 'http://localhost:8080'}/realms/oauth-hub/protocol/openid-connect/auth?client_id=oauth-hub-client&redirect_uri=${encodeURIComponent(process.env.FRONTEND_URL || 'http://localhost:3000')}/dashboard&response_type=code&scope=openid profile email`);
-});
+app.get('/auth', (req, res) => res.redirect(`${process.env.KEYCLOAK_URL || 'http://localhost:8080'}/realms/oauth-hub/account`));
 app.get('/dashboard', keycloak.protect(), (req, res) => res.send(getModernDashboardPage(req.kauth.grant.access_token.content)));
 app.get('/apps', keycloak.protect(), (req, res) => res.send(getModernAppsPage()));
 app.get('/api-keys', keycloak.protect(), (req, res) => res.send(getModernApiKeysPage()));
