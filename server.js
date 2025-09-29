@@ -473,10 +473,10 @@ app.get('/api/subscription/plans', (req, res) => {
   });
 });
 
+// Ensure the subscription checkout is async
 app.post('/api/subscription/checkout', authenticateJWT, async (req, res) => {
   try {
     const { planId } = req.body;
-    // Mock: Update user plan
     await UserService.updateProfile(req.user.id, { subscriptionPlan: planId });
     res.json({ success: true, message: `Upgraded to ${planId}`, redirectUrl: '/dashboard' });
   } catch (error) {

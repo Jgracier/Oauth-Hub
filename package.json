@@ -42,7 +42,6 @@
     "passport-twitch": "^1.0.3",
     "passport-twitter": "^1.0.4",
     "sequelize": "^6.37.3",
-    "sequelize-pool": "^0.0.1",
     "winston": "^3.14.2"
   }
 }
