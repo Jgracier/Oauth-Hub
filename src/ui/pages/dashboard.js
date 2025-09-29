@@ -5,6 +5,7 @@
 import { MODERN_CSS, MODERN_ICONS, THEME_PREVENTION_SCRIPT } from '../styles.js';
 import { getModernLayout, getModernScripts } from '../navigation.js';
 import { getAuthManagerScript } from '../../lib/auth/auth-manager.js';
+import { useState, useEffect } from 'react'; // Added for enhanced dashboard
 
 export function getModernDashboardPage() {
   const content = `
@@ -169,6 +170,62 @@ export function getModernDashboardPage() {
     ${getModernScripts()}
     
     <script>
+      // Enhanced Dashboard with API integration
+      const DashboardPage = (user) => { // user from req.user in server
+        const [usage, setUsage] = useState(null);
+        const [appsCount, setAppsCount] = useState(0);
+        const [loading, setLoading] = useState(true);
+
+        const token = localStorage.getItem('jwt_token');
+
+        const loadDashboard = async () => {
+          try {
+            // Parallel fetches
+            const [appsRes, subRes] = await Promise.all([
+              fetch('/api/user-apps', { headers: { Authorization: `Bearer ${token}` } }),
+              fetch('/api/subscription/status', { headers: { Authorization: `Bearer ${token}` } })
+            ]);
+
+            if (appsRes.ok && subRes.ok) {
+              const { apps } = await appsRes.json();
+              const subData = await subRes.json();
+              setAppsCount(apps.length);
+              setUsage(subData.usage);
+            }
+            // Handle 401 refresh as in apps.js
+          } catch (err) {
+            // Error handling
+          } finally {
+            setLoading(false);
+          }
+        };
+
+        useEffect(() => loadDashboard(), []);
+
+        if (loading) return '<div>Loading dashboard...</div>';
+
+        return \`
+          <div class="dashboard">
+            <h1>Welcome, \${user.fullName || user.email}!</h1>
+            <div class="stats">
+              <div>Apps: \${appsCount}</div>
+              <div>API Calls: \${usage?.apiCalls?.current || 0}/\${usage?.apiCalls?.limit || 0}</div>
+              <div>Plan: \${usage?.plan || 'free'}</div>
+            </div>
+            <!-- Simple chart for usage -->
+            <canvas id="usageChart"></canvas>
+            <script>
+              // Chart.js if added, or simple bar
+              const ctx = document.getElementById('usageChart');
+              // Draw basic bar for API usage percentage
+            </script>
+            <a href="/apps">Manage Apps</a>
+            <a href="/api-keys">API Keys</a>
+            <a href="/subscription">Upgrade Plan</a>
+          </div>
+        \`;
+      };
+
       // Platform data
       const platforms = [
         { id: 'google', name: 'Google', icon: '🔍', color: '#4285F4' },

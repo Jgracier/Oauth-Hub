@@ -6,6 +6,61 @@
 import { MODERN_CSS, MODERN_ICONS, THEME_PREVENTION_SCRIPT } from '../styles.js';
 import { getModernLayout, getModernScripts } from '../navigation.js';
 import { getAuthManagerScript } from '../../lib/auth/auth-manager.js';
+import { useState, useEffect } from 'react';
+
+// Updated Subscription for JWT
+const SubscriptionPage = () => {
+  const [status, setStatus] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const token = localStorage.getItem('jwt_token');
+
+  const loadStatus = async () => {
+    try {
+      const res = await fetch('/api/subscription/status', { headers: { Authorization: `Bearer ${token}` } });
+      if (res.ok) setStatus(await res.json());
+      else if (res.status === 401) window.location.href = '/auth/login';
+    } catch (err) {
+      // Handle
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => loadStatus(), []);
+
+  if (loading) return '<div>Loading...</div>';
+
+  return `
+    <div class="subscription-page">
+      <h1>Subscription</h1>
+      <div class="current-plan">Plan: ${status.plan} - Usage: ${status.usage.apiCalls.percentage}%</div>
+      <div class="plans">
+        <!-- Fetch /api/subscription/plans and render buttons -->
+        <button onclick="upgrade('pro')">Upgrade to Pro ($29/mo)</button>
+      </div>
+      <form id="checkoutForm">
+        <button type="submit">Checkout</button>
+      </form>
+    </div>
+    <script>
+      const upgrade = async (plan) => {
+        const res = await fetch('/api/subscription/checkout', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ planId: plan })
+        });
+        if (res.ok) window.location.reload();
+      };
+
+      document.getElementById('checkoutForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        // Mock or Stripe integration
+        alert('Subscription updated!');
+        loadStatus();
+      });
+    </script>
+  `;
+};
 
 export function getModernSubscriptionPage() {
   return `
