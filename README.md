@@ -6,32 +6,34 @@ A modern, scalable OAuth 2.0/OIDC platform built with Node.js, Express, and Keyc
 
 ```
 oauth-hub/
-├── backend/                    # Backend application
-│   ├── server.js              # Main Express server
+├── backend/                    # 🔧 Backend Logic
+│   ├── server.js              # Main Express server with Keycloak
 │   └── src/
-│       ├── lib/
-│       │   └── auth/
-│       │       └── auth-manager.js  # Auth utilities (stub for Keycloak)
-│       └── core/
-│           └── platforms/
-│               └── index.js         # Platform configurations (Google, GitHub, etc.)
-├── frontend/                   # Frontend UI components
-│   └── src/
-│       └── ui/
-│           ├── pages/               # Server-rendered page functions
-│           │   ├── auth.js
-│           │   ├── dashboard.js
-│           │   ├── apps.js
-│           │   ├── api-keys.js
-│           │   ├── subscription.js
-│           │   ├── analytics.js
-│           │   ├── docs.js
-│           │   ├── profile.js
-│           │   └── settings.js
-│           ├── navigation.js         # Navigation components
-│           └── styles.js            # CSS and styling utilities
-├── keycloak.json              # Keycloak client configuration
-├── package.json               # Dependencies and scripts
+│       ├── lib/auth/          # Auth utilities (Keycloak stubs)
+│       └── core/platforms/    # Platform configurations
+├── frontend/                   # 🎨 Frontend UI
+│   └── src/ui/
+│       ├── pages/             # Server-rendered pages
+│       │   ├── auth.js        # Login/signup (redirects to Keycloak)
+│       │   ├── dashboard.js   # Main dashboard
+│       │   ├── apps.js        # OAuth app management
+│       │   ├── api-keys.js    # API key management
+│       │   ├── subscription.js# Billing & plans
+│       │   ├── analytics.js   # Usage analytics
+│       │   ├── docs.js        # API documentation
+│       │   ├── profile.js     # User profile
+│       │   └── settings.js    # User preferences
+│       ├── navigation.js      # Navigation components
+│       └── styles.js          # CSS & theming utilities
+├── docs/                       # 📚 Documentation
+│   ├── ADMIN_DOCUMENTATION.md
+│   ├── DEPLOYMENT.md
+│   ├── ORACLE_SETUP.md
+│   └── PLATFORM_ARCHITECTURE.md
+├── keycloak.json              # Keycloak client config
+├── package.json               # Dependencies & scripts
+├── Dockerfile                 # Container config
+├── deploy-to-oracle.sh        # Oracle deployment script
 └── README.md                  # This file
 ```
 
