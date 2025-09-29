@@ -4,19 +4,23 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import session from 'express-session';
 import Keycloak from 'keycloak-connect';
-import { KcAdminClient } from '@keycloak/keycloak-admin-client';
+import KcAdminClient from '@keycloak/keycloak-admin-client';
 import path from 'path';
 import crypto from 'crypto';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 dotenv.config();
 
-// Import UI pages from oauth-worker
-import { getModernAuthPage } from './src/ui/pages/auth.js';
-import { getModernDashboardPage } from './src/ui/pages/dashboard.js';
-import { getModernAppsPage } from './src/ui/pages/apps.js';
-import { getModernApiKeysPage } from './src/ui/pages/api-keys.js';
-import { getModernSubscriptionPage } from './src/ui/pages/subscription.js';
+// Import UI pages from frontend
+import { getModernAuthPage } from '../frontend/src/ui/pages/auth.js';
+import { getModernDashboardPage } from '../frontend/src/ui/pages/dashboard.js';
+import { getModernAppsPage } from '../frontend/src/ui/pages/apps.js';
+import { getModernApiKeysPage } from '../frontend/src/ui/pages/api-keys.js';
+import { getModernSubscriptionPage } from '../frontend/src/ui/pages/subscription.js';
+import { getModernAnalyticsPage } from '../frontend/src/ui/pages/analytics.js';
+import { getModernDocsPage } from '../frontend/src/ui/pages/docs.js';
+import { getModernProfilePage } from '../frontend/src/ui/pages/profile.js';
+import { getModernSettingsPage } from '../frontend/src/ui/pages/settings.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -27,7 +31,7 @@ const keycloak = new Keycloak({ store: memoryStore });
 
 // Keycloak Admin Client
 const kcAdminClient = new KcAdminClient({
-  baseUrl: process.env.KEYCLOAK_URL || 'http://localhost:8080',
+  baseUrl: process.env.KEYCLOAK_URL || 'http://localhost:8081',
   realmName: 'master'
 });
 
@@ -94,7 +98,7 @@ app.get('/api/platforms', (req, res) => {
     { id: 'google', name: 'Google', icon: '🔵', description: 'Google OAuth' },
     { id: 'github', name: 'GitHub', icon: '🐙', description: 'GitHub OAuth' },
   ];
-  res.json({ platforms });
+    res.json({ platforms });
 });
 
 // Consent URL: Generate URL to Keycloak auth endpoint
@@ -227,18 +231,22 @@ app.post('/api/subscription/checkout', keycloak.protect(), async (req, res) => {
 // Logout
 app.get('/logout', keycloak.protect(), (req, res, next) => {
   req.logout();
-  res.redirect(`${process.env.KEYCLOAK_URL || 'http://localhost:8080'}/realms/oauth-hub/protocol/openid-connect/logout?redirect_uri=${encodeURIComponent(process.env.FRONTEND_URL || 'http://localhost:3000')}/auth`);
+  res.redirect(`${process.env.KEYCLOAK_URL || 'http://localhost:8081'}/realms/oauth-hub/protocol/openid-connect/logout?redirect_uri=${encodeURIComponent(process.env.FRONTEND_URL || 'http://localhost:3000')}/auth`);
 });
 
 // UI Routes
 app.get('/', (req, res) => res.redirect('/dashboard'));
 app.get('/auth', (req, res) => {
   // Since using Keycloak, redirect to Keycloak login
-  res.redirect(`${process.env.KEYCLOAK_URL || 'http://localhost:8080'}/realms/oauth-hub/protocol/openid-connect/auth?client_id=oauth-hub-client&redirect_uri=${encodeURIComponent(process.env.FRONTEND_URL || 'http://localhost:3000')}/dashboard&response_type=code&scope=openid profile email`);
+  res.redirect(`${process.env.KEYCLOAK_URL || 'http://localhost:8081'}/realms/oauth-hub/protocol/openid-connect/auth?client_id=oauth-hub-client&redirect_uri=${encodeURIComponent(process.env.FRONTEND_URL || 'http://localhost:3000')}/dashboard&response_type=code&scope=openid profile email`);
 });
 app.get('/dashboard', keycloak.protect(), (req, res) => res.send(getModernDashboardPage(req.kauth.grant.access_token.content)));
 app.get('/apps', keycloak.protect(), (req, res) => res.send(getModernAppsPage()));
 app.get('/api-keys', keycloak.protect(), (req, res) => res.send(getModernApiKeysPage()));
 app.get('/subscription', keycloak.protect(), (req, res) => res.send(getModernSubscriptionPage()));
+app.get('/analytics', keycloak.protect(), (req, res) => res.send(getModernAnalyticsPage()));
+app.get('/docs', keycloak.protect(), (req, res) => res.send(getModernDocsPage()));
+app.get('/profile', keycloak.protect(), (req, res) => res.send(getModernProfilePage()));
+app.get('/settings', keycloak.protect(), (req, res) => res.send(getModernSettingsPage()));
 
 app.listen(port, () => console.log(`Server on port ${port}`));

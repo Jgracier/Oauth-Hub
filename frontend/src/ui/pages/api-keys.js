@@ -4,7 +4,7 @@
 
 import { MODERN_CSS, MODERN_ICONS, THEME_PREVENTION_SCRIPT } from '../styles.js';
 import { getModernLayout, getModernScripts } from '../navigation.js';
-import { getAuthManagerScript } from '../../lib/auth/auth-manager.js';
+import { getAuthManagerScript } from '../../../backend/src/lib/auth/auth-manager.js';
 
 export function getModernApiKeysPage() {
   const content = `
